@@ -11,7 +11,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
 
 // Импорт страницы создания заявки
-import CreateRequest from "./pages/CreateRequest";
+import CreateRequest from "./pages/CreateRequestPage";
 
 
 function App() {
