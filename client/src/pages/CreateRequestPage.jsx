@@ -28,7 +28,7 @@ export default function CreateRequest() {
       // Добавляем поле type, чтобы сервер получил тип заявки
       const dataToSend = { ...formData, type: activeTab };
 
-      const response = await fetch("http://localhost:5000/api/applications", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

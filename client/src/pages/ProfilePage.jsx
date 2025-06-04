@@ -17,7 +17,7 @@ const ProfilePage = () => {
     }
 
     // Предположим, что есть эндпоинт /api/profile, который возвращает данные пользователя
-    fetch("http://localhost:5000/api/profile", {
+    fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
