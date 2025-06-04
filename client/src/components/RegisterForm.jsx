@@ -42,7 +42,7 @@ const RegisterForm = ({ setMessage, onRegisterSuccess }) => {
         formData.append("file", avatar); // имя поля должно быть "file", как в uploadMiddleware
       }
 
-      const response = await fetch("http://localhost:5000/api/register?folder=avatars", {
+      const response = await fetch(`https://dragonauto-backend.onrender.com/api/register?folder=avatars`, {
         method: "POST",
         body: formData, // не указываем Content-Type вручную
       });
