@@ -19,7 +19,7 @@ export default function Requests() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/applications", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
         headers: { Authorization: "Bearer " + token },
       });
 
@@ -51,7 +51,7 @@ export default function Requests() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/applications/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/applications/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -74,7 +74,7 @@ export default function Requests() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/applications/${id}/close`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/applications/${id}/close`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -21,7 +21,7 @@ const CatalogManagement = () => {
   }, [activeTab]);
 
   const fetchData = async (offsetParam) => {
-    const url = `http://localhost:5000/api/${activeTab}?limit=${PAGE_SIZE}&offset=${offsetParam}`;
+    const url = `${process.env.REACT_APP_API_URL}/api/${activeTab}?limit=${PAGE_SIZE}&offset=${offsetParam}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("Ошибка сети");
     return await res.json();
@@ -60,7 +60,7 @@ const CatalogManagement = () => {
 
   const handleEdit = async (item) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/${activeTab}/${item.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/${activeTab}/${item.id}`);
       if (!response.ok) throw new Error("Не удалось загрузить данные");
       const fullItem = await response.json();
 
@@ -79,7 +79,7 @@ const CatalogManagement = () => {
 
   const confirmDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/${activeTab}/${confirmDeleteId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/${activeTab}/${confirmDeleteId}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Не удалось удалить запись");
@@ -97,8 +97,8 @@ const CatalogManagement = () => {
     const isNew = !updatedData.id;
     const dataToSend = { ...updatedData };
     const endpoint = isNew
-      ? `http://localhost:5000/api/${activeTab}`
-      : `http://localhost:5000/api/${activeTab}/${updatedData.id}`;
+      ? `${process.env.REACT_APP_API_URL}/api/${activeTab}`
+      : `${process.env.REACT_APP_API_URL}/api/${activeTab}/${updatedData.id}`;
     const method = isNew ? "POST" : "PUT";
 
     try {

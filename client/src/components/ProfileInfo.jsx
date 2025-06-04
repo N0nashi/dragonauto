@@ -26,7 +26,7 @@ export default function ProfileInfo() {
   const getFullAvatarUrl = (url) => {
     if (!url) return "https://i.pravatar.cc/150?img=12";
     if (url.startsWith("http")) return url;
-    return `http://localhost:5000${url}`;
+    return `${process.env.REACT_APP_API_URL}${url}`;
   };
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function ProfileInfo() {
       return;
     }
 
-    fetch("http://localhost:5000/api/profile", {
+    fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -78,7 +78,7 @@ export default function ProfileInfo() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/profile/email", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/email`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export default function ProfileInfo() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/profile/password", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -139,7 +139,7 @@ export default function ProfileInfo() {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    const res = await fetch("http://localhost:5000/api/upload?folder=avatars", {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/upload?folder=avatars`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -171,7 +171,7 @@ export default function ProfileInfo() {
         photo_url: uploadedUrl,
       };
 
-      const res = await fetch("http://localhost:5000/api/profile", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

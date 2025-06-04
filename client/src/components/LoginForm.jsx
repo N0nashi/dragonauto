@@ -15,7 +15,7 @@ const LoginForm = ({ setMessage, onLoginSuccess }) => {
     e.preventDefault();
     setMessage("");
     try {
-      const res = await axios.post("http://localhost:5000/api/login", {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/login`, {
         email: form.email,
         password: form.password,
       });
