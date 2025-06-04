@@ -15,7 +15,7 @@ const ForgotPasswordForm = ({ onClose }) => {
     e.preventDefault();
     setStatus({ loading: true, success: "", error: "" });
     try {
-      await fetch("http://localhost:5000/api/forgot-password", {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
@@ -39,7 +39,7 @@ const ForgotPasswordForm = ({ onClose }) => {
     e.preventDefault();
     setStatus({ loading: true, success: "", error: "" });
     try {
-      await fetch("http://localhost:5000/api/reset-password", {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, otp, newPassword }),

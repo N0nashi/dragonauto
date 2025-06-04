@@ -150,7 +150,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
 
       try {
         const uploadRes = await axios.post(
-          "http://localhost:5000/api/upload?folder=cars",
+          `${process.env.REACT_APP_API_URL}/api/upload?folder=cars`,
           formData
         );
         photoUrl = uploadRes.data.url;

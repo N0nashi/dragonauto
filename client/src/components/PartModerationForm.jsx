@@ -94,7 +94,7 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
 
       try {
         const uploadRes = await axios.post(
-          "http://localhost:5000/api/upload?folder=parts",
+          `${process.env.REACT_APP_API_URL}/api/upload?folder=parts`,
           formData
         );
         photoUrl = uploadRes.data.url;

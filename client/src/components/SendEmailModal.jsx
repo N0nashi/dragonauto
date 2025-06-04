@@ -21,7 +21,7 @@ const SendEmailModal = ({ email, applicationId, onClose }) => {
     setSuccess(false);
 
     try {
-      const res = await fetch("http://localhost:5000/api/adminRoutes/send-email", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/adminRoutes/send-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

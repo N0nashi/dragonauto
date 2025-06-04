@@ -69,7 +69,7 @@ const PartsCatalog = () => {
   useEffect(() => {
     const loadFilters = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/parts/filters");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/parts/filters`);
         if (!response.ok) throw new Error("Failed to load filters");
         const data = await response.json();
         setFilters(data);
@@ -88,7 +88,7 @@ const PartsCatalog = () => {
     const loadParts = async () => {
       setLoadingParts(true);
       try {
-        const response = await fetch("http://localhost:5000/api/parts/search", {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/parts/search`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(selectedFilters),
@@ -156,7 +156,7 @@ const PartsCatalog = () => {
 
     const src = photoUrl?.startsWith("http")
       ? photoUrl
-      : `http://localhost:5000${photoUrl}`;
+      : `${process.env.REACT_APP_API_URL}${photoUrl}`;
 
     const heightClass =
       gridCols === 3 ? "h-64" : gridCols === 6 ? "h-48" : "h-40";
@@ -194,7 +194,7 @@ const PartsCatalog = () => {
 
       console.log("Отправка данных заявки:", requestData);
 
-      const response = await fetch("http://localhost:5000/api/applications", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
