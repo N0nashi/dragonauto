@@ -78,47 +78,57 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// 📩 Роут: Отправка кода восстановления
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email обязателен" });
 
-  const userCheck = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-  if (userCheck.rows.length === 0) {
-    return res.status(400).json({ error: "Пользователь с таким email не найден" });
+  try {
+    const userCheck = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (userCheck.rows.length === 0) {
+      return res.status(400).json({ error: "Пользователь с таким email не найден" });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 минут
+
+    // Удаляем старые коды
+    await db.query("DELETE FROM password_resets WHERE email = $1", [email]);
+
+    // Сохраняем новый код
+    await db.query(`
+      INSERT INTO password_resets (email, code, expires_at)
+      VALUES ($1, $2, to_timestamp($3 / 1000.0))
+    `, [email, code, expires]);
+
+    // Настройка SMTP Яндекс
+    const transporter = nodemailer.createTransport({
+      host: "smtp.yandex.ru",
+      port: 465,
+      secure: true, // для порта 465 всегда true
+      auth: {
+        user: process.env.YANDEX_EMAIL,      // твой Яндекс email
+        pass: process.env.YANDEX_PASSWORD,   // пароль приложения из Яндекса
+      },
+      tls: {
+        rejectUnauthorized: false,  // на случай проблем с сертификатом
+      },
+    });
+
+    // Отправка письма
+    await transporter.sendMail({
+      from: `"DragonAuto" <${process.env.YANDEX_EMAIL}>`,
+      to: email,
+      subject: "Код восстановления пароля",
+      text: `Ваш код восстановления: ${code}. Он действителен в течение 10 минут.`,
+    });
+
+    console.log(`Код восстановления ${code} отправлен на ${email}`);
+    res.json({ message: "Код восстановления отправлен на email" });
+
+  } catch (error) {
+    console.error("Ошибка в /forgot-password:", error);
+    res.status(500).json({ error: "Произошла ошибка при отправке кода" });
   }
-
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = Date.now() + 10 * 60 * 1000; // 10 минут
-
-  // Удаляем старые коды
-  await db.query("DELETE FROM password_resets WHERE email = $1", [email]);
-
-  // Сохраняем новый код
-  await db.query(`
-    INSERT INTO password_resets (email, code, expires_at)
-    VALUES ($1, $2, to_timestamp($3 / 1000.0))
-  `, [email, code, expires]);
-
-  // Отправка email
-  const transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    auth: {
-      user: process.env.ETHEREAL_USER,
-      pass: process.env.ETHEREAL_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    from: '"DragonAuto" <no-reply@dragonauto.com>',
-    to: email,
-    subject: "Код восстановления пароля",
-    text: `Ваш код восстановления: ${code}. Он действителен в течение 10 минут.`,
-  });
-
-  console.log(`Код восстановления ${code} отправлен на ${email}`);
-  res.json({ message: "Код восстановления отправлен на email" });
 });
 
 // 🔐 Роут: Сброс пароля
