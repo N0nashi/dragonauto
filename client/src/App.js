@@ -11,8 +11,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
 
 // Импорт страницы создания заявки
-import CreateRequest from "./pages/CreateRequestPage";
-
+import CreateRequestPage from "./pages/CreateRequestPage";
 
 function App() {
   return (
@@ -27,7 +26,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/auth" element={<AuthPage />} />
           {/* Добавляем новый маршрут */}
-          <Route path="/create-request" element={<CreateRequest />} />
+          <Route path="/create-request" element={<CreateRequestPage />} />
         </Routes>
       </main>
       <Footer />
