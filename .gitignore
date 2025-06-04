@@ -1,0 +1,20 @@
+# Node.js dependencies
+node_modules/
+client/node_modules/
+backend/node_modules/
+
+# Build outputs
+client/build/
+backend/dist/
+
+# Uploads or temp files
+backend/uploads/
+
+# Logs
+*.log
+
+# Environment variables
+*.env
+
+# VSCode settings
+.vscode/
