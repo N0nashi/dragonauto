@@ -7,7 +7,7 @@ export default function MainFrame2() {
   const navigate = useNavigate();
 
   const cars = [
-    { id: 1, brand: "Toyota", model: "Camry", year: 2019, price: 2500000, photo_url: "/camry.webp" },
+    { id: 1, brand: "Toyota", model: "Camry", year: 2019, price: 2500000, photo_url: "url/camry.webp" },
     { id: 2, brand: "Honda", model: "Accord", year: 2020, price: 150000, photo_url: "/images/car-placeholder.png" },
     { id: 3, brand: "Kia", model: "Sportage", year: 2021, price: 1200000, photo_url: "/images/car-placeholder.png" },
     { id: 4, brand: "Hyundai", model: "Tucson", year: 2020, price: 1600000, photo_url: "/images/car-placeholder.png" },
