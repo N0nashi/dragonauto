@@ -30,6 +30,17 @@ const reviews = [
 
 export default function ReviewsCarousel() {
   const [activeIndex, setActiveIndex] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const updateIsMobile = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+
+  useEffect(() => {
+    updateIsMobile();
+    window.addEventListener("resize", updateIsMobile);
+    return () => window.removeEventListener("resize", updateIsMobile);
+  }, []);
 
   const next = () => {
     setActiveIndex((prev) => (prev + 1) % reviews.length);
@@ -54,6 +65,18 @@ export default function ReviewsCarousel() {
     return [reviews[left], reviews[center], reviews[right]];
   };
 
+  const renderCard = (item, highlight = false) => (
+    <div
+      key={item.id}
+      className={`w-80 bg-white border border-[#00355B] rounded-lg shadow-md text-[#00355B] p-6 transition-all duration-500 transform
+        ${highlight ? "scale-110 z-10 opacity-100 shadow-lg" : "scale-95 opacity-70"}
+      `}
+    >
+      <p className="mb-4 text-lg italic">&quot;{item.text}&quot;</p>
+      <p className="font-semibold text-right">— {item.author}</p>
+    </div>
+  );
+
   return (
     <section className="py-10 bg-[#00355B]">
       <div className="max-w-4xl mx-auto px-4">
@@ -61,35 +84,29 @@ export default function ReviewsCarousel() {
           Отзывы наших клиентов
         </h2>
 
-        <div className="flex items-center justify-center gap-4">
+        <div className="relative flex items-center justify-center">
           {/* Левая стрелка */}
           <button
             onClick={prev}
-            className="bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
+            className="absolute left-0 z-20 bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
             aria-label="Предыдущий отзыв"
           >
             &larr;
           </button>
 
           {/* Карточки */}
-          <div className="flex gap-6 justify-center items-center">
-            {getDisplayItems().map((item, idx) => (
-              <div
-                key={item.id}
-                className={`w-80 bg-white border border-[#00355B] rounded-lg shadow-md text-[#00355B] p-6 transition-all duration-500 transform
-                  ${idx === 1 ? "scale-110 z-10 opacity-100 shadow-lg" : "scale-95 opacity-70"}
-                `}
-              >
-                <p className="mb-4 text-lg italic">&quot;{item.text}&quot;</p>
-                <p className="font-semibold text-right">— {item.author}</p>
-              </div>
-            ))}
-          </div>
+          {isMobile ? (
+            <div className="w-full flex justify-center">{renderCard(reviews[activeIndex], true)}</div>
+          ) : (
+            <div className="flex gap-6 justify-center items-center">
+              {getDisplayItems().map((item, idx) => renderCard(item, idx === 1))}
+            </div>
+          )}
 
           {/* Правая стрелка */}
           <button
             onClick={next}
-            className="bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
+            className="absolute right-0 z-20 bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
             aria-label="Следующий отзыв"
           >
             &rarr;
