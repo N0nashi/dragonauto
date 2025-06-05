@@ -70,7 +70,7 @@ export default function MainFrame2() {
     </div>
   );
 
-  return (
+    return (
     <section className="py-10 bg-gray-100">
       <div className="max-w-6xl mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6 text-center">Рекомендуем</h2>
@@ -102,29 +102,43 @@ export default function MainFrame2() {
         </div>
 
         {/* Отображение карточек */}
-        {isMobile ? (
-          <div className="relative flex items-center justify-center">
-            <button
-              onClick={() => setActiveIndex((prev) => (prev - 1 + list.length) % list.length)}
-              className="absolute left-0 z-10 bg-white p-2 rounded-full shadow-md hover:bg-gray-100"
-            >
-              &larr;
-            </button>
+        <div className="relative flex items-center justify-center overflow-hidden">
+          <button
+            onClick={() => setActiveIndex((prev) => (prev - 1 + list.length) % list.length)}
+            className="absolute left-0 z-20 bg-white p-2 rounded-full shadow-md hover:bg-gray-100"
+          >
+            &larr;
+          </button>
 
+          {isMobile ? (
             <div className="w-full max-w-xs">{renderCard(list[activeIndex])}</div>
+          ) : (
+            <div className="flex gap-6 justify-center items-center">
+              {[-1, 0, 1].map((offset) => {
+                const index = (activeIndex + offset + list.length) % list.length;
+                const isCenter = offset === 0;
+                return (
+                  <div
+                    key={index}
+                    className={`transition-all duration-300 ${
+                      isCenter ? "scale-105 z-10" : "opacity-50"
+                    }`}
+                    style={{ flexShrink: 0, width: "300px" }}
+                  >
+                    {renderCard(list[index])}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-            <button
-              onClick={() => setActiveIndex((prev) => (prev + 1) % list.length)}
-              className="absolute right-0 z-10 bg-white p-2 rounded-full shadow-md hover:bg-gray-100"
-            >
-              &rarr;
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-            {list.map((item) => renderCard(item))}
-          </div>
-        )}
+          <button
+            onClick={() => setActiveIndex((prev) => (prev + 1) % list.length)}
+            className="absolute right-0 z-20 bg-white p-2 rounded-full shadow-md hover:bg-gray-100"
+          >
+            &rarr;
+          </button>
+        </div>
 
         {/* Кнопка в каталог */}
         <div className="mt-10 text-center">
@@ -138,4 +152,5 @@ export default function MainFrame2() {
       </div>
     </section>
   );
+
 }
