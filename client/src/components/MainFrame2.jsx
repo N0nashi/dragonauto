@@ -7,13 +7,13 @@ export default function MainFrame2() {
   const navigate = useNavigate();
 
   const cars = [
-    { id: 1, brand: "Toyota", model: "Camry", year: 2019, price: 850000, photo_url: "/images/car-placeholder.png" },
-    { id: 2, brand: "Honda", model: "Accord", year: 2020, price: 920000, photo_url: "/images/car-placeholder.png" },
+    { id: 1, brand: "Toyota", model: "Camry", year: 2019, price: 2500000, photo_url: "/camry.webp" },
+    { id: 2, brand: "Honda", model: "Accord", year: 2020, price: 150000, photo_url: "/images/car-placeholder.png" },
     { id: 3, brand: "Kia", model: "Sportage", year: 2021, price: 1200000, photo_url: "/images/car-placeholder.png" },
-    { id: 4, brand: "Hyundai", model: "Tucson", year: 2020, price: 1100000, photo_url: "/images/car-placeholder.png" },
-    { id: 5, brand: "Mazda", model: "CX-5", year: 2022, price: 1300000, photo_url: "/images/car-placeholder.png" },
-    { id: 6, brand: "Nissan", model: "Qashqai", year: 2018, price: 700000, photo_url: "/images/car-placeholder.png" },
-    { id: 7, brand: "Lada", model: "Granta", year: 2021, price: 550000, photo_url: "/images/car-placeholder.png" }
+    { id: 4, brand: "Hyundai", model: "Tucson", year: 2020, price: 1600000, photo_url: "/images/car-placeholder.png" },
+    { id: 5, brand: "Mazda", model: "CX-5", year: 2022, price: 1700000, photo_url: "/images/car-placeholder.png" },
+    { id: 6, brand: "Nissan", model: "Qashqai", year: 2018, price: 1300000, photo_url: "/images/car-placeholder.png" },
+    { id: 7, brand: "Haval", model: "Jolion", year: 2024, price: 2550000, photo_url: "/images/car-placeholder.png" }
   ];
 
   const parts = [
