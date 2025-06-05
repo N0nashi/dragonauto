@@ -2,9 +2,26 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function MainFrame2() {
-  const [activeIndex, setActiveIndex] = useState(1);
   const [tab, setTab] = useState("cars");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % list.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isMobile, activeIndex, tab]);
 
   const cars = [
     { id: 1, brand: "Toyota", model: "Camry", year: 2019, price: 2500000, photo_url: "/camry.webp" },
@@ -26,28 +43,32 @@ export default function MainFrame2() {
 
   const list = tab === "cars" ? cars : parts;
 
-  const next = () => {
-    setActiveIndex((prev) => (prev + 1) % list.length);
-  };
-
-  const prev = () => {
-    setActiveIndex((prev) => (prev - 1 + list.length) % list.length);
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      next();
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [list, activeIndex]);
-
-  const getDisplayItems = () => {
-    const total = list.length;
-    const center = activeIndex;
-    const left = (center - 1 + total) % total;
-    const right = (center + 1) % total;
-    return [list[left], list[center], list[right]];
-  };
+  const renderCard = (item) => (
+    <div
+      key={item.id}
+      className="bg-[#00355B] border border-gray-200 rounded-lg shadow-md overflow-hidden flex-shrink-0 w-full sm:w-72"
+    >
+      <img
+        src={item.photo_url}
+        alt={item.name || `${item.brand} ${item.model}`}
+        className="w-full h-40 object-cover"
+      />
+      <div className="p-4 text-white">
+        {tab === "cars" ? (
+          <>
+            <h3 className="font-semibold text-lg">{item.brand} {item.model}</h3>
+            <p className="text-sm text-gray-300">Год: {item.year}</p>
+            <p className="text-white font-bold mt-2">от {item.price.toLocaleString()} ₽</p>
+          </>
+        ) : (
+          <>
+            <h3 className="font-semibold text-lg">{item.name}</h3>
+            <p className="text-white font-bold mt-2">от {item.price.toLocaleString()} ₽</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <section className="py-10 bg-gray-100">
@@ -57,7 +78,10 @@ export default function MainFrame2() {
         {/* Переключатель */}
         <div className="flex justify-center mb-8 space-x-4">
           <button
-            onClick={() => setTab("cars")}
+            onClick={() => {
+              setTab("cars");
+              setActiveIndex(0);
+            }}
             className={`px-4 py-2 rounded-full font-medium ${
               tab === "cars" ? "bg-[#00355B] text-white" : "bg-white text-gray-700 border"
             }`}
@@ -65,7 +89,10 @@ export default function MainFrame2() {
             Популярные автомобили
           </button>
           <button
-            onClick={() => setTab("parts")}
+            onClick={() => {
+              setTab("parts");
+              setActiveIndex(0);
+            }}
             className={`px-4 py-2 rounded-full font-medium ${
               tab === "parts" ? "bg-[#00355B] text-white" : "bg-white text-gray-700 border"
             }`}
@@ -74,52 +101,30 @@ export default function MainFrame2() {
           </button>
         </div>
 
-        {/* Карусель */}
-        <div className="relative flex items-center justify-center">
-          <button
-            onClick={prev}
-            className="absolute left-2 md:left-0 z-10 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
-          >
-            &larr;
-          </button>
+        {/* Отображение карточек */}
+        {isMobile ? (
+          <div className="relative flex items-center justify-center">
+            <button
+              onClick={() => setActiveIndex((prev) => (prev - 1 + list.length) % list.length)}
+              className="absolute left-0 z-10 bg-white p-2 rounded-full shadow-md hover:bg-gray-100"
+            >
+              &larr;
+            </button>
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center w-full px-2">
-            {getDisplayItems().map((item, idx) => (
-              <div
-                key={item.id}
-                className={`w-full max-w-xs bg-[#00355B] border border-gray-200 rounded-lg shadow-md transition-all duration-500 transform 
-                  ${idx === 1 ? "scale-105 z-10 opacity-100 shadow-lg" : "scale-95 opacity-60"}`}
-              >
-                <img
-                  src={item.photo_url}
-                  alt={item.name || `${item.brand} ${item.model}`}
-                  className="w-full h-40 sm:h-48 object-cover rounded-t-lg"
-                />
-                <div className="p-4 text-white">
-                  {tab === "cars" ? (
-                    <>
-                      <h3 className="font-semibold text-lg">{item.brand} {item.model}</h3>
-                      <p className="text-sm text-gray-300">Год: {item.year}</p>
-                      <p className="text-white font-bold mt-2">от {item.price.toLocaleString()} ₽</p>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="font-semibold text-lg">{item.name}</h3>
-                      <p className="text-white font-bold mt-2">от {item.price.toLocaleString()} ₽</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
+            <div className="w-full max-w-xs">{renderCard(list[activeIndex])}</div>
+
+            <button
+              onClick={() => setActiveIndex((prev) => (prev + 1) % list.length)}
+              className="absolute right-0 z-10 bg-white p-2 rounded-full shadow-md hover:bg-gray-100"
+            >
+              &rarr;
+            </button>
           </div>
-
-          <button
-            onClick={next}
-            className="absolute right-2 md:right-0 z-10 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
-          >
-            &rarr;
-          </button>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+            {list.map((item) => renderCard(item))}
+          </div>
+        )}
 
         {/* Кнопка в каталог */}
         <div className="mt-10 text-center">
