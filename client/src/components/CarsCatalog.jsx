@@ -152,7 +152,7 @@ const CarsCatalog = () => {
   );
 
   const renderCarImage = (car) => {
-    const placeholder = "/images/car-placeholder.png";
+    
     const photoUrl = car.photo_url;
     const src = photoUrl?.startsWith("http")
       ? photoUrl
@@ -161,12 +161,10 @@ const CarsCatalog = () => {
       gridCols === 3 ? "h-64" : gridCols === 6 ? "h-48" : "h-40";
     return (
       <img
-        src={photoUrl ? src : placeholder}
+        src={photoUrl }
         alt={`${car.brand} ${car.model}`}
         className={`w-full ${heightClass} object-cover rounded-t`}
-        onError={(e) => {
-          e.target.src = placeholder;
-        }}
+        
       />
     );
   };
