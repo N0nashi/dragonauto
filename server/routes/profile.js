@@ -103,6 +103,7 @@ router.put("/avatar", authMiddleware, async (req, res) => {
 
 // Отправка кода для изменения email
 router.post("/request-email-change", authMiddleware, async (req, res) => {
+  console.log("POST /request-email-change called");
   try {
     const userId = req.userId;
     const currentUser = await getUserById(userId);
