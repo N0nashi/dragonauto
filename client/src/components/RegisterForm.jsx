@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const RegisterForm = ({ setMessage, onRegisterSuccess }) => {
+const RegisterForm = ({ onRegisterSuccess }) => {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -19,7 +21,7 @@ const RegisterForm = ({ setMessage, onRegisterSuccess }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setMessage("Размер файла не должен превышать 5MB");
+        toast.error("Размер файла не должен превышать 5MB");
         return;
       }
       setAvatar(file);
@@ -28,23 +30,29 @@ const RegisterForm = ({ setMessage, onRegisterSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+
+    // Проверка обязательных полей
+    if (!form.first_name || !form.last_name) {
+      toast.error("Имя и фамилия обязательны для заполнения");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const formData = new FormData();
-      formData.append("first_name", form.first_name);
-      formData.append("last_name", form.last_name);
-      formData.append("email", form.email);
+      formData.append("first_name", form.first_name.trim());
+      formData.append("last_name", form.last_name.trim());
+      formData.append("email", form.email.trim());
       formData.append("password", form.password);
 
       if (avatar) {
-        formData.append("file", avatar); // имя поля должно быть "file", как в uploadMiddleware
+        formData.append("file", avatar); // как ожидает uploadMiddleware
       }
 
       const response = await fetch(`https://dragonauto74.ru/api/register?folder=avatars`, {
         method: "POST",
-        body: formData, // не указываем Content-Type вручную
+        body: formData,
       });
 
       const data = await response.json();
@@ -53,11 +61,11 @@ const RegisterForm = ({ setMessage, onRegisterSuccess }) => {
         throw new Error(data.error || "Ошибка регистрации");
       }
 
+      toast.success("Регистрация успешна!");
       onRegisterSuccess(data.token);
-      setMessage("Регистрация успешна!");
     } catch (err) {
       console.error(err);
-      setMessage(err.message || "Ошибка регистрации");
+      toast.error(err.message || "Ошибка регистрации");
     } finally {
       setLoading(false);
     }

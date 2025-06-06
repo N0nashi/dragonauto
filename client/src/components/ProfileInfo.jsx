@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ProfileInfo() {
   const [profile, setProfile] = useState({
@@ -7,13 +9,15 @@ export default function ProfileInfo() {
     email: "",
     avatarUrl: "https://i.pravatar.cc/150?img=12",
   });
-
   const [newEmail, setNewEmail] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [isEmailStep, setIsEmailStep] = useState(false); // true — ввод кода
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [notification, setNotification] = useState({ message: "", type: "" });
 
+  const [notification, setNotification] = useState({ message: "", type: "" });
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState({
     firstName: "",
@@ -32,10 +36,9 @@ export default function ProfileInfo() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Пользователь не авторизован");
+      toast.error("Пользователь не авторизован");
       return;
     }
-
     fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -58,7 +61,7 @@ export default function ProfileInfo() {
       })
       .catch((err) => {
         console.error(err);
-        alert("Не удалось загрузить профиль");
+        toast.error("Не удалось загрузить профиль");
       });
   }, []);
 
@@ -69,11 +72,40 @@ export default function ProfileInfo() {
     }, 5000);
   }, []);
 
-  const handleEmailChange = async (e) => {
+  // Шаг 1: запрос отправки кода для изменения email
+  const handleSendEmailCode = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     if (!token || !newEmail) {
       showNotification("Введите новый email", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/request-email-change`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ new_email: newEmail }),
+      });
+
+      if (!res.ok) throw new Error("Ошибка при отправке кода");
+
+      setIsEmailStep(true);
+      showNotification("Код отправлен на текущий email", "success");
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  // Шаг 2: проверка кода и изменение email
+  const handleVerifyEmailCode = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token || !emailCode) {
+      showNotification("Введите код", "error");
       return;
     }
 
@@ -84,12 +116,16 @@ export default function ProfileInfo() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: newEmail }),
+        body: JSON.stringify({ email: newEmail, code: emailCode }),
       });
-      if (!res.ok) throw new Error("Ошибка при обновлении email");
+
+      if (!res.ok) throw new Error("Неверный или истёкший код");
+
       setProfile((prev) => ({ ...prev, email: newEmail }));
       setNewEmail("");
-      showNotification("Email успешно обновлен", "success");
+      setEmailCode("");
+      setIsEmailStep(false);
+      showNotification("Email успешно изменён", "success");
     } catch (err) {
       showNotification(err.message, "error");
     }
@@ -106,7 +142,6 @@ export default function ProfileInfo() {
       showNotification("Новый пароль и подтверждение не совпадают", "error");
       return;
     }
-
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/password`, {
         method: "PUT",
@@ -134,11 +169,9 @@ export default function ProfileInfo() {
 
   const handleFileUpload = async () => {
     if (!selectedFile) return editProfile.avatarUrl;
-
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("file", selectedFile);
-
     const res = await fetch(`${process.env.REACT_APP_API_URL}/api/upload?folder=avatars`, {
       method: "POST",
       headers: {
@@ -146,11 +179,9 @@ export default function ProfileInfo() {
       },
       body: formData,
     });
-
     if (!res.ok) {
       throw new Error("Ошибка при загрузке изображения");
     }
-
     const data = await res.json();
     return data.url; // URL для сохранения в профиле
   };
@@ -162,15 +193,13 @@ export default function ProfileInfo() {
       showNotification("Пользователь не авторизован", "error");
       return;
     }
-
     try {
       const uploadedUrl = await handleFileUpload();
       const bodyData = {
-        first_name: editProfile.firstName,
-        last_name: editProfile.lastName,
+        first_name: editProfile.firstName.trim(),
+        last_name: editProfile.lastName.trim(),
         photo_url: uploadedUrl,
       };
-
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
         method: "PUT",
         headers: {
@@ -179,12 +208,10 @@ export default function ProfileInfo() {
         },
         body: JSON.stringify(bodyData),
       });
-
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.message || "Ошибка при обновлении профиля");
       }
-
       setProfile({ ...editProfile, avatarUrl: uploadedUrl });
       setIsEditing(false);
       setSelectedFile(null);
@@ -194,8 +221,7 @@ export default function ProfileInfo() {
     }
   };
 
-  // Вынесем формы в отдельные мемоизированные компоненты, чтобы минимизировать перерендеры
-
+  // Компоненты форм
   const ProfileCard = React.useMemo(() => (
     <section className="border border-gray-300 rounded shadow-sm bg-white p-4 max-w-md w-full mx-auto md:mx-0">
       <div className="flex flex-col items-center mb-6">
@@ -218,7 +244,6 @@ export default function ProfileInfo() {
             />
           )}
         </div>
-
         {isEditing ? (
           <>
             <input
@@ -286,25 +311,45 @@ export default function ProfileInfo() {
   const EmailChangeCard = React.useMemo(() => (
     <section className="bg-white border border-gray-300 rounded shadow-sm p-4 mb-6 max-w-lg w-full mx-auto md:mx-0">
       <h3 className="text-lg font-semibold mb-4">Смена электронной почты</h3>
-      <form onSubmit={handleEmailChange} className="flex flex-col gap-2" autoComplete="off">
-        <input
-          type="email"
-          placeholder="Новый email"
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          autoComplete="off"
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white rounded py-1 hover:bg-blue-700 transition"
-        >
-          Обновить email
-        </button>
-      </form>
+      {!isEmailStep ? (
+        <form onSubmit={handleSendEmailCode} className="flex flex-col gap-2" autoComplete="off">
+          <input
+            type="email"
+            placeholder="Новый email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+            autoComplete="off"
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white rounded py-1 hover:bg-blue-700 transition"
+          >
+            Отправить код
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleVerifyEmailCode} className="flex flex-col gap-2" autoComplete="off">
+          <input
+            type="text"
+            placeholder="Код из письма"
+            value={emailCode}
+            onChange={(e) => setEmailCode(e.target.value)}
+            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+            autoComplete="off"
+          />
+          <button
+            type="submit"
+            className="bg-green-600 text-white rounded py-1 hover:bg-green-700 transition"
+          >
+            Подтвердить код
+          </button>
+        </form>
+      )}
     </section>
-  ), [newEmail]);
+  ), [newEmail, emailCode, isEmailStep]);
 
   const PasswordChangeCard = React.useMemo(() => (
     <section className="bg-white border border-gray-300 rounded shadow-sm p-4 max-w-lg w-full mx-auto md:mx-0">
@@ -349,6 +394,7 @@ export default function ProfileInfo() {
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={3000} />
       {notification.message && (
         <div
           className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded shadow-md font-semibold z-50 ${
