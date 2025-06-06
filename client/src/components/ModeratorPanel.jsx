@@ -25,7 +25,7 @@ const ModeratorPanel = () => {
       return;
     }
 
-    fetch(`https://dragonauto-backend.onrender.com/api/applications/all`, {
+    fetch(`http://195.133.147.185:5000/api/applications/all`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
