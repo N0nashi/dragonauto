@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const allGridOptions = [3, 6, 9];
+const allGridOptions = [3, 6];
 
 const CarsCatalog = () => {
   const [filters, setFilters] = useState(null);
@@ -11,7 +13,7 @@ const CarsCatalog = () => {
   const [error, setError] = useState(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [gridCols, setGridCols] = useState(3);
-  const [availableGridOptions, setAvailableGridOptions] = useState([3, 6, 9]);
+  const [availableGridOptions, setAvailableGridOptions] = useState([3, 6]);
   const [isPortrait, setIsPortrait] = useState(
     window.matchMedia("(orientation: portrait)").matches
   );
@@ -61,7 +63,10 @@ const CarsCatalog = () => {
   }, []);
 
   useEffect(() => {
-    if (availableGridOptions.length > 0 && !availableGridOptions.includes(gridCols)) {
+    if (
+      availableGridOptions.length > 0 &&
+      !availableGridOptions.includes(gridCols)
+    ) {
       setGridCols(availableGridOptions[0]);
     }
   }, [availableGridOptions]);
@@ -70,7 +75,9 @@ const CarsCatalog = () => {
   useEffect(() => {
     const loadFilters = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cars/filters`);
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/cars/filters`
+        );
         if (!response.ok) throw new Error("Failed to load filters");
         const data = await response.json();
         setFilters(data);
@@ -89,11 +96,14 @@ const CarsCatalog = () => {
     const loadCars = async () => {
       setLoadingCars(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cars/search`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(selectedFilters),
-        });
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/cars/search`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(selectedFilters),
+          }
+        );
         if (!response.ok) throw new Error("Failed to load cars");
         const data = await response.json();
         setCars(data);
@@ -108,7 +118,7 @@ const CarsCatalog = () => {
   }, [selectedFilters]);
 
   const handleFilterChange = (key, value) => {
-    setSelectedFilters(prev => ({ ...prev, [key]: value }));
+    setSelectedFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const renderFilterSelect = (label, key, options) => (
@@ -169,7 +179,10 @@ const CarsCatalog = () => {
 
   const createRequest = async (car) => {
     if (!currentUserId) {
-      alert("Пожалуйста, войдите в систему, чтобы создать заявку.");
+      toast.info("Пожалуйста, войдите в систему, чтобы создать заявку.");
+      setTimeout(() => {
+        window.location.href = "/auth"; // Перенаправление на страницу авторизации
+      }, 2000);
       return;
     }
 
@@ -188,19 +201,20 @@ const CarsCatalog = () => {
         gearbox_car: car.gearbox,
         body_car: car.body,
         drive_car: car.drive ? [car.drive] : null,
-        car_power: car.engine_power?.toString()
+        car_power: car.engine_power?.toString(),
       };
 
-      console.log("Отправка данных заявки:", requestData);
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/applications`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -208,125 +222,124 @@ const CarsCatalog = () => {
       }
 
       const data = await response.json();
-      alert(`Заявка №${data.applicationId} успешно создана!`);
+      toast.success(`Заявка №${data.applicationId} успешно создана!`);
     } catch (error) {
       console.error("Ошибка при создании заявки:", error);
-      alert(`Ошибка: ${error.message}`);
+      toast.error(`Ошибка: ${error.message}`);
     }
   };
 
   return (
-    <div className="flex flex-col lg:flex-row p-4 gap-6">
-      {/* Блок фильтров */}
-      <aside className="w-full md:w-64 bg-white border rounded p-4 h-fit shadow">
-        <h2 className="font-bold text-lg mb-4">Фильтры</h2>
-        
-        {loadingFilters ? (
-          <p>Загрузка фильтров...</p>
-        ) : error ? (
-          <p className="text-red-600">{error}</p>
-        ) : (
-          <>
-            {renderFilterSelect("Страна", "country", filters?.countries)}
-            {renderFilterSelect("Марка", "brand", filters?.brands)}
-            {renderFilterSelect("Модель", "model", filters?.models)}
+    <>
+      <div className="flex flex-col lg:flex-row p-4 gap-6">
+        {/* Блок фильтров */}
+        <aside className="w-full md:w-64 bg-white border rounded p-4 h-fit shadow">
+          <h2 className="font-bold text-lg mb-4">Фильтры</h2>
+          {loadingFilters ? (
+            <p>Загрузка фильтров...</p>
+          ) : error ? (
+            <p className="text-red-600">{error}</p>
+          ) : (
+            <>
+              {renderFilterSelect("Страна", "country", filters?.countries)}
+              {renderFilterSelect("Марка", "brand", filters?.brands)}
+              {renderFilterSelect("Модель", "model", filters?.models)}
+              {showAdvancedFilters && (
+                <>
+                  {renderRangeInput("Год выпуска", "year_from", "year_to")}
+                  {renderRangeInput("Цена (₽)", "price_from", "price_to")}
+                  {renderRangeInput("Пробег (км)", "mileage_from", "mileage_to")}
+                  {renderFilterSelect("Коробка передач", "gearbox", filters?.gearboxes)}
+                  {renderFilterSelect("Привод", "drive", filters?.drives)}
+                  {renderFilterSelect("Кузов", "body", filters?.bodies)}
+                </>
+              )}
+              <button
+                className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
+                onClick={() =>
+                  setShowAdvancedFilters((prev) => !prev)
+                }
+              >
+                {showAdvancedFilters
+                  ? "Скрыть дополнительные фильтры"
+                  : "Показать дополнительные фильтры"}
+              </button>
+            </>
+          )}
+        </aside>
 
-            {showAdvancedFilters && (
-              <>
-                {renderRangeInput("Год выпуска", "year_from", "year_to")}
-                {renderRangeInput("Цена (₽)", "price_from", "price_to")}
-                {renderRangeInput("Пробег (км)", "mileage_from", "mileage_to")}
-                {renderFilterSelect("Коробка передач", "gearbox", filters?.gearboxes)}
-                {renderFilterSelect("Привод", "drive", filters?.drives)}
-                {renderFilterSelect("Кузов", "body", filters?.bodies)}
-              </>
+        {/* Основной контент */}
+        <main className="flex-1">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-xl">Автомобили ({cars.length})</h2>
+            {availableGridOptions.length > 0 && (
+              <div className="flex gap-2">
+                {availableGridOptions.map((cols) => (
+                  <button
+                    key={cols}
+                    className={`px-3 py-1 border rounded transition ${
+                      gridCols === cols
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-blue-600 hover:bg-blue-50"
+                    }`}
+                    onClick={() => setGridCols(cols)}
+                  >
+                    {cols}
+                  </button>
+                ))}
+              </div>
             )}
-
-            <button
-              className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
-              onClick={() => setShowAdvancedFilters(prev => !prev)}
+          </div>
+          {loadingCars ? (
+            <p>Загрузка автомобилей...</p>
+          ) : error ? (
+            <p className="text-red-600">{error}</p>
+          ) : cars.length === 0 ? (
+            <p className="text-gray-500">По вашему запросу автомобилей не найдено</p>
+          ) : (
+            <div
+              className={`grid gap-6 ${
+                gridCols === 1
+                  ? "grid-cols-1"
+                  : gridCols === 2
+                  ? "grid-cols-2"
+                  : gridCols === 3
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                  : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+              }`}
             >
-              {showAdvancedFilters
-                ? "Скрыть дополнительные фильтры"
-                : "Показать дополнительные фильтры"}
-            </button>
-          </>
-        )}
-      </aside>
-
-      {/* Основной контент */}
-      <main className="flex-1">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-bold text-xl">Автомобили ({cars.length})</h2>
-
-          {availableGridOptions.length > 0 && (
-            <div className="flex gap-2">
-              {availableGridOptions.map(cols => (
-                <button
-                  key={cols}
-                  className={`px-3 py-1 border rounded transition ${
-                    gridCols === cols
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-blue-600 hover:bg-blue-50"
-                  }`}
-                  onClick={() => setGridCols(cols)}
+              {cars.map((car) => (
+                <div
+                  key={car.id}
+                  className="border rounded shadow hover:shadow-lg transition flex flex-col"
                 >
-                  {cols}
-                </button>
+                  {renderCarImage(car)}
+                  <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="font-semibold text-lg mb-1">
+                      {car.brand} {car.model}
+                    </h3>
+                    <p className="text-sm mb-2">
+                      {car.year} год · {car.mileage?.toLocaleString() || "—"} км
+                    </p>
+                    <p className="text-lg font-bold mb-3">
+                      {car.price?.toLocaleString() || "—"} ₽
+                    </p>
+                    <button
+                      onClick={() => createRequest(car)}
+                      className="mt-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+                    >
+                      Подобрать
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
-        </div>
+        </main>
+      </div>
 
-        {loadingCars ? (
-          <p>Загрузка автомобилей...</p>
-        ) : error ? (
-          <p className="text-red-600">{error}</p>
-        ) : cars.length === 0 ? (
-          <p className="text-gray-500">По вашему запросу автомобилей не найдено</p>
-        ) : (
-          <div
-            className={`grid gap-6 ${
-              gridCols === 1
-                ? "grid-cols-1"
-                : gridCols === 2
-                ? "grid-cols-2"
-                : gridCols === 3
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                : gridCols === 6
-                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-                : "grid-cols-3 md:grid-cols-6 lg:grid-cols-9"
-            }`}
-          >
-            {cars.map(car => (
-              <div
-                key={car.id}
-                className="border rounded shadow hover:shadow-lg transition flex flex-col"
-              >
-                {renderCarImage(car)}
-                <div className="p-4 flex flex-col flex-grow">
-                  <h3 className="font-semibold text-lg mb-1">
-                    {car.brand} {car.model}
-                  </h3>
-                  <p className="text-sm mb-2">
-                    {car.year} год · {car.mileage?.toLocaleString() || '—'} км
-                  </p>
-                  <p className="text-lg font-bold mb-3">
-                    {car.price?.toLocaleString() || '—'} ₽
-                  </p>
-                  <button
-                    onClick={() => createRequest(car)}
-                    className="mt-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-                  >
-                    Подобрать
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+      <ToastContainer position="top-right" autoClose={3000} />
+    </>
   );
 };
 
