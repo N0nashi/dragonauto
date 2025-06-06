@@ -100,7 +100,9 @@ router.put("/avatar", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
-
+router.get("/hueta", authMiddleware, async (req, res) => {
+res.json({ message: 'PISDA NAHU' });
+});
 // Отправка кода для изменения email
 router.put("/request-email-change", authMiddleware, async (req, res) => {
 res.json({ message: 'Test route works!' });
