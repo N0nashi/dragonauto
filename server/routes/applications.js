@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
-
+const isModerator = require("../middleware/isModerator");
 // Функция для безопасного преобразования строки в массив
 function parseToArray(value) {
   if (!value) return [];
