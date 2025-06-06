@@ -106,9 +106,11 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
     const currentUser = await getUserById(userId);
-    if (!currentUser) return res.status(404).json({ error: "Пользователь не найден" });
-    console.log("Отправляем код:", code);
-    console.log("На email:", currentUser.email);
+    
+    if (!currentUser) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = Date.now() + 10 * 60 * 1000; // 10 минут
 
@@ -116,10 +118,11 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
     await db.query("DELETE FROM password_resets WHERE email = $1", [currentUser.email]);
 
     // Сохраняем новый код
-    await db.query(`
-      INSERT INTO password_resets (email, code, expires_at)
-      VALUES ($1, $2, to_timestamp($3 / 1000.0))
-    `, [currentUser.email, code, expires]);
+    await db.query(
+      `INSERT INTO password_resets (email, code, expires_at)
+       VALUES ($1, $2, to_timestamp($3 / 1000.0))`,
+      [currentUser.email, code, expires]
+    );
 
     // Настройка SMTP Яндекс
     const transporter = nodemailer.createTransport({
@@ -139,16 +142,32 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
     await transporter.sendMail({
       from: `"DragonAuto" <${process.env.YANDEX_EMAIL}>`,
       to: currentUser.email,
-      subject: "Код изменения email",
-      text: `Ваш код для изменения email: ${code}. Он действителен в течение 10 минут.`,
+      subject: "Код подтверждения смены email",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Подтверждение смены email</h2>
+          <p>Ваш код подтверждения:</p>
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 4px; font-size: 24px; font-weight: bold; text-align: center; margin: 16px 0;">
+            ${code}
+          </div>
+          <p>Этот код действителен в течение 10 минут.</p>
+          <p style="color: #6b7280; font-size: 14px;">Если вы не запрашивали смену email, проигнорируйте это письмо.</p>
+        </div>
+      `,
     });
 
-    console.log(`Код изменения email ${code} отправлен на ${currentUser.email}`);
-    res.json({ message: "Код изменения email отправлен на вашу почту" });
+    console.log(`Код подтверждения ${code} отправлен на ${currentUser.email}`);
+    res.json({ 
+      message: "Код подтверждения отправлен на вашу текущую почту",
+      email: currentUser.email // Отправляем email для информации
+    });
 
   } catch (error) {
-    console.error("Ошибка отправки кода изменения email:", error);
-    res.status(500).json({ error: "Ошибка сервера" });
+    console.error("Ошибка отправки кода подтверждения:", error);
+    res.status(500).json({ 
+      error: "Произошла ошибка при отправке кода подтверждения",
+      details: error.message 
+    });
   }
 });
 
@@ -156,61 +175,77 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
 router.put("/email", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
-    const { email, code } = req.body;
+    let { newEmail, code } = req.body;
 
-    if (!email || typeof email !== "string") {
-      return res.status(400).json({ error: "Email обязателен и должен быть строкой" });
+    // Валидация
+    if (!newEmail || typeof newEmail !== "string") {
+      return res.status(400).json({ error: "Новый email обязателен" });
     }
     if (!code || typeof code !== "string") {
-      return res.status(400).json({ error: "Код обязателен и должен быть строкой" });
+      return res.status(400).json({ error: "Код подтверждения обязателен" });
     }
 
-    email = email.trim();
-    if (!isValidEmail(email)) {
+    newEmail = newEmail.trim().toLowerCase();
+    if (!isValidEmail(newEmail)) {
       return res.status(400).json({ error: "Неверный формат email" });
     }
 
     const currentUser = await getUserById(userId);
-    if (!currentUser) return res.status(404).json({ error: "Пользователь не найден" });
+    if (!currentUser) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
 
     // Проверяем код
     const result = await db.query(
-      "SELECT * FROM password_resets WHERE email = $1 AND code = $2 ORDER BY created_at DESC LIMIT 1",
+      `SELECT * FROM password_resets 
+       WHERE email = $1 AND code = $2 
+       ORDER BY created_at DESC LIMIT 1`,
       [currentUser.email, code]
     );
 
-    const entry = result.rows[0];
-
-    if (!entry) {
-      return res.status(400).json({ error: "Неверный код" });
+    const resetEntry = result.rows[0];
+    if (!resetEntry) {
+      return res.status(400).json({ error: "Неверный код подтверждения" });
     }
 
-    if (new Date(entry.expires_at) < new Date()) {
+    if (new Date(resetEntry.expires_at) < new Date()) {
       return res.status(400).json({ error: "Срок действия кода истёк" });
     }
 
-    // Проверяем, занят ли новый email
+    // Проверяем, не занят ли новый email
     const emailCheck = await db.query(
-      `SELECT id FROM users WHERE email = $1 AND id != $2`,
-      [email, userId]
+      `SELECT id FROM users WHERE email = $1`,
+      [newEmail]
     );
 
     if (emailCheck.rows.length > 0) {
-      return res.status(400).json({ error: "Данный email уже используется" });
+      return res.status(400).json({ error: "Этот email уже используется" });
     }
 
     // Обновляем email
-    await db.query(`UPDATE users SET email = $1 WHERE id = $2`, [email, userId]);
+    await db.query(
+      `UPDATE users SET email = $1 WHERE id = $2`,
+      [newEmail, userId]
+    );
 
-    // Опционально: удаляем использованный код
-    await db.query("DELETE FROM password_resets WHERE email = $1", [currentUser.email]);
+    // Удаляем использованный код
+    await db.query(
+      `DELETE FROM password_resets WHERE email = $1`,
+      [currentUser.email]
+    );
 
     const updatedUser = await getUserById(userId);
-    res.json({ message: "Email успешно обновлён", user: updatedUser });
+    res.json({ 
+      message: "Email успешно изменён",
+      user: updatedUser 
+    });
 
   } catch (error) {
-    console.error("PUT /profile/email error:", error);
-    res.status(500).json({ error: "Ошибка сервера" });
+    console.error("Ошибка при обновлении email:", error);
+    res.status(500).json({ 
+      error: "Ошибка при обновлении email",
+      details: error.message 
+    });
   }
 });
 
