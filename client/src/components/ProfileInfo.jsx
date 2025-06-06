@@ -406,7 +406,6 @@ export default function ProfileInfo() {
           {notification.message}
         </div>
       )}
-
       <main className="p-4 flex flex-col items-center gap-6 max-w-4xl mx-auto md:flex-row md:items-start md:justify-between">
         {ProfileCard}
         <div className="flex flex-col gap-6 flex-grow">
