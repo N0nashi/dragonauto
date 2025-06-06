@@ -25,7 +25,7 @@ const ModeratorPanel = () => {
       return;
     }
 
-    fetch(`http://195.133.147.185:5000/api/applications/all`, {
+    fetch(`https://dragonauto74.ru/api/applications/all`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

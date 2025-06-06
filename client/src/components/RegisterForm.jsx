@@ -42,7 +42,7 @@ const RegisterForm = ({ setMessage, onRegisterSuccess }) => {
         formData.append("file", avatar); // имя поля должно быть "file", как в uploadMiddleware
       }
 
-      const response = await fetch(`http://195.133.147.185:5000/api/register?folder=avatars`, {
+      const response = await fetch(`https://dragonauto74.ru/api/register?folder=avatars`, {
         method: "POST",
         body: formData, // не указываем Content-Type вручную
       });
