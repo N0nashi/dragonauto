@@ -102,7 +102,7 @@ router.put("/avatar", authMiddleware, async (req, res) => {
 });
 
 // Отправка кода для изменения email
-router.post("/request-email-change", authMiddleware, async (req, res) => {
+router.put("/request-email-change", authMiddleware, async (req, res) => {
 res.json({ message: 'Test route works!' });
 });
 // Обновление email с использованием кода
