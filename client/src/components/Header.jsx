@@ -18,14 +18,20 @@ export default function Header() {
 
   return (
     <header className="bg-[#00355B] shadow-md flex items-center h-14 px-4 relative">
+      {/* Логотип с ссылкой на главную */}
       <div className="flex-shrink-0">
-        <img
-          src={process.env.PUBLIC_URL + "/DA.svg"}
-          alt="Logo"
-          className="h-8 w-8"
-        />
+        <Link to="/" onClick={handleLinkClick}>
+          <img
+            src={process.env.PUBLIC_URL + "/DA.svg"}
+            alt="Logo"
+            className="h-8 w-8"
+          />
+        </Link>
       </div>
+
       <div className="flex-grow" />
+
+      {/* Десктопное меню */}
       <nav className="hidden md:flex space-x-8 text-white font-medium mr-4 lg:mr-8">
         <Link to="/" className="hover:text-blue-400" onClick={handleLinkClick}>
           Главная
@@ -41,6 +47,8 @@ export default function Header() {
           Вопросы
         </Link>
       </nav>
+
+      {/* Каталог и авторизация (десктоп) */}
       <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
         <Link
           to="/catalog"
@@ -53,13 +61,12 @@ export default function Header() {
           <>
             <Link
               to="/profile"
-              aria-label="Профиль"
-              className="focus:outline-none"
+              className="flex items-center space-x-1 text-white hover:text-blue-400 transition"
               onClick={handleLinkClick}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8 text-white hover:text-blue-400 transition"
+                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -71,6 +78,7 @@ export default function Header() {
                   d="M5.121 17.804A7.966 7.966 0 0112 15a7.966 7.966 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
+              <span>Профиль</span>
             </Link>
             <button
               onClick={handleLogout}
@@ -91,6 +99,7 @@ export default function Header() {
         )}
       </div>
 
+      {/* Мобильная кнопка меню */}
       <button
         onClick={toggleMenu}
         className="md:hidden flex items-center justify-center w-10 h-10 focus:outline-none"
@@ -112,6 +121,7 @@ export default function Header() {
         </svg>
       </button>
 
+      {/* Мобильное меню */}
       {isOpen && (
         <div
           className="absolute top-14 left-0 w-full bg-[#00355B] text-white flex flex-col items-center space-y-4 py-4 md:hidden z-10 shadow-md"
@@ -139,12 +149,11 @@ export default function Header() {
               <Link
                 to="/profile"
                 onClick={handleLinkClick}
-                aria-label="Профиль"
-                className="flex items-center justify-center w-8 h-8 text-white hover:text-blue-400 transition"
+                className="flex items-center justify-center space-x-2 text-white hover:text-blue-400 transition"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -156,6 +165,7 @@ export default function Header() {
                     d="M5.121 17.804A7.966 7.966 0 0112 15a7.966 7.966 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
+                <span>Профиль</span>
               </Link>
               <button
                 onClick={handleLogout}
