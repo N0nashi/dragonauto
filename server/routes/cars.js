@@ -41,7 +41,7 @@ router.get("/filters", async (req, res) => {
   }
 });
 
-// Поиск авто с фильтрами
+
 router.post("/search", async (req, res) => {
   const {
     brand,
