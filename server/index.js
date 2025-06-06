@@ -20,7 +20,6 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json()); // вместо bodyParser.json()
-
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Подключаем роуты
