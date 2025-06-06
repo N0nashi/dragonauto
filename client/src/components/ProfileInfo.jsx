@@ -88,7 +88,7 @@ export default function ProfileInfo() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ new_email: newEmail }),
+        body: JSON.stringify({ newEmail: newEmail }),
       });
 
       if (!res.ok) throw new Error("Ошибка при отправке кода");
