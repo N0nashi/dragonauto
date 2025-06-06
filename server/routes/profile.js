@@ -19,9 +19,7 @@ async function getUserById(userId) {
   );
   return result.rows[0];
 }
-router.post("/test", (req, res) => {
-  res.json({ ok: true });
-});
+
 // Получить данные профиля (текущий или любой пользователь)
 router.get("/", authMiddleware, async (req, res) => {
   try {
@@ -102,13 +100,78 @@ router.put("/avatar", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
-router.get("/hueta", authMiddleware, async (req, res) => {
-res.json({ message: 'PISDA NAHU' });
-});
+
 // Отправка кода для изменения email
-router.put("/request-email-change", authMiddleware, async (req, res) => {
-res.json({ message: 'Test route works!' });
+router.post("/request-email-change", authMiddleware, async (req, res) => {
+  console.log("POST /request-email-change called");
+  try {
+    const userId = req.userId;
+    const currentUser = await getUserById(userId);
+    
+    if (!currentUser) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 минут
+
+    // Удаляем старые коды
+    await db.query("DELETE FROM password_resets WHERE email = $1", [currentUser.email]);
+
+    // Сохраняем новый код
+    await db.query(
+      `INSERT INTO password_resets (email, code, expires_at)
+       VALUES ($1, $2, to_timestamp($3 / 1000.0))`,
+      [currentUser.email, code, expires]
+    );
+
+    // Настройка SMTP Яндекс
+    const transporter = nodemailer.createTransport({
+      host: "smtp.yandex.ru",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.YANDEX_EMAIL,
+        pass: process.env.YANDEX_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    // Отправка письма
+    await transporter.sendMail({
+      from: `"DragonAuto" <${process.env.YANDEX_EMAIL}>`,
+      to: currentUser.email,
+      subject: "Код подтверждения смены email",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Подтверждение смены email</h2>
+          <p>Ваш код подтверждения:</p>
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 4px; font-size: 24px; font-weight: bold; text-align: center; margin: 16px 0;">
+            ${code}
+          </div>
+          <p>Этот код действителен в течение 10 минут.</p>
+          <p style="color: #6b7280; font-size: 14px;">Если вы не запрашивали смену email, проигнорируйте это письмо.</p>
+        </div>
+      `,
+    });
+
+    console.log(`Код подтверждения ${code} отправлен на ${currentUser.email}`);
+    res.json({ 
+      message: "Код подтверждения отправлен на вашу текущую почту",
+      email: currentUser.email // Отправляем email для информации
+    });
+
+  } catch (error) {
+    console.error("Ошибка отправки кода подтверждения:", error);
+    res.status(500).json({ 
+      error: "Произошла ошибка при отправке кода подтверждения",
+      details: error.message 
+    });
+  }
 });
+
 // Обновление email с использованием кода
 router.put("/email", authMiddleware, async (req, res) => {
   try {
