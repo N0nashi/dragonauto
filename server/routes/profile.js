@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
 
 // Вспомогательная функция проверки email
 function isValidEmail(email) {
@@ -51,11 +52,12 @@ router.put("/", authMiddleware, async (req, res) => {
     const userId = req.userId;
     let { first_name, last_name, photo_url } = req.body;
 
-    if (first_name !== undefined && typeof first_name !== "string") {
-      return res.status(400).json({ error: "first_name должен быть строкой" });
+    // Имя и фамилия обязательны
+    if (!first_name || typeof first_name !== "string") {
+      return res.status(400).json({ error: "first_name обязателен и должен быть строкой" });
     }
-    if (last_name !== undefined && typeof last_name !== "string") {
-      return res.status(400).json({ error: "last_name должен быть строкой" });
+    if (!last_name || typeof last_name !== "string") {
+      return res.status(400).json({ error: "last_name обязателен и должен быть строкой" });
     }
     if (photo_url !== undefined && typeof photo_url !== "string") {
       return res.status(400).json({ error: "photo_url должен быть строкой" });
@@ -64,13 +66,11 @@ router.put("/", authMiddleware, async (req, res) => {
     const currentUser = await getUserById(userId);
     if (!currentUser) return res.status(404).json({ error: "Пользователь не найден" });
 
-    const updatedFirstName = first_name !== undefined ? first_name : currentUser.first_name;
-    const updatedLastName = last_name !== undefined ? last_name : currentUser.last_name;
     const updatedPhotoUrl = photo_url !== undefined ? photo_url : currentUser.photo_url;
 
     await db.query(
       `UPDATE users SET first_name = $1, last_name = $2, photo_url = $3 WHERE id = $4`,
-      [updatedFirstName, updatedLastName, updatedPhotoUrl, userId]
+      [first_name.trim(), last_name.trim(), updatedPhotoUrl, userId]
     );
 
     const updatedUser = await getUserById(userId);
@@ -101,14 +101,67 @@ router.put("/avatar", authMiddleware, async (req, res) => {
   }
 });
 
-// Обновление email
+// Отправка кода для изменения email
+router.post("/request-email-change", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const currentUser = await getUserById(userId);
+    if (!currentUser) return res.status(404).json({ error: "Пользователь не найден" });
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 минут
+
+    // Удаляем старые коды
+    await db.query("DELETE FROM password_resets WHERE email = $1", [currentUser.email]);
+
+    // Сохраняем новый код
+    await db.query(`
+      INSERT INTO password_resets (email, code, expires_at)
+      VALUES ($1, $2, to_timestamp($3 / 1000.0))
+    `, [currentUser.email, code, expires]);
+
+    // Настройка SMTP Яндекс
+    const transporter = nodemailer.createTransport({
+      host: "smtp.yandex.ru",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.YANDEX_EMAIL,
+        pass: process.env.YANDEX_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    // Отправка письма
+    await transporter.sendMail({
+      from: `"DragonAuto" <${process.env.YANDEX_EMAIL}>`,
+      to: currentUser.email,
+      subject: "Код изменения email",
+      text: `Ваш код для изменения email: ${code}. Он действителен в течение 10 минут.`,
+    });
+
+    console.log(`Код изменения email ${code} отправлен на ${currentUser.email}`);
+    res.json({ message: "Код изменения email отправлен на вашу почту" });
+
+  } catch (error) {
+    console.error("Ошибка отправки кода изменения email:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+// Обновление email с использованием кода
 router.put("/email", authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
-    let { email } = req.body;
+    const { email, code } = req.body;
 
     if (!email || typeof email !== "string") {
       return res.status(400).json({ error: "Email обязателен и должен быть строкой" });
+    }
+    if (!code || typeof code !== "string") {
+      return res.status(400).json({ error: "Код обязателен и должен быть строкой" });
     }
 
     email = email.trim();
@@ -116,6 +169,26 @@ router.put("/email", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "Неверный формат email" });
     }
 
+    const currentUser = await getUserById(userId);
+    if (!currentUser) return res.status(404).json({ error: "Пользователь не найден" });
+
+    // Проверяем код
+    const result = await db.query(
+      "SELECT * FROM password_resets WHERE email = $1 AND code = $2 ORDER BY created_at DESC LIMIT 1",
+      [currentUser.email, code]
+    );
+
+    const entry = result.rows[0];
+
+    if (!entry) {
+      return res.status(400).json({ error: "Неверный код" });
+    }
+
+    if (new Date(entry.expires_at) < new Date()) {
+      return res.status(400).json({ error: "Срок действия кода истёк" });
+    }
+
+    // Проверяем, занят ли новый email
     const emailCheck = await db.query(
       `SELECT id FROM users WHERE email = $1 AND id != $2`,
       [email, userId]
@@ -125,10 +198,15 @@ router.put("/email", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "Данный email уже используется" });
     }
 
+    // Обновляем email
     await db.query(`UPDATE users SET email = $1 WHERE id = $2`, [email, userId]);
+
+    // Опционально: удаляем использованный код
+    await db.query("DELETE FROM password_resets WHERE email = $1", [currentUser.email]);
 
     const updatedUser = await getUserById(userId);
     res.json({ message: "Email успешно обновлён", user: updatedUser });
+
   } catch (error) {
     console.error("PUT /profile/email error:", error);
     res.status(500).json({ error: "Ошибка сервера" });

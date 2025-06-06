@@ -5,19 +5,30 @@ const db = require("../db");
 
 // GET /filters — получение уникальных значений для фильтров
 router.get("/filters", async (req, res) => {
+  const { country, brand } = req.query;
+
   try {
-    const [brands, models, countries, bodies] = await Promise.all([
-      db.query("SELECT DISTINCT brand FROM parts ORDER BY brand"),
-      db.query("SELECT DISTINCT model FROM parts ORDER BY model"),
+    // Базовые запросы с учётом параметров
+    const [brandsQuery, modelsQuery, countriesQuery, bodiesQuery] = await Promise.all([
+      db.query(
+        `SELECT DISTINCT brand FROM parts ${country ? "WHERE country = $1" : ""} ORDER BY brand`,
+        country ? [country] : []
+      ),
+      db.query(
+        `SELECT DISTINCT model FROM parts ${
+          brand ? "WHERE brand = $1" : country ? "WHERE country = $1" : ""
+        } ORDER BY model`,
+        brand ? [brand] : country ? [country] : []
+      ),
       db.query("SELECT DISTINCT country FROM parts ORDER BY country"),
       db.query("SELECT DISTINCT body FROM parts ORDER BY body")
     ]);
 
     res.json({
-      brands: brands.rows.map(r => r.brand),
-      models: models.rows.map(r => r.model),
-      countries: countries.rows.map(r => r.country),
-      bodies: bodies.rows.map(r => r.body),
+      brands: brandsQuery.rows.map(r => r.brand),
+      models: modelsQuery.rows.map(r => r.model),
+      countries: countriesQuery.rows.map(r => r.country),
+      bodies: bodiesQuery.rows.map(r => r.body),
     });
   } catch (err) {
     console.error("Ошибка в /api/parts/filters:", err.message);

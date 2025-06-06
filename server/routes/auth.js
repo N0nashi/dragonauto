@@ -10,14 +10,14 @@ const JWT_SECRET = process.env.JWT_SECRET || "mysecret";
 
 // 📌 Роут: Регистрация
 router.post("/register", uploadMiddleware, async (req, res) => {
-  const { email, password, first_name, last_name, } = req.body;
+  const { email, password, first_name, last_name } = req.body;
 
   try {
     const existing = await db.query("SELECT * FROM users WHERE email = $1", [email]);
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: "Пользователь с таким email уже существует" });
     }
-    console.log("req.file:", req.file);
+
     let photoUrl = null;
     if (req.file) {
       photoUrl = `/uploads/avatars/${req.file.filename}`;
@@ -26,31 +26,88 @@ router.post("/register", uploadMiddleware, async (req, res) => {
     const hashedPassword = await bcryptjs.hash(password, 10);
 
     const result = await db.query(
-      `INSERT INTO users (email, password, first_name, last_name, photo_url)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id, email`,
+      `INSERT INTO users (email, password, first_name, last_name, photo_url, is_verified)
+       VALUES ($1, $2, $3, $4, $5, false) RETURNING id, email`,
       [email, hashedPassword, first_name, last_name, photoUrl]
     );
 
     const user = result.rows[0];
 
-    // Генерация токена
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    // Генерация кода подтверждения
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 минут
 
-    res.json({
-      message: "Регистрация прошла успешно",
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        first_name,
-        last_name,
-        photoUrl,
+    // Удаляем старые коды
+    await db.query("DELETE FROM password_resets WHERE email = $1", [email]);
+
+    // Сохраняем новый код
+    await db.query(`
+      INSERT INTO password_resets (email, code, expires_at)
+      VALUES ($1, $2, to_timestamp($3 / 1000.0))
+    `, [email, code, expires]);
+
+    // Настройка SMTP Яндекс
+    const transporter = nodemailer.createTransport({
+      host: "smtp.yandex.ru",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.YANDEX_EMAIL,
+        pass: process.env.YANDEX_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
       },
     });
+
+    // Отправка письма
+    await transporter.sendMail({
+      from: `"DragonAuto" <${process.env.YANDEX_EMAIL}>`,
+      to: email,
+      subject: "Код подтверждения email",
+      text: `Ваш код подтверждения: ${code}. Он действителен в течение 10 минут.`,
+    });
+
+    console.log(`Код подтверждения ${code} отправлен на ${email}`);
+
+    res.json({ message: "Регистрация успешна. Код подтверждения отправлен на email", requiresVerification: true });
+
   } catch (error) {
     console.error("Ошибка регистрации:", error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+// 📬 Роут: Подтверждение email по коду
+router.post("/verify-email", async (req, res) => {
+  const { email, code } = req.body;
+
+  try {
+    const result = await db.query(
+      "SELECT * FROM password_resets WHERE email = $1 AND code = $2 ORDER BY created_at DESC LIMIT 1",
+      [email, code]
+    );
+
+    const entry = result.rows[0];
+
+    if (!entry) {
+      return res.status(400).json({ error: "Неверный код" });
+    }
+
+    if (new Date(entry.expires_at) < new Date()) {
+      return res.status(400).json({ error: "Срок действия кода истёк" });
+    }
+
+    // Обновляем статус пользователя
+    await db.query("UPDATE users SET is_verified = TRUE WHERE email = $1", [email]);
+
+    // Опционально: удаляем использованный код
+    await db.query("DELETE FROM password_resets WHERE email = $1", [email]);
+
+    res.json({ message: "Email успешно подтверждён" });
+
+  } catch (error) {
+    console.error("Ошибка подтверждения email:", error);
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -67,6 +124,10 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcryptjs.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: "Неверный email или пароль" });
 
+    if (!user.is_verified) {
+      return res.status(403).json({ error: "Email не подтверждён" });
+    }
+
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
       expiresIn: "7d",
     });
@@ -78,6 +139,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// 📧 Роут: Забыли пароль — отправка кода
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email обязателен" });
@@ -104,13 +166,13 @@ router.post("/forgot-password", async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: "smtp.yandex.ru",
       port: 465,
-      secure: true, // для порта 465 всегда true
+      secure: true,
       auth: {
-        user: process.env.YANDEX_EMAIL,      // твой Яндекс email
-        pass: process.env.YANDEX_PASSWORD,   // пароль приложения из Яндекса
+        user: process.env.YANDEX_EMAIL,
+        pass: process.env.YANDEX_PASSWORD,
       },
       tls: {
-        rejectUnauthorized: false,  // на случай проблем с сертификатом
+        rejectUnauthorized: false,
       },
     });
 
@@ -131,7 +193,7 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-// 🔐 Роут: Сброс пароля
+// 🔐 Роут: Сброс пароля по коду
 router.post("/reset-password", async (req, res) => {
   const { email, otp, newPassword } = req.body;
 

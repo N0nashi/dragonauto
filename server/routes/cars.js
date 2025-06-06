@@ -4,10 +4,21 @@ const db = require("../db");
 
 // Получение фильтров (списки уникальных значений и диапазон цен)
 router.get("/filters", async (req, res) => {
+  const { country, brand } = req.query;
+
   try {
-    const [brands, models, countries, bodies, gearboxes, drives, prices] = await Promise.all([
-      db.query("SELECT DISTINCT brand FROM cars ORDER BY brand"),
-      db.query("SELECT DISTINCT model FROM cars ORDER BY model"),
+    // Запросы с возможностью фильтрации
+    const [brandsQuery, modelsQuery, countriesQuery, bodiesQuery, gearboxesQuery, drivesQuery, pricesQuery] = await Promise.all([
+      db.query(
+        `SELECT DISTINCT brand FROM cars ${country ? "WHERE country = $1" : ""} ORDER BY brand`,
+        country ? [country] : []
+      ),
+      db.query(
+        `SELECT DISTINCT model FROM cars ${
+          brand ? "WHERE brand = $1" : country ? "WHERE country = $1" : ""
+        } ORDER BY model`,
+        brand ? [brand] : country ? [country] : []
+      ),
       db.query("SELECT DISTINCT country FROM cars ORDER BY country"),
       db.query("SELECT DISTINCT body FROM cars ORDER BY body"),
       db.query("SELECT DISTINCT gearbox FROM cars ORDER BY gearbox"),
@@ -16,13 +27,13 @@ router.get("/filters", async (req, res) => {
     ]);
 
     res.json({
-      brands: brands.rows.map(r => r.brand),
-      models: models.rows.map(r => r.model),
-      countries: countries.rows.map(r => r.country),
-      bodies: bodies.rows.map(r => r.body),
-      gearboxes: gearboxes.rows.map(r => r.gearbox),
-      drives: drives.rows.map(r => r.drive),
-      priceRange: prices.rows[0],
+      brands: brandsQuery.rows.map(r => r.brand),
+      models: modelsQuery.rows.map(r => r.model),
+      countries: countriesQuery.rows.map(r => r.country),
+      bodies: bodiesQuery.rows.map(r => r.body),
+      gearboxes: gearboxesQuery.rows.map(r => r.gearbox),
+      drives: drivesQuery.rows.map(r => r.drive),
+      priceRange: pricesQuery.rows[0],
     });
   } catch (err) {
     console.error("Ошибка в /api/cars/filters:", err.message);

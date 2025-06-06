@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
-const isModerator = require("../middleware/isModerator");
-// Функция для безопасного преобразования строки с запятыми в массив
+
+// Функция для безопасного преобразования строки в массив
 function parseToArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -13,7 +13,6 @@ function parseToArray(value) {
 // POST /api/applications — создать заявку (для car или part)
 router.post("/", authMiddleware, async (req, res) => {
   const userId = req.userId;
-
   const {
     // Общие поля
     type,
@@ -44,8 +43,12 @@ router.post("/", authMiddleware, async (req, res) => {
     body_part
   } = req.body;
 
-  if (!type || (type !== "car" && type !== "part")) {
-    return res.status(400).json({ error: "Неверный или отсутствующий тип заявки" });
+  // Проверка: тип заявки указан
+  if (!type || !["car", "part"].includes(type)) {
+    return res.status(400).json({
+      error: "Некорректный тип заявки",
+      details: "Поле 'type' должно быть 'car' или 'part'",
+    });
   }
 
   try {
@@ -61,7 +64,32 @@ router.post("/", authMiddleware, async (req, res) => {
     const applicationId = result.rows[0].id;
 
     if (type === "car") {
-      // Заявка на автомобиль
+      // Заявка на автомобиль — обязательные поля
+      const requiredFields = [
+        { name: "country_car", value: country_car },
+        { name: "brand_car", value: brand_car },
+        { name: "price_from_car", value: price_from_car },
+        { name: "price_to_car", value: price_to_car },
+        { name: "year_from_car", value: year_from_car },
+        { name: "year_to_car", value: year_to_car },
+        { name: "mileage_from_car", value: mileage_from_car },
+        { name: "mileage_to_car", value: mileage_to_car },
+        { name: "gearbox_car", value: gearbox_car },
+        { name: "body_car", value: body_car },
+        { name: "drive_car", value: drive_car },
+        { name: "car_power", value: car_power }
+      ];
+
+      const missingFields = requiredFields.filter(field => !field.value && field.value !== 0);
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          error: "Не все обязательные поля для заявки на автомобиль заполнены",
+          missingFields: missingFields.map(f => f.name),
+          example: "Пример: country_car, brand_car, price_from_car и т.д.",
+        });
+      }
+
       const countryCarArr = parseToArray(country_car);
       const brandCarArr = parseToArray(brand_car);
       const gearboxCarArr = parseToArray(gearbox_car);
@@ -107,7 +135,27 @@ router.post("/", authMiddleware, async (req, res) => {
       ]);
 
     } else if (type === "part") {
-      // Заявка на запчасть
+      // Заявка на запчасть — обязательные поля
+      const requiredFields = [
+        { name: "country_part", value: country_part },
+        { name: "brand_part", value: brand_part },
+        { name: "model_part", value: model_part },
+        { name: "part_name", value: part_name },
+        { name: "price_from_part", value: price_from_part },
+        { name: "price_to_part", value: price_to_part },
+        { name: "body_part", value: body_part }
+      ];
+
+      const missingFields = requiredFields.filter(field => !field.value);
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          error: "Не все обязательные поля для заявки на запчасть заполнены",
+          missingFields: missingFields.map(f => f.name),
+          example: "Пример: country_part, brand_part, model_part и т.д."
+        });
+      }
+
       const insertPartQuery = `
         INSERT INTO part_applications (
           application_id,
@@ -143,8 +191,12 @@ router.post("/", authMiddleware, async (req, res) => {
 
   } catch (error) {
     await db.query("ROLLBACK");
-    console.error("Ошибка при создании заявки:", error);
-    res.status(500).json({ error: "Ошибка сервера при создании заявки" });
+    console.error("Ошибка при создании заявки:", error.message, error.stack);
+    res.status(500).json({
+      error: "Ошибка сервера при создании заявки",
+      details: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
+    });
   }
 });
 
@@ -170,6 +222,7 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Ошибка сервера при получении заявок" });
   }
 });
+
 // GET /api/applications/all — получить все заявки (только для модератора)
 router.get("/all", authMiddleware, isModerator, async (req, res) => {
   try {
@@ -196,9 +249,10 @@ router.get("/all", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
+// GET /api/applications/:id — получить конкретную заявку
 router.get("/:id", authMiddleware, async (req, res) => {
   const userId = req.userId;
-  const userRole = req.userRole;  // теперь есть роль
+  const userRole = req.userRole;
   const applicationId = parseInt(req.params.id, 10);
 
   if (isNaN(applicationId)) {
@@ -210,7 +264,6 @@ router.get("/:id", authMiddleware, async (req, res) => {
     let params;
 
     if (userRole === "moderator") {
-      // Модератор видит любую заявку
       query = `
         SELECT a.id, a.user_id, a.type, a.description, a.status, a.date,
           c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car, c.year_from_car, c.year_to_car,
@@ -224,7 +277,6 @@ router.get("/:id", authMiddleware, async (req, res) => {
       `;
       params = [applicationId];
     } else {
-      // Обычный пользователь — только свои заявки
       query = `
         SELECT a.id, a.user_id, a.type, a.description, a.status, a.date,
           c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car, c.year_from_car, c.year_to_car,
@@ -246,23 +298,26 @@ router.get("/:id", authMiddleware, async (req, res) => {
     }
 
     res.json(result.rows[0]);
+
   } catch (error) {
     console.error("Ошибка при получении заявки:", error);
     res.status(500).json({ error: "Ошибка сервера при получении заявки" });
   }
 });
 
-
 // DELETE /api/applications/:id — отменить заявку
 router.delete("/:id", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const applicationId = req.params.id;
+
   try {
     const checkQuery = `SELECT user_id FROM applications WHERE id = $1`;
     const checkResult = await db.query(checkQuery, [applicationId]);
+
     if (checkResult.rowCount === 0) {
       return res.status(404).json({ error: "Заявка не найдена" });
     }
+
     if (checkResult.rows[0].user_id !== userId) {
       return res.status(403).json({ error: "Нет доступа к этой заявке" });
     }
@@ -271,6 +326,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     await db.query(deleteQuery, [applicationId]);
 
     res.json({ message: `Заявка №${applicationId} отменена` });
+
   } catch (error) {
     console.error("Ошибка при отмене заявки:", error);
     res.status(500).json({ error: "Ошибка сервера при отмене заявки" });
@@ -281,6 +337,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 router.patch("/:id/close", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const applicationId = parseInt(req.params.id, 10);
+
   if (isNaN(applicationId)) {
     return res.status(400).json({ error: "Неверный идентификатор заявки" });
   }
@@ -288,14 +345,17 @@ router.patch("/:id/close", authMiddleware, async (req, res) => {
   try {
     const checkQuery = "SELECT status FROM applications WHERE id = $1 AND user_id = $2";
     const checkResult = await db.query(checkQuery, [applicationId, userId]);
+
     if (checkResult.rowCount === 0) {
       return res.status(404).json({ error: "Заявка не найдена" });
     }
 
     const currentStatus = checkResult.rows[0].status;
+
     if (currentStatus === "выполнена") {
       return res.status(400).json({ error: "Заявка уже закрыта" });
     }
+
     if (currentStatus === "отменена") {
       return res.status(400).json({ error: "Нельзя закрыть отмененную заявку" });
     }
@@ -304,6 +364,7 @@ router.patch("/:id/close", authMiddleware, async (req, res) => {
     await db.query(updateQuery, [applicationId]);
 
     res.json({ message: "Заявка успешно закрыта" });
+
   } catch (error) {
     console.error("Ошибка при закрытии заявки:", error);
     res.status(500).json({ error: "Ошибка сервера при закрытии заявки" });
