@@ -1,11 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const allGridOptions = [3, 6];
 
 const CarsCatalog = () => {
-  const [filters, setFilters] = useState(null);
+  // Состояния
+  const [filters, setFilters] = useState({
+    countries: [],
+    brands: [],
+    models: [],
+    bodies: [],
+    gearboxes: [],
+    drives: [],
+    priceRange: { min: 0, max: 0 }
+  });
   const [selectedFilters, setSelectedFilters] = useState({});
   const [cars, setCars] = useState([]);
   const [loadingFilters, setLoadingFilters] = useState(true);
@@ -17,6 +26,10 @@ const CarsCatalog = () => {
   const [isPortrait, setIsPortrait] = useState(
     window.matchMedia("(orientation: portrait)").matches
   );
+
+  // Refs для отслеживания предыдущих значений фильтров
+  const prevCountryRef = useRef(null);
+  const prevBrandRef = useRef(null);
 
   // Получаем токен из localStorage
   const token = localStorage.getItem("token");
@@ -52,6 +65,81 @@ const CarsCatalog = () => {
     }
   };
 
+  // Загрузка фильтров с учетом выбранных значений
+  const loadFilters = async () => {
+    try {
+      const url = new URL(`${process.env.REACT_APP_API_URL}/api/cars/filters`);
+      
+      // Добавляем текущие фильтры в запрос
+      if (selectedFilters.country) url.searchParams.append('country', selectedFilters.country);
+      if (selectedFilters.brand) url.searchParams.append('brand', selectedFilters.brand);
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to load filters");
+      const data = await response.json();
+      
+      setFilters(data);
+      
+      // Сбрасываем зависимые фильтры при изменении родительского
+      if (prevCountryRef.current !== selectedFilters.country) {
+        setSelectedFilters(prev => ({ ...prev, brand: '', model: '' }));
+      }
+      if (prevBrandRef.current !== selectedFilters.brand) {
+        setSelectedFilters(prev => ({ ...prev, model: '' }));
+      }
+      
+      // Сохраняем текущие значения для следующего сравнения
+      prevCountryRef.current = selectedFilters.country;
+      prevBrandRef.current = selectedFilters.brand;
+    } catch (err) {
+      setError("Ошибка загрузки фильтров");
+      console.error(err);
+    } finally {
+      setLoadingFilters(false);
+    }
+  };
+
+  // Загрузка автомобилей по фильтрам
+  const loadCars = async () => {
+    setLoadingCars(true);
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/cars/search`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(selectedFilters),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to load cars");
+      const data = await response.json();
+      setCars(data);
+    } catch (err) {
+      setError("Ошибка загрузки автомобилей");
+      console.error(err);
+    } finally {
+      setLoadingCars(false);
+    }
+  };
+
+  // Обработчик изменения фильтров
+  const handleFilterChange = (key, value) => {
+    setSelectedFilters(prev => {
+      const newFilters = { ...prev, [key]: value || undefined };
+      
+      // Каскадный сброс зависимых фильтров
+      if (key === 'country') {
+        newFilters.brand = '';
+        newFilters.model = '';
+      } else if (key === 'brand') {
+        newFilters.model = '';
+      }
+      
+      return newFilters;
+    });
+  };
+
+  // Эффекты
   useEffect(() => {
     updateLayout();
     window.addEventListener("resize", updateLayout);
@@ -63,70 +151,26 @@ const CarsCatalog = () => {
   }, []);
 
   useEffect(() => {
-    if (
-      availableGridOptions.length > 0 &&
-      !availableGridOptions.includes(gridCols)
-    ) {
+    if (availableGridOptions.length > 0 && !availableGridOptions.includes(gridCols)) {
       setGridCols(availableGridOptions[0]);
     }
   }, [availableGridOptions]);
 
-  // Загрузка фильтров
   useEffect(() => {
-    const loadFilters = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/cars/filters`
-        );
-        if (!response.ok) throw new Error("Failed to load filters");
-        const data = await response.json();
-        setFilters(data);
-      } catch (err) {
-        setError("Ошибка загрузки фильтров");
-        console.error(err);
-      } finally {
-        setLoadingFilters(false);
-      }
-    };
     loadFilters();
-  }, []);
+  }, [selectedFilters.country, selectedFilters.brand]);
 
-  // Загрузка автомобилей по фильтрам
   useEffect(() => {
-    const loadCars = async () => {
-      setLoadingCars(true);
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/cars/search`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(selectedFilters),
-          }
-        );
-        if (!response.ok) throw new Error("Failed to load cars");
-        const data = await response.json();
-        setCars(data);
-      } catch (err) {
-        setError("Ошибка загрузки автомобилей");
-        console.error(err);
-      } finally {
-        setLoadingCars(false);
-      }
-    };
     loadCars();
   }, [selectedFilters]);
 
-  const handleFilterChange = (key, value) => {
-    setSelectedFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
+  // Рендер-функции
   const renderFilterSelect = (label, key, options) => (
     <label className="block mb-4" key={key}>
       <span className="block font-semibold mb-1">{label}</span>
       <select
         value={selectedFilters[key] || ""}
-        onChange={(e) => handleFilterChange(key, e.target.value)}
+        onChange={(e) => handleFilterChange(key, e.target.value || undefined)}
         className="w-full border rounded px-2 py-1"
       >
         <option value="">Все</option>
@@ -139,22 +183,28 @@ const CarsCatalog = () => {
     </label>
   );
 
-  const renderRangeInput = (label, keyMin, keyMax) => (
-    <div className="mb-4" key={keyMin + keyMax}>
+  const renderRangeInput = (label, key) => (
+    <div className="mb-4" key={key}>
       <span className="block font-semibold mb-1">{label}</span>
       <div className="flex gap-2">
         <input
           type="number"
           placeholder="от"
-          value={selectedFilters[keyMin] || ""}
-          onChange={(e) => handleFilterChange(keyMin, e.target.value)}
+          value={selectedFilters[key]?.min || ""}
+          onChange={(e) => handleFilterChange(key, { 
+            ...selectedFilters[key], 
+            min: e.target.value ? Number(e.target.value) : undefined 
+          })}
           className="w-1/2 border rounded px-2 py-1"
         />
         <input
           type="number"
           placeholder="до"
-          value={selectedFilters[keyMax] || ""}
-          onChange={(e) => handleFilterChange(keyMax, e.target.value)}
+          value={selectedFilters[key]?.max || ""}
+          onChange={(e) => handleFilterChange(key, { 
+            ...selectedFilters[key], 
+            max: e.target.value ? Number(e.target.value) : undefined 
+          })}
           className="w-1/2 border rounded px-2 py-1"
         />
       </div>
@@ -170,9 +220,12 @@ const CarsCatalog = () => {
       gridCols === 3 ? "h-64" : gridCols === 6 ? "h-48" : "h-40";
     return (
       <img
-        src={src}
+        src={src || "/placeholder-car.jpg"}
         alt={`${car.brand} ${car.model}`}
         className={`w-full ${heightClass} object-cover rounded-t`}
+        onError={(e) => {
+          e.target.src = "/placeholder-car.jpg";
+        }}
       />
     );
   };
@@ -181,7 +234,7 @@ const CarsCatalog = () => {
     if (!currentUserId) {
       toast.info("Пожалуйста, войдите в систему, чтобы создать заявку.");
       setTimeout(() => {
-        window.location.href = "/auth"; // Перенаправление на страницу авторизации
+        window.location.href = "/auth";
       }, 2000);
       return;
     }
@@ -241,24 +294,24 @@ const CarsCatalog = () => {
             <p className="text-red-600">{error}</p>
           ) : (
             <>
-              {renderFilterSelect("Страна", "country", filters?.countries)}
-              {renderFilterSelect("Марка", "brand", filters?.brands)}
-              {renderFilterSelect("Модель", "model", filters?.models)}
+              {renderFilterSelect("Страна", "country", filters.countries)}
+              {renderFilterSelect("Марка", "brand", filters.brands)}
+              {renderFilterSelect("Модель", "model", filters.models)}
+              
               {showAdvancedFilters && (
                 <>
-                  {renderRangeInput("Год выпуска", "year_from", "year_to")}
-                  {renderRangeInput("Цена (₽)", "price_from", "price_to")}
-                  {renderRangeInput("Пробег (км)", "mileage_from", "mileage_to")}
-                  {renderFilterSelect("Коробка передач", "gearbox", filters?.gearboxes)}
-                  {renderFilterSelect("Привод", "drive", filters?.drives)}
-                  {renderFilterSelect("Кузов", "body", filters?.bodies)}
+                  {renderRangeInput("Год выпуска", "year")}
+                  {renderRangeInput("Цена (₽)", "price")}
+                  {renderRangeInput("Пробег (км)", "mileage")}
+                  {renderFilterSelect("Коробка передач", "gearbox", filters.gearboxes)}
+                  {renderFilterSelect("Привод", "drive", filters.drives)}
+                  {renderFilterSelect("Кузов", "body", filters.bodies)}
                 </>
               )}
+              
               <button
                 className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
-                onClick={() =>
-                  setShowAdvancedFilters((prev) => !prev)
-                }
+                onClick={() => setShowAdvancedFilters(prev => !prev)}
               >
                 {showAdvancedFilters
                   ? "Скрыть дополнительные фильтры"
@@ -290,6 +343,7 @@ const CarsCatalog = () => {
               </div>
             )}
           </div>
+          
           {loadingCars ? (
             <p>Загрузка автомобилей...</p>
           ) : error ? (
