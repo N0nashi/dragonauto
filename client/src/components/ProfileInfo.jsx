@@ -83,7 +83,7 @@ export default function ProfileInfo() {
 
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/request-email-change`, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
