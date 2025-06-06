@@ -80,7 +80,6 @@ router.put("/", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
-
 // Обновление photo_url после загрузки аватара (принимает url из /upload/avatars)
 router.put("/avatar", authMiddleware, async (req, res) => {
   try {
