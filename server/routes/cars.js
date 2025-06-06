@@ -7,24 +7,47 @@ router.get("/filters", async (req, res) => {
   const { country, brand } = req.query;
 
   try {
-    // Запросы с возможностью фильтрации
-    const [brandsQuery, modelsQuery, countriesQuery, bodiesQuery, gearboxesQuery, drivesQuery, pricesQuery] = await Promise.all([
-      db.query(
-        `SELECT DISTINCT brand FROM cars ${country ? "WHERE country = $1" : ""} ORDER BY brand`,
-        country ? [country] : []
-      ),
-      db.query(
-        `SELECT DISTINCT model FROM cars ${
-          brand ? "WHERE brand = $1" : country ? "WHERE country = $1" : ""
-        } ORDER BY model`,
-        brand ? [brand] : country ? [country] : []
-      ),
-      db.query("SELECT DISTINCT country FROM cars ORDER BY country"),
-      db.query("SELECT DISTINCT body FROM cars ORDER BY body"),
-      db.query("SELECT DISTINCT gearbox FROM cars ORDER BY gearbox"),
-      db.query("SELECT DISTINCT drive FROM cars ORDER BY drive"),
-      db.query("SELECT MIN(price) as min, MAX(price) as max FROM cars"),
-    ]);
+    // Запросы с правильной фильтрацией
+
+    // Все бренды по стране, если указана
+    const brandsQuery = await db.query(
+      `SELECT DISTINCT brand FROM cars WHERE ($1::text IS NULL OR country = $1) ORDER BY brand`,
+      [country]
+    );
+
+    // Все модели по бренду или стране
+    const modelsQuery = await db.query(
+      `SELECT DISTINCT model FROM cars 
+       WHERE ($1::text IS NULL OR brand = $1) 
+         AND ($2::text IS NULL OR country = $2) 
+       ORDER BY model`,
+      [brand, country]
+    );
+
+    // Все страны (всегда полный список)
+    const countriesQuery = await db.query(
+      `SELECT DISTINCT country FROM cars ORDER BY country`
+    );
+
+    // Типы кузова
+    const bodiesQuery = await db.query(
+      `SELECT DISTINCT body FROM cars ORDER BY body`
+    );
+
+    // Коробки передач
+    const gearboxesQuery = await db.query(
+      `SELECT DISTINCT gearbox FROM cars ORDER BY gearbox`
+    );
+
+    // Привод
+    const drivesQuery = await db.query(
+      `SELECT DISTINCT drive FROM cars ORDER BY drive`
+    );
+
+    // Диапазон цен
+    const pricesQuery = await db.query(
+      `SELECT MIN(price) as min, MAX(price) as max FROM cars`
+    );
 
     res.json({
       brands: brandsQuery.rows.map(r => r.brand),
@@ -40,7 +63,6 @@ router.get("/filters", async (req, res) => {
     res.status(500).json({ error: "Ошибка при получении фильтров" });
   }
 });
-
 
 router.post("/search", async (req, res) => {
   const {
