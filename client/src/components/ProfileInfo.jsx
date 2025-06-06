@@ -76,11 +76,12 @@ export default function ProfileInfo() {
   const handleSendEmailCode = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+    const actualNewEmail = newEmail.trim();
     if (!token || !newEmail) {
       showNotification("Введите новый email", "error");
       return;
     }
-
+    console.log("Финальный newEmail:", actualNewEmail);
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/request-email-change`, {
         method: "POST",
