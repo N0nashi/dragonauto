@@ -19,7 +19,9 @@ async function getUserById(userId) {
   );
   return result.rows[0];
 }
-
+router.post("/test", (req, res) => {
+  res.json({ ok: true });
+});
 // Получить данные профиля (текущий или любой пользователь)
 router.get("/", authMiddleware, async (req, res) => {
   try {
