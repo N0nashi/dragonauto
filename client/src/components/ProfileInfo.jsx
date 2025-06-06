@@ -117,7 +117,7 @@ export default function ProfileInfo() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: newEmail, code: emailCode }),
+        body: JSON.stringify({ newEmail: newEmail, code: emailCode }),
       });
 
       if (!res.ok) throw new Error("Неверный или истёкший код");
