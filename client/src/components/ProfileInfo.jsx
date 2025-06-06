@@ -1,418 +1,490 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function ProfileInfo() {
+const ProfileInfo = () => {
+  // Состояния профиля
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    avatarUrl: "https://i.pravatar.cc/150?img=12",
+    avatarUrl: "",
   });
+  
+  // Состояния для смены email
   const [newEmail, setNewEmail] = useState("");
   const [emailCode, setEmailCode] = useState("");
-  const [isEmailStep, setIsEmailStep] = useState(false); // true — ввод кода
-
+  const [isEmailStep, setIsEmailStep] = useState(false);
+  
+  // Состояния для смены пароля
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [notification, setNotification] = useState({ message: "", type: "" });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editProfile, setEditProfile] = useState({
+  
+  // Состояния для редактирования профиля
+  const [editMode, setEditMode] = useState(false);
+  const [editedProfile, setEditedProfile] = useState({
     firstName: "",
     lastName: "",
-    avatarUrl: "",
   });
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  
+  // Состояния загрузки
+  const [isLoading, setIsLoading] = useState({
+    profile: false,
+    email: false,
+    password: false,
+    avatar: false,
+  });
 
-  // Получение полного URL аватара
-  const getFullAvatarUrl = (url) => {
-    if (!url) return "https://i.pravatar.cc/150?img=12";
-    if (url.startsWith("http")) return url;
-    return `${process.env.REACT_APP_API_URL}${url}`;
-  };
-
+  // Загрузка данных профиля
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Пользователь не авторизован");
-      return;
-    }
-    fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Ошибка при загрузке профиля");
-        const data = await res.json();
+    const fetchProfile = async () => {
+      setIsLoading(prev => ({...prev, profile: true}));
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Требуется авторизация");
+        }
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Ошибка загрузки профиля");
+        }
+
+        const data = await response.json();
         setProfile({
-          firstName: data.first_name,
-          lastName: data.last_name,
-          email: data.email,
-          avatarUrl: data.photo_url || "https://i.pravatar.cc/150?img=12",
+          firstName: data.first_name || "",
+          lastName: data.last_name || "",
+          email: data.email || "",
+          avatarUrl: data.photo_url || "",
         });
-        setEditProfile({
-          firstName: data.first_name,
-          lastName: data.last_name,
-          avatarUrl: data.photo_url || "https://i.pravatar.cc/150?img=12",
+        setEditedProfile({
+          firstName: data.first_name || "",
+          lastName: data.last_name || "",
         });
-      })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Не удалось загрузить профиль");
-      });
+        setAvatarPreview(data.photo_url || "");
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setIsLoading(prev => ({...prev, profile: false}));
+      }
+    };
+
+    fetchProfile();
   }, []);
 
-  const showNotification = useCallback((message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => {
-      setNotification({ message: "", type: "" });
-    }, 5000);
-  }, []);
-
-  // Шаг 1: запрос отправки кода для изменения email
-  const handleSendEmailCode = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token || !newEmail) {
-      showNotification("Введите новый email", "error");
-      return;
-    }
-
-    try {
-      const res = await fetch(`https://dragonauto74.ru/api/profile/request-email-change`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ new_email: newEmail }),
-      });
-
-      if (!res.ok) throw new Error("Ошибка при отправке кода");
-
-      setIsEmailStep(true);
-      showNotification("Код отправлен на текущий email", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
+  // Обработка изменения аватара
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
-  // Шаг 2: проверка кода и изменение email
-  const handleVerifyEmailCode = async (e) => {
+  // Сохранение изменений профиля
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token || !emailCode) {
-      showNotification("Введите код", "error");
-      return;
-    }
-
+    setIsLoading(prev => ({...prev, profile: true}));
+    
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/email`, {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Требуется авторизация");
+      }
+
+      const formData = new FormData();
+      formData.append("first_name", editedProfile.firstName);
+      formData.append("last_name", editedProfile.lastName);
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: newEmail, code: emailCode }),
+        body: formData,
       });
 
-      if (!res.ok) throw new Error("Неверный или истёкший код");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка обновления профиля");
+      }
 
-      setProfile((prev) => ({ ...prev, email: newEmail }));
+      const data = await response.json();
+      setProfile(prev => ({
+        ...prev,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        avatarUrl: data.photo_url || prev.avatarUrl,
+      }));
+      setAvatarPreview(data.photo_url || avatarPreview);
+      setEditMode(false);
+      toast.success("Профиль успешно обновлен");
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(prev => ({...prev, profile: false}));
+    }
+  };
+
+  // Отправка кода подтверждения для смены email
+  const handleSendVerificationCode = async (e) => {
+    e.preventDefault();
+    setIsLoading(prev => ({...prev, email: true}));
+    
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Требуется авторизация");
+      }
+
+      if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        throw new Error("Введите корректный email");
+      }
+
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/profile/request-email-change`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка отправки кода");
+      }
+
+      setIsEmailStep(true);
+      toast.success(`Код подтверждения отправлен на ${profile.email}`);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(prev => ({...prev, email: false}));
+    }
+  };
+
+  // Подтверждение смены email
+  const handleConfirmEmailChange = async (e) => {
+    e.preventDefault();
+    setIsLoading(prev => ({...prev, email: true}));
+    
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Требуется авторизация");
+      }
+
+      if (!emailCode || emailCode.length !== 6) {
+        throw new Error("Введите 6-значный код");
+      }
+
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/profile/email`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            newEmail: newEmail,
+            code: emailCode,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка подтверждения email");
+      }
+
+      const result = await response.json();
+      setProfile(prev => ({ ...prev, email: result.user.email }));
       setNewEmail("");
       setEmailCode("");
       setIsEmailStep(false);
-      showNotification("Email успешно изменён", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
+      toast.success("Email успешно изменен");
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(prev => ({...prev, email: false}));
     }
   };
 
-  const handlePasswordChange = async (e) => {
+  // Смена пароля
+  const handleChangePassword = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token || !currentPassword || !newPassword || !confirmPassword) {
-      showNotification("Заполните все поля", "error");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      showNotification("Новый пароль и подтверждение не совпадают", "error");
-      return;
-    }
+    setIsLoading(prev => ({...prev, password: true}));
+    
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Ошибка при смене пароля");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Требуется авторизация");
       }
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        throw new Error("Заполните все поля");
+      }
+
+      if (newPassword !== confirmPassword) {
+        throw new Error("Пароли не совпадают");
+      }
+
+      if (newPassword.length < 6) {
+        throw new Error("Пароль должен содержать минимум 6 символов");
+      }
+
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/profile/password`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка смены пароля");
+      }
+
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      showNotification("Пароль успешно обновлен", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
+      toast.success("Пароль успешно изменен");
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(prev => ({...prev, password: false}));
     }
   };
-
-  const handleFileUpload = async () => {
-    if (!selectedFile) return editProfile.avatarUrl;
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/upload?folder=avatars`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    if (!res.ok) {
-      throw new Error("Ошибка при загрузке изображения");
-    }
-    const data = await res.json();
-    return data.url; // URL для сохранения в профиле
-  };
-
-  const handleProfileSave = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) {
-      showNotification("Пользователь не авторизован", "error");
-      return;
-    }
-    try {
-      const uploadedUrl = await handleFileUpload();
-      const bodyData = {
-        first_name: editProfile.firstName.trim(),
-        last_name: editProfile.lastName.trim(),
-        photo_url: uploadedUrl,
-      };
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(bodyData),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Ошибка при обновлении профиля");
-      }
-      setProfile({ ...editProfile, avatarUrl: uploadedUrl });
-      setIsEditing(false);
-      setSelectedFile(null);
-      showNotification("Профиль успешно обновлен", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
-    }
-  };
-
-  // Компоненты форм
-  const ProfileCard = React.useMemo(() => (
-    <section className="border border-gray-300 rounded shadow-sm bg-white p-4 max-w-md w-full mx-auto md:mx-0">
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-blue-600 mb-4">
-          {isEditing ? (
-            <img
-              src={
-                selectedFile
-                  ? URL.createObjectURL(selectedFile)
-                  : getFullAvatarUrl(editProfile.avatarUrl)
-              }
-              alt="Предпросмотр"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img
-              src={getFullAvatarUrl(profile.avatarUrl)}
-              alt="Фото профиля"
-              className="w-full h-full object-cover"
-            />
-          )}
-        </div>
-        {isEditing ? (
-          <>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="mb-2"
-            />
-            <input
-              type="text"
-              value={editProfile.firstName}
-              onChange={(e) =>
-                setEditProfile((prev) => ({ ...prev, firstName: e.target.value }))
-              }
-              placeholder="Имя"
-              className="mb-2 w-full border border-gray-300 rounded px-3 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              value={editProfile.lastName}
-              onChange={(e) =>
-                setEditProfile((prev) => ({ ...prev, lastName: e.target.value }))
-              }
-              placeholder="Фамилия"
-              className="mb-4 w-full border border-gray-300 rounded px-3 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoComplete="off"
-            />
-            <div className="flex gap-2 w-full">
-              <button
-                onClick={handleProfileSave}
-                className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 transition flex-grow"
-              >
-                Сохранить
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditProfile(profile);
-                  setSelectedFile(null);
-                }}
-                className="bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500 transition flex-grow"
-              >
-                Отмена
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <h2 className="text-xl font-semibold mb-1">{profile.firstName}</h2>
-            <h3 className="text-lg text-gray-600 mb-3">{profile.lastName}</h3>
-            <p className="text-gray-700 break-words text-center">{profile.email}</p>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="mt-4 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
-            >
-              Редактировать профиль
-            </button>
-          </>
-        )}
-      </div>
-    </section>
-  ), [profile, editProfile, isEditing, selectedFile]);
-
-  const EmailChangeCard = React.useMemo(() => (
-    <section className="bg-white border border-gray-300 rounded shadow-sm p-4 mb-6 max-w-lg w-full mx-auto md:mx-0">
-      <h3 className="text-lg font-semibold mb-4">Смена электронной почты</h3>
-      {!isEmailStep ? (
-        <form onSubmit={handleSendEmailCode} className="flex flex-col gap-2" autoComplete="off">
-          <input
-            type="email"
-            placeholder="Новый email"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white rounded py-1 hover:bg-blue-700 transition"
-          >
-            Отправить код
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleVerifyEmailCode} className="flex flex-col gap-2" autoComplete="off">
-          <input
-            type="text"
-            placeholder="Код из письма"
-            value={emailCode}
-            onChange={(e) => setEmailCode(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            className="bg-green-600 text-white rounded py-1 hover:bg-green-700 transition"
-          >
-            Подтвердить код
-          </button>
-        </form>
-      )}
-    </section>
-  ), [newEmail, emailCode, isEmailStep]);
-
-  const PasswordChangeCard = React.useMemo(() => (
-    <section className="bg-white border border-gray-300 rounded shadow-sm p-4 max-w-lg w-full mx-auto md:mx-0">
-      <h3 className="text-lg font-semibold mb-4">Смена пароля</h3>
-      <form onSubmit={handlePasswordChange} className="flex flex-col gap-2" autoComplete="off">
-        <input
-          type="password"
-          placeholder="Текущий пароль"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          autoComplete="off"
-        />
-        <input
-          type="password"
-          placeholder="Новый пароль"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          autoComplete="off"
-        />
-        <input
-          type="password"
-          placeholder="Подтверждение нового пароля"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          autoComplete="off"
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white rounded py-1 hover:bg-blue-700 transition"
-        >
-          Обновить пароль
-        </button>
-      </form>
-    </section>
-  ), [currentPassword, newPassword, confirmPassword]);
 
   return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} />
-      {notification.message && (
-        <div
-          className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded shadow-md font-semibold z-50 ${
-            notification.type === "error"
-              ? "bg-red-600 text-white"
-              : "bg-green-600 text-white"
-          }`}
-        >
-          {notification.message}
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Мой профиль</h1>
+        
+        {/* Карточка профиля */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
+            <div className="relative">
+              {editMode ? (
+                <>
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-blue-500">
+                    <img
+                      src={avatarPreview || "https://via.placeholder.com/150"}
+                      alt="Аватар"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <label className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full cursor-pointer hover:bg-blue-600 transition">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                  </label>
+                </>
+              ) : (
+                <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
+                  <img
+                    src={profile.avatarUrl || "https://via.placeholder.com/150"}
+                    alt="Аватар"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1">
+              {editMode ? (
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
+                    <input
+                      type="text"
+                      value={editedProfile.firstName}
+                      onChange={(e) => setEditedProfile(prev => ({...prev, firstName: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Фамилия</label>
+                    <input
+                      type="text"
+                      value={editedProfile.lastName}
+                      onChange={(e) => setEditedProfile(prev => ({...prev, lastName: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      type="submit"
+                      disabled={isLoading.profile}
+                      className={`px-4 py-2 rounded-md text-white ${isLoading.profile ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} transition`}
+                    >
+                      {isLoading.profile ? 'Сохранение...' : 'Сохранить'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditMode(false)}
+                      className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-semibold text-gray-800">
+                    {profile.firstName} {profile.lastName}
+                  </h2>
+                  <p className="text-gray-600 mt-1">{profile.email}</p>
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                  >
+                    Редактировать профиль
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      )}
-      <main className="p-4 flex flex-col items-center gap-6 max-w-4xl mx-auto md:flex-row md:items-start md:justify-between">
-        {ProfileCard}
-        <div className="flex flex-col gap-6 flex-grow">
-          {EmailChangeCard}
-          {PasswordChangeCard}
+
+        {/* Смена email */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Смена email</h2>
+          
+          {!isEmailStep ? (
+            <form onSubmit={handleSendVerificationCode} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Новый email</label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading.email}
+                className={`px-4 py-2 rounded-md text-white ${isLoading.email ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} transition`}
+              >
+                {isLoading.email ? 'Отправка...' : 'Отправить код подтверждения'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleConfirmEmailChange} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Код подтверждения</label>
+                <input
+                  type="text"
+                  value={emailCode}
+                  onChange={(e) => setEmailCode(e.target.value)}
+                  placeholder="Введите 6-значный код"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  maxLength={6}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Код отправлен на текущий email: {profile.email}
+                </p>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  type="submit"
+                  disabled={isLoading.email}
+                  className={`px-4 py-2 rounded-md text-white ${isLoading.email ? 'bg-green-400' : 'bg-green-600 hover:bg-green-700'} transition`}
+                >
+                  {isLoading.email ? 'Проверка...' : 'Подтвердить'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEmailStep(false)}
+                  className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                >
+                  Отмена
+                </button>
+              </div>
+            </form>
+          )}
         </div>
-      </main>
-    </>
+
+        {/* Смена пароля */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Смена пароля</h2>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Текущий пароль</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Новый пароль</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Подтверждение пароля</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading.password}
+              className={`px-4 py-2 rounded-md text-white ${isLoading.password ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} transition`}
+            >
+              {isLoading.password ? 'Сохранение...' : 'Изменить пароль'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default ProfileInfo;
