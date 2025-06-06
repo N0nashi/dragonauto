@@ -107,7 +107,8 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
     const userId = req.userId;
     const currentUser = await getUserById(userId);
     if (!currentUser) return res.status(404).json({ error: "Пользователь не найден" });
-
+    console.log("Отправляем код:", code);
+    console.log("На email:", currentUser.email);
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = Date.now() + 10 * 60 * 1000; // 10 минут
 
