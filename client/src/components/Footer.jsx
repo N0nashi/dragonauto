@@ -12,8 +12,8 @@ export default function Footer() {
 
         {/* Второй блок — всегда по правому краю на мобилках */}
         <div>
-          <p className="mb-1">+7 945 643 55 46</p>
           <p>г.Челябинск, пр. Ленина 87</p>
+          <p className="mb-1">+7 945 643 55 46</p>
         </div>
       </div>
     </footer>
