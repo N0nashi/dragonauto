@@ -31,7 +31,8 @@ router.post("/", authMiddleware, async (req, res) => {
     gearbox_car,
     body_car,
     drive_car,
-    car_power,
+    power_from_car,
+    power_to_car,
 
     // Для запчасти
     country_part,
@@ -43,7 +44,6 @@ router.post("/", authMiddleware, async (req, res) => {
     body_part
   } = req.body;
 
-  // Проверка: тип заявки указан
   if (!type || !["car", "part"].includes(type)) {
     return res.status(400).json({
       error: "Некорректный тип заявки",
@@ -54,7 +54,6 @@ router.post("/", authMiddleware, async (req, res) => {
   try {
     await db.query("BEGIN");
 
-    // Вставка основной заявки
     const insertAppQuery = `
       INSERT INTO applications (user_id, type, description, status)
       VALUES ($1, $2, $3, $4)
@@ -64,7 +63,6 @@ router.post("/", authMiddleware, async (req, res) => {
     const applicationId = result.rows[0].id;
 
     if (type === "car") {
-      // Заявка на автомобиль — обязательные поля
       const requiredFields = [
         { name: "country_car", value: country_car },
         { name: "brand_car", value: brand_car },
@@ -77,10 +75,11 @@ router.post("/", authMiddleware, async (req, res) => {
         { name: "gearbox_car", value: gearbox_car },
         { name: "body_car", value: body_car },
         { name: "drive_car", value: drive_car },
-        { name: "car_power", value: car_power }
+        { name: "power_from_car", value: power_from_car },
+        { name: "power_to_car", value: power_to_car }
       ];
 
-      const missingFields = requiredFields.filter(field => !field.value && field.value !== 0);
+      const missingFields = requiredFields.filter(field => field.value === undefined || field.value === null || field.value === "");
 
       if (missingFields.length > 0) {
         return res.status(400).json({
@@ -111,9 +110,11 @@ router.post("/", authMiddleware, async (req, res) => {
           gearbox_car,
           body_car,
           drive_car,
-          car_power
+          power_from_car,
+          power_to_car
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15
         )
       `;
 
@@ -131,11 +132,11 @@ router.post("/", authMiddleware, async (req, res) => {
         gearboxCarArr.length ? gearboxCarArr : null,
         bodyCarArr.length ? bodyCarArr : null,
         driveCarArr.length ? driveCarArr : null,
-        car_power || null
+        power_from_car || null,
+        power_to_car || null
       ]);
 
     } else if (type === "part") {
-      // Заявка на запчасть — обязательные поля
       const requiredFields = [
         { name: "country_part", value: country_part },
         { name: "brand_part", value: brand_part },
@@ -199,6 +200,7 @@ router.post("/", authMiddleware, async (req, res) => {
     });
   }
 });
+
 
 // GET /api/applications — получить все заявки текущего пользователя
 router.get("/", authMiddleware, async (req, res) => {
