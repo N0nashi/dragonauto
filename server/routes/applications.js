@@ -10,17 +10,16 @@ function parseToArray(value) {
   return value.split(",").map(s => s.trim()).filter(Boolean);
 }
 
-// POST /api/applications — создать заявку (для car или part)
 router.post("/", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const {
     // Общие поля
     type,
     description,
-
     // Для автомобиля
     country_car,
     brand_car,
+    model_car, 
     price_from_car,
     price_to_car,
     year_from_car,
@@ -33,7 +32,6 @@ router.post("/", authMiddleware, async (req, res) => {
     drive_car,
     power_from_car,
     power_to_car,
-
     // Для запчасти
     country_part,
     brand_part,
@@ -59,13 +57,19 @@ router.post("/", authMiddleware, async (req, res) => {
       VALUES ($1, $2, $3, $4)
       RETURNING id
     `;
-    const result = await db.query(insertAppQuery, [userId, type, description || null, "в обработке"]);
+    const result = await db.query(insertAppQuery, [
+      userId,
+      type,
+      description || null,
+      "в обработке"
+    ]);
     const applicationId = result.rows[0].id;
 
     if (type === "car") {
       const requiredFields = [
         { name: "country_car", value: country_car },
         { name: "brand_car", value: brand_car },
+        { name: "model_car", value: model_car }, 
         { name: "price_from_car", value: price_from_car },
         { name: "price_to_car", value: price_to_car },
         { name: "year_from_car", value: year_from_car },
@@ -79,18 +83,21 @@ router.post("/", authMiddleware, async (req, res) => {
         { name: "power_to_car", value: power_to_car }
       ];
 
-      const missingFields = requiredFields.filter(field => field.value === undefined || field.value === null || field.value === "");
+      const missingFields = requiredFields.filter(field =>
+        field.value === undefined || field.value === null || field.value === ""
+      );
 
       if (missingFields.length > 0) {
         return res.status(400).json({
           error: "Не все обязательные поля для заявки на автомобиль заполнены",
           missingFields: missingFields.map(f => f.name),
-          example: "Пример: country_car, brand_car, price_from_car и т.д.",
+          example: "Пример: country_car, brand_car, model_car и т.д.",
         });
       }
 
       const countryCarArr = parseToArray(country_car);
       const brandCarArr = parseToArray(brand_car);
+      const modelCarArr = parseToArray(model_car); 
       const gearboxCarArr = parseToArray(gearbox_car);
       const bodyCarArr = parseToArray(body_car);
       const driveCarArr = parseToArray(drive_car);
@@ -100,6 +107,7 @@ router.post("/", authMiddleware, async (req, res) => {
           application_id,
           country_car,
           brand_car,
+          model_car, 
           price_from_car,
           price_to_car,
           year_from_car,
@@ -114,7 +122,7 @@ router.post("/", authMiddleware, async (req, res) => {
           power_to_car
         ) VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-          $11, $12, $13, $14, $15
+          $11, $12, $13, $14, $15, $16
         )
       `;
 
@@ -122,6 +130,7 @@ router.post("/", authMiddleware, async (req, res) => {
         applicationId,
         countryCarArr.length ? countryCarArr : null,
         brandCarArr.length ? brandCarArr : null,
+        modelCarArr.length ? modelCarArr : null, 
         price_from_car || null,
         price_to_car || null,
         year_from_car || null,
@@ -208,12 +217,14 @@ router.get("/", authMiddleware, async (req, res) => {
   try {
     const query = `
       SELECT a.id, a.type, a.description, a.status, a.date,
-        c.country_car, c.brand_car, c.price_from_car, c.price_to_car,
+        c.country_car, c.brand_car, c.model_car, 
+        c.price_from_car, c.price_to_car,
         c.year_from_car, c.year_to_car, c.year_range_car,
-        c.mileage_from_car, c.mileage_to_car, c.gearbox_car, c.body_car, c.drive_car,
+        c.mileage_from_car, c.mileage_to_car,
+        c.gearbox_car, c.body_car, c.drive_car,
         c.power_from_car, c.power_to_car,
-        p.country_part, p.brand_part, p.model_part, p.part_name,
-        p.price_from_part, p.price_to_part, p.body_part
+        p.country_part, p.brand_part, p.model_part,
+        p.part_name, p.price_from_part, p.price_to_part, p.body_part
       FROM applications a
       LEFT JOIN car_applications c ON a.id = c.application_id
       LEFT JOIN part_applications p ON a.id = p.application_id
@@ -227,6 +238,7 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Ошибка сервера при получении заявок" });
   }
 });
+
 // GET /api/applications/all — получить все заявки (только для модератора)
 router.get("/all", authMiddleware, isModerator, async (req, res) => {
   try {
@@ -261,18 +273,22 @@ router.get("/:id", authMiddleware, async (req, res) => {
   if (isNaN(applicationId)) {
     return res.status(400).json({ error: "Неверный идентификатор заявки" });
   }
+
   try {
     let query;
     let params;
+
     if (userRole === "moderator") {
       query = `
         SELECT a.id, a.user_id, a.type, a.description, a.status, a.date,
-          c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car,
-          c.year_from_car, c.year_to_car, c.year_range_car, c.mileage_from_car, c.mileage_to_car,
+          c.application_id, c.country_car, c.brand_car, c.model_car, -- ✅ Добавлено
+          c.price_from_car, c.price_to_car,
+          c.year_from_car, c.year_to_car, c.year_range_car,
+          c.mileage_from_car, c.mileage_to_car,
           c.gearbox_car, c.body_car, c.drive_car,
           c.power_from_car, c.power_to_car,
-          p.country_part, p.brand_part, p.model_part, p.part_name,
-          p.price_from_part, p.price_to_part, p.body_part
+          p.country_part, p.brand_part, p.model_part,
+          p.part_name, p.price_from_part, p.price_to_part, p.body_part
         FROM applications a
         LEFT JOIN car_applications c ON a.id = c.application_id
         LEFT JOIN part_applications p ON a.id = p.application_id
@@ -283,12 +299,14 @@ router.get("/:id", authMiddleware, async (req, res) => {
     } else {
       query = `
         SELECT a.id, a.user_id, a.type, a.description, a.status, a.date,
-          c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car,
-          c.year_from_car, c.year_to_car, c.year_range_car, c.mileage_from_car, c.mileage_to_car,
+          c.application_id, c.country_car, c.brand_car, c.model_car, -- ✅ Добавлено
+          c.price_from_car, c.price_to_car,
+          c.year_from_car, c.year_to_car, c.year_range_car,
+          c.mileage_from_car, c.mileage_to_car,
           c.gearbox_car, c.body_car, c.drive_car,
           c.power_from_car, c.power_to_car,
-          p.country_part, p.brand_part, p.model_part, p.part_name,
-          p.price_from_part, p.price_to_part, p.body_part
+          p.country_part, p.brand_part, p.model_part,
+          p.part_name, p.price_from_part, p.price_to_part, p.body_part
         FROM applications a
         LEFT JOIN car_applications c ON a.id = c.application_id
         LEFT JOIN part_applications p ON a.id = p.application_id

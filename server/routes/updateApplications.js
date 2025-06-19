@@ -20,6 +20,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     description,
     country_car,
     brand_car,
+    model_car,               // ✅ Добавлено
     price_from_car,
     price_to_car,
     year_from_car,
@@ -29,9 +30,9 @@ router.put("/:id", authMiddleware, async (req, res) => {
     mileage_to_car,
     gearbox_car,
     body_car,
-    drive_car,              
-    power_from_car,         
-    power_to_car,           
+    drive_car,
+    power_from_car,
+    power_to_car,
     body_part,
     country_part,
     brand_part,
@@ -69,32 +70,35 @@ router.put("/:id", authMiddleware, async (req, res) => {
     if (type === "car") {
       const countryCarArr = parseToArray(country_car);
       const brandCarArr = parseToArray(brand_car);
+      const modelCarArr = parseToArray(model_car); // ✅ Добавлено
       const gearboxCarArr = parseToArray(gearbox_car);
       const bodyCarArr = parseToArray(body_car);
-      const driveCarArr = parseToArray(drive_car); 
+      const driveCarArr = parseToArray(drive_car);
 
       const updateCarQuery = `
         UPDATE car_applications SET
           country_car = $1,
           brand_car = $2,
-          price_from_car = $3,
-          price_to_car = $4,
-          year_from_car = $5,
-          year_to_car = $6,
-          year_range_car = $7,
-          mileage_from_car = $8,
-          mileage_to_car = $9,
-          gearbox_car = $10,
-          body_car = $11,
-          drive_car = $12,
-          power_from_car = $13,
-          power_to_car = $14
-        WHERE application_id = $15
+          model_car = $3,              -- ✅ Добавлено
+          price_from_car = $4,
+          price_to_car = $5,
+          year_from_car = $6,
+          year_to_car = $7,
+          year_range_car = $8,
+          mileage_from_car = $9,
+          mileage_to_car = $10,
+          gearbox_car = $11,
+          body_car = $12,
+          drive_car = $13,
+          power_from_car = $14,
+          power_to_car = $15
+        WHERE application_id = $16
       `;
 
       await db.query(updateCarQuery, [
         countryCarArr.length ? countryCarArr : null,
         brandCarArr.length ? brandCarArr : null,
+        modelCarArr.length ? modelCarArr : null, // ✅ Добавлено
         price_from_car || null,
         price_to_car || null,
         year_from_car || null,
@@ -104,9 +108,9 @@ router.put("/:id", authMiddleware, async (req, res) => {
         mileage_to_car || null,
         gearboxCarArr.length ? gearboxCarArr : null,
         bodyCarArr.length ? bodyCarArr : null,
-        driveCarArr.length ? driveCarArr : null, 
-        power_from_car || null,                  
-        power_to_car || null,                    
+        driveCarArr.length ? driveCarArr : null,
+        power_from_car || null,
+        power_to_car || null,
         applicationId,
       ]);
     } else if (type === "part") {
