@@ -74,7 +74,7 @@ export default function Requests() {
     }
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/applications/${id}/close`, {
+      const res = await fetch(`https://dragonauto74.ru/api/applications/${id}/close`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
