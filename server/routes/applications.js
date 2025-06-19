@@ -258,21 +258,21 @@ router.get("/:id", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const userRole = req.userRole;
   const applicationId = parseInt(req.params.id, 10);
-
   if (isNaN(applicationId)) {
     return res.status(400).json({ error: "Неверный идентификатор заявки" });
   }
-
   try {
     let query;
     let params;
-
     if (userRole === "moderator") {
       query = `
         SELECT a.id, a.user_id, a.type, a.description, a.status, a.date,
-          c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car, c.year_from_car, c.year_to_car,
-          c.year_range_car, c.mileage_from_car, c.mileage_to_car, c.gearbox_car, c.body_car, c.drive_car, c.car_power,
-          p.country_part, p.brand_part, p.model_part, p.part_name, p.price_from_part, p.price_to_part, p.body_part
+          c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car,
+          c.year_from_car, c.year_to_car, c.year_range_car, c.mileage_from_car, c.mileage_to_car,
+          c.gearbox_car, c.body_car, c.drive_car,
+          c.power_from_car, c.power_to_car,
+          p.country_part, p.brand_part, p.model_part, p.part_name,
+          p.price_from_part, p.price_to_part, p.body_part
         FROM applications a
         LEFT JOIN car_applications c ON a.id = c.application_id
         LEFT JOIN part_applications p ON a.id = p.application_id
@@ -283,9 +283,12 @@ router.get("/:id", authMiddleware, async (req, res) => {
     } else {
       query = `
         SELECT a.id, a.user_id, a.type, a.description, a.status, a.date,
-          c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car, c.year_from_car, c.year_to_car,
-          c.year_range_car, c.mileage_from_car, c.mileage_to_car, c.gearbox_car, c.body_car, c.drive_car, c.car_power,
-          p.country_part, p.brand_part, p.model_part, p.part_name, p.price_from_part, p.price_to_part, p.body_part
+          c.application_id, c.country_car, c.brand_car, c.price_from_car, c.price_to_car,
+          c.year_from_car, c.year_to_car, c.year_range_car, c.mileage_from_car, c.mileage_to_car,
+          c.gearbox_car, c.body_car, c.drive_car,
+          c.power_from_car, c.power_to_car,
+          p.country_part, p.brand_part, p.model_part, p.part_name,
+          p.price_from_part, p.price_to_part, p.body_part
         FROM applications a
         LEFT JOIN car_applications c ON a.id = c.application_id
         LEFT JOIN part_applications p ON a.id = p.application_id
@@ -302,7 +305,6 @@ router.get("/:id", authMiddleware, async (req, res) => {
     }
 
     res.json(result.rows[0]);
-
   } catch (error) {
     console.error("Ошибка при получении заявки:", error);
     res.status(500).json({ error: "Ошибка сервера при получении заявки" });
