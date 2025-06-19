@@ -5,7 +5,6 @@ import "react-toastify/dist/ReactToastify.css";
 const allGridOptions = [3, 6];
 
 const CarsCatalog = () => {
-  // Состояния
   const [filters, setFilters] = useState({
     countries: [],
     brands: [],
@@ -13,7 +12,7 @@ const CarsCatalog = () => {
     bodies: [],
     gearboxes: [],
     drives: [],
-    priceRange: { min: 0, max: 0 }
+    priceRange: { min: 0, max: 0 },
   });
   const [selectedFilters, setSelectedFilters] = useState({});
   const [cars, setCars] = useState([]);
@@ -27,14 +26,11 @@ const CarsCatalog = () => {
     window.matchMedia("(orientation: portrait)").matches
   );
 
-  // Refs для отслеживания предыдущих значений фильтров
   const prevCountryRef = useRef(null);
   const prevBrandRef = useRef(null);
 
-  // Получаем токен из localStorage
   const token = localStorage.getItem("token");
 
-  // Функция для получения userId из токена
   const getUserIdFromToken = () => {
     if (!token) return null;
     try {
@@ -47,12 +43,10 @@ const CarsCatalog = () => {
 
   const currentUserId = getUserIdFromToken();
 
-  // Обновление доступных вариантов сетки
   const updateLayout = () => {
     const width = window.innerWidth;
     const portrait = window.matchMedia("(orientation: portrait)").matches;
     setIsPortrait(portrait);
-
     if (width < 768) {
       setAvailableGridOptions([]);
       setGridCols(portrait ? 1 : 2);
@@ -65,30 +59,26 @@ const CarsCatalog = () => {
     }
   };
 
-  // Загрузка фильтров с учетом выбранных значений
   const loadFilters = async () => {
     try {
       const url = new URL(`${process.env.REACT_APP_API_URL}/api/cars/filters`);
-      
-      // Добавляем текущие фильтры в запрос
-      if (selectedFilters.country) url.searchParams.append('country', selectedFilters.country);
-      if (selectedFilters.brand) url.searchParams.append('brand', selectedFilters.brand);
+      if (selectedFilters.country)
+        url.searchParams.append("country", selectedFilters.country);
+      if (selectedFilters.brand)
+        url.searchParams.append("brand", selectedFilters.brand);
 
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to load filters");
       const data = await response.json();
-      
       setFilters(data);
-      
-      // Сбрасываем зависимые фильтры при изменении родительского
+
       if (prevCountryRef.current !== selectedFilters.country) {
-        setSelectedFilters(prev => ({ ...prev, brand: '', model: '' }));
+        setSelectedFilters((prev) => ({ ...prev, brand: "", model: "" }));
       }
       if (prevBrandRef.current !== selectedFilters.brand) {
-        setSelectedFilters(prev => ({ ...prev, model: '' }));
+        setSelectedFilters((prev) => ({ ...prev, model: "" }));
       }
-      
-      // Сохраняем текущие значения для следующего сравнения
+
       prevCountryRef.current = selectedFilters.country;
       prevBrandRef.current = selectedFilters.brand;
     } catch (err) {
@@ -99,18 +89,14 @@ const CarsCatalog = () => {
     }
   };
 
-  // Загрузка автомобилей по фильтрам
   const loadCars = async () => {
     setLoadingCars(true);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/cars/search`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(selectedFilters),
-        }
-      );
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cars/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selectedFilters),
+      });
       if (!response.ok) throw new Error("Failed to load cars");
       const data = await response.json();
       setCars(data);
@@ -122,24 +108,19 @@ const CarsCatalog = () => {
     }
   };
 
-  // Обработчик изменения фильтров
   const handleFilterChange = (key, value) => {
-    setSelectedFilters(prev => {
+    setSelectedFilters((prev) => {
       const newFilters = { ...prev, [key]: value || undefined };
-      
-      // Каскадный сброс зависимых фильтров
-      if (key === 'country') {
-        newFilters.brand = '';
-        newFilters.model = '';
-      } else if (key === 'brand') {
-        newFilters.model = '';
+      if (key === "country") {
+        newFilters.brand = "";
+        newFilters.model = "";
+      } else if (key === "brand") {
+        newFilters.model = "";
       }
-      
       return newFilters;
     });
   };
 
-  // Эффекты
   useEffect(() => {
     updateLayout();
     window.addEventListener("resize", updateLayout);
@@ -164,7 +145,6 @@ const CarsCatalog = () => {
     loadCars();
   }, [selectedFilters]);
 
-  // Рендер-функции
   const renderFilterSelect = (label, key, options) => (
     <label className="block mb-4" key={key}>
       <span className="block font-semibold mb-1">{label}</span>
@@ -191,20 +171,24 @@ const CarsCatalog = () => {
           type="number"
           placeholder="от"
           value={selectedFilters[key]?.min || ""}
-          onChange={(e) => handleFilterChange(key, { 
-            ...selectedFilters[key], 
-            min: e.target.value ? Number(e.target.value) : undefined 
-          })}
+          onChange={(e) =>
+            handleFilterChange(key, {
+              ...selectedFilters[key],
+              min: e.target.value ? Number(e.target.value) : undefined,
+            })
+          }
           className="w-1/2 border rounded px-2 py-1"
         />
         <input
           type="number"
           placeholder="до"
           value={selectedFilters[key]?.max || ""}
-          onChange={(e) => handleFilterChange(key, { 
-            ...selectedFilters[key], 
-            max: e.target.value ? Number(e.target.value) : undefined 
-          })}
+          onChange={(e) =>
+            handleFilterChange(key, {
+              ...selectedFilters[key],
+              max: e.target.value ? Number(e.target.value) : undefined,
+            })
+          }
           className="w-1/2 border rounded px-2 py-1"
         />
       </div>
@@ -216,8 +200,7 @@ const CarsCatalog = () => {
     const src = photoUrl?.startsWith("http")
       ? photoUrl
       : `${process.env.REACT_APP_API_URL}${photoUrl}`;
-    const heightClass =
-      gridCols === 3 ? "h-64" : gridCols === 6 ? "h-48" : "h-40";
+    const heightClass = gridCols === 3 ? "h-64" : gridCols === 6 ? "h-48" : "h-40";
     return (
       <img
         src={src || "/placeholder-car.jpg"}
@@ -240,6 +223,8 @@ const CarsCatalog = () => {
     }
 
     try {
+      const enginePower = car.engine_power ? Number(car.engine_power) : null;
+
       const requestData = {
         type: "car",
         description: `Заявка на автомобиль ${car.brand} ${car.model} ${car.year} года`,
@@ -254,20 +239,18 @@ const CarsCatalog = () => {
         gearbox_car: car.gearbox,
         body_car: car.body,
         drive_car: car.drive ? [car.drive] : null,
-        car_power: car.engine_power?.toString(),
+        power_from_car: enginePower,
+        power_to_car: enginePower,
       };
 
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/applications`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestData),
-        }
-      );
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -285,7 +268,6 @@ const CarsCatalog = () => {
   return (
     <>
       <div className="flex flex-col lg:flex-row p-4 gap-6">
-        {/* Блок фильтров */}
         <aside className="w-full md:w-64 bg-white border rounded p-4 h-fit shadow">
           <h2 className="font-bold text-lg mb-4">Фильтры</h2>
           {loadingFilters ? (
@@ -297,7 +279,6 @@ const CarsCatalog = () => {
               {renderFilterSelect("Страна", "country", filters.countries)}
               {renderFilterSelect("Марка", "brand", filters.brands)}
               {renderFilterSelect("Модель", "model", filters.models)}
-              
               {showAdvancedFilters && (
                 <>
                   {renderRangeInput("Год выпуска", "year")}
@@ -308,10 +289,9 @@ const CarsCatalog = () => {
                   {renderFilterSelect("Кузов", "body", filters.bodies)}
                 </>
               )}
-              
               <button
                 className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
-                onClick={() => setShowAdvancedFilters(prev => !prev)}
+                onClick={() => setShowAdvancedFilters((prev) => !prev)}
               >
                 {showAdvancedFilters
                   ? "Скрыть дополнительные фильтры"
@@ -321,7 +301,6 @@ const CarsCatalog = () => {
           )}
         </aside>
 
-        {/* Основной контент */}
         <main className="flex-1">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-xl">Автомобили ({cars.length})</h2>
@@ -343,7 +322,6 @@ const CarsCatalog = () => {
               </div>
             )}
           </div>
-          
           {loadingCars ? (
             <p>Загрузка автомобилей...</p>
           ) : error ? (
@@ -391,7 +369,6 @@ const CarsCatalog = () => {
           )}
         </main>
       </div>
-
       <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
