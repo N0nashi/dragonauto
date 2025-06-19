@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const COUNTRIES = ["Китай", "Корея", "Япония"];
 const BODIES = [
@@ -36,7 +38,6 @@ export default function PartForm({
 
   const [errors, setErrors] = useState({});
 
-  // При монтировании или изменении initialData обновляем форму
   useEffect(() => {
     if (initialData) {
       setForm({
@@ -88,6 +89,19 @@ export default function PartForm({
     return errs;
   };
 
+  const getErrorToastMessage = (errors) => {
+    const errorMessages = [];
+    
+    if (errors.part_name) errorMessages.push("• Название запчасти: " + errors.part_name);
+    if (errors.country_part) errorMessages.push("• Страна: " + errors.country_part);
+    if (errors.brand_part) errorMessages.push("• Марка: " + errors.brand_part);
+    if (errors.body_part) errorMessages.push("• Кузов: " + errors.body_part);
+    if (errors.price_from_part) errorMessages.push("• Цена от: " + errors.price_from_part);
+    if (errors.price_to_part) errorMessages.push("• Цена до: " + errors.price_to_part);
+
+    return "Исправьте следующие ошибки:\n" + errorMessages.join("\n");
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (readOnly) return;
@@ -101,172 +115,204 @@ export default function PartForm({
         price_from_part: Number(form.price_from_part),
         price_to_part: Number(form.price_to_part),
       });
+    } else {
+      toast.error(getErrorToastMessage(validationErrors), {
+        autoClose: 5000,
+        closeButton: true,
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-4">
-      {/* Название запчасти */}
-      <div>
-        <label className="block font-semibold mb-1">Запчасть (обязательно):</label>
-        <input
-          type="text"
-          name="part_name"
-          value={form.part_name}
-          onChange={handleChange}
-          disabled={loading || readOnly}
-          className="border p-2 w-full"
-          placeholder="Например, Амортизатор"
-        />
-        {errors.part_name && <p className="text-red-600 text-sm mt-1">{errors.part_name}</p>}
-      </div>
-
-      {/* Страна */}
-      <div>
-        <label className="block font-semibold mb-1">Страна (обязательно):</label>
-        <select
-          name="country_part"
-          value={form.country_part}
-          onChange={handleChange}
-          disabled={loading || readOnly}
-          className="border p-2 w-full"
-        >
-          <option value="">-- Выберите страну --</option>
-          {COUNTRIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        {errors.country_part && (
-          <p className="text-red-600 text-sm mt-1">{errors.country_part}</p>
-        )}
-      </div>
-
-      {/* Марка */}
-      <div>
-        <label className="block font-semibold mb-1">Марка (обязательно):</label>
-        <input
-          type="text"
-          name="brand_part"
-          value={form.brand_part}
-          onChange={handleChange}
-          disabled={loading || readOnly}
-          className="border p-2 w-full"
-          placeholder="Например, Toyota"
-        />
-        {errors.brand_part && <p className="text-red-600 text-sm mt-1">{errors.brand_part}</p>}
-      </div>
-
-      {/* Модель */}
-      <div>
-        <label className="block font-semibold mb-1">Модель (необязательно):</label>
-        <input
-          type="text"
-          name="model_part"
-          value={form.model_part}
-          onChange={handleChange}
-          disabled={loading || readOnly}
-          className="border p-2 w-full"
-          placeholder="Например, Camry"
-        />
-      </div>
-
-      {/* Кузов */}
-      <div>
-        <label className="block font-semibold mb-1">Кузов (обязательно):</label>
-        <select
-          name="body_part"
-          value={form.body_part}
-          onChange={handleChange}
-          disabled={loading || readOnly}
-          className="border p-2 w-full"
-        >
-          <option value="">-- Выберите кузов --</option>
-          {BODIES.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
-        {errors.body_part && <p className="text-red-600 text-sm mt-1">{errors.body_part}</p>}
-      </div>
-
-      {/* Цены */}
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <label className="block font-semibold mb-1">Цена от (обязательно):</label>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-4">
+        {/* Название запчасти */}
+        <div>
+          <label className="block font-semibold mb-1">
+            Название запчасти: <span className="text-red-600">*</span>
+          </label>
           <input
-            type="number"
-            name="price_from_part"
-            value={form.price_from_part}
+            type="text"
+            name="part_name"
+            value={form.part_name}
             onChange={handleChange}
             disabled={loading || readOnly}
             className="border p-2 w-full"
-            placeholder="Минимум"
-            min="0"
-            step="any"
+            placeholder="Например, Амортизатор"
           />
-          {errors.price_from_part && (
-            <p className="text-red-600 text-sm mt-1">{errors.price_from_part}</p>
-          )}
+          {errors.part_name && <p className="text-red-600 text-sm mt-1">{errors.part_name}</p>}
         </div>
-        <div className="flex-1">
-          <label className="block font-semibold mb-1">Цена до (обязательно):</label>
-          <input
-            type="number"
-            name="price_to_part"
-            value={form.price_to_part}
+
+        {/* Страна */}
+        <div>
+          <label className="block font-semibold mb-1">
+            Страна: <span className="text-red-600">*</span>
+          </label>
+          <select
+            name="country_part"
+            value={form.country_part}
             onChange={handleChange}
             disabled={loading || readOnly}
             className="border p-2 w-full"
-            placeholder="Максимум"
-            min="0"
-            step="any"
-          />
-          {errors.price_to_part && (
-            <p className="text-red-600 text-sm mt-1">{errors.price_to_part}</p>
+          >
+            <option value="">-- Выберите страну --</option>
+            {COUNTRIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          {errors.country_part && (
+            <p className="text-red-600 text-sm mt-1">{errors.country_part}</p>
           )}
         </div>
-      </div>
 
-      {/* Описание */}
-      <div>
-        <label className="block font-semibold mb-1">Описание (необязательно):</label>
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          disabled={loading || readOnly}
-          className="border p-2 w-full"
-          rows={4}
-          placeholder="Дополнительная информация"
-        />
-      </div>
+        {/* Марка */}
+        <div>
+          <label className="block font-semibold mb-1">
+            Марка: <span className="text-red-600">*</span>
+          </label>
+          <input
+            type="text"
+            name="brand_part"
+            value={form.brand_part}
+            onChange={handleChange}
+            disabled={loading || readOnly}
+            className="border p-2 w-full"
+            placeholder="Например, Toyota"
+          />
+          {errors.brand_part && <p className="text-red-600 text-sm mt-1">{errors.brand_part}</p>}
+        </div>
 
-      {/* Кнопки */}
-      <div className="flex gap-4">
-        {!readOnly && (
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
+        {/* Модель */}
+        <div>
+          <label className="block font-semibold mb-1">Модель:</label>
+          <input
+            type="text"
+            name="model_part"
+            value={form.model_part}
+            onChange={handleChange}
+            disabled={loading || readOnly}
+            className="border p-2 w-full"
+            placeholder="Например, Camry"
+          />
+        </div>
+
+        {/* Кузов */}
+        <div>
+          <label className="block font-semibold mb-1">
+            Кузов: <span className="text-red-600">*</span>
+          </label>
+          <select
+            name="body_part"
+            value={form.body_part}
+            onChange={handleChange}
+            disabled={loading || readOnly}
+            className="border p-2 w-full"
           >
-            {loading ? "Отправка..." : "Отправить заявку"}
-          </button>
-        )}
+            <option value="">-- Выберите кузов --</option>
+            {BODIES.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+          {errors.body_part && <p className="text-red-600 text-sm mt-1">{errors.body_part}</p>}
+        </div>
 
-        {(onClose || onCancel) && (
-          <button
-            type="button"
-            onClick={onClose || onCancel}
-            disabled={loading}
-            className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
-          >
-            Закрыть
-          </button>
-        )}
-      </div>
-    </form>
+        {/* Цены */}
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="block font-semibold mb-1">
+              Цена от (₽): <span className="text-red-600">*</span>
+            </label>
+            <input
+              type="number"
+              name="price_from_part"
+              value={form.price_from_part}
+              onChange={handleChange}
+              disabled={loading || readOnly}
+              className="border p-2 w-full"
+              placeholder="Минимум"
+              min="0"
+              step="any"
+            />
+            {errors.price_from_part && (
+              <p className="text-red-600 text-sm mt-1">{errors.price_from_part}</p>
+            )}
+          </div>
+          <div className="flex-1">
+            <label className="block font-semibold mb-1">
+              Цена до (₽): <span className="text-red-600">*</span>
+            </label>
+            <input
+              type="number"
+              name="price_to_part"
+              value={form.price_to_part}
+              onChange={handleChange}
+              disabled={loading || readOnly}
+              className="border p-2 w-full"
+              placeholder="Максимум"
+              min="0"
+              step="any"
+            />
+            {errors.price_to_part && (
+              <p className="text-red-600 text-sm mt-1">{errors.price_to_part}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Описание */}
+        <div>
+          <label className="block font-semibold mb-1">Описание:</label>
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            disabled={loading || readOnly}
+            className="border p-2 w-full"
+            rows={4}
+            placeholder="Дополнительная информация"
+          />
+        </div>
+
+        {/* Кнопки */}
+        <div className="flex gap-4">
+          {!readOnly && (
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
+            >
+              {loading ? "Отправка..." : "Отправить заявку"}
+            </button>
+          )}
+
+          {(onClose || onCancel) && (
+            <button
+              type="button"
+              onClick={onClose || onCancel}
+              disabled={loading}
+              className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            >
+              Закрыть
+            </button>
+          )}
+        </div>
+      </form>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+    </>
   );
 }

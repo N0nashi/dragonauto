@@ -63,8 +63,6 @@ const CatalogManagement = () => {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/${activeTab}/${item.id}`);
       if (!response.ok) throw new Error("Не удалось загрузить данные");
       const fullItem = await response.json();
-
-      // Явно сохраняем id из item, чтобы он не терялся
       setEditingItem({ ...fullItem, id: item.id });
     } catch (err) {
       toast.error("Ошибка при загрузке данных для редактирования");
@@ -160,7 +158,7 @@ const CatalogManagement = () => {
     <div className="mt-4">
       <button
         onClick={handleAddNew}
-        className="mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
       >
         Добавить позицию
       </button>
@@ -203,7 +201,7 @@ const CatalogManagement = () => {
                 <td className="px-4 py-2 space-x-2">
                   <button
                     onClick={() => handleEdit(item)}
-                    className="text-yellow-600 hover:underline"
+                    className="text-blue-600 hover:underline"
                   >
                     Редактировать
                   </button>
@@ -237,26 +235,27 @@ const CatalogManagement = () => {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Управление каталогом</h2>
-      <div className="flex justify-center mb-4">
+      <nav className="mb-6 flex justify-center space-x-4 border-b pb-2">
         <button
           onClick={() => setActiveTab("cars")}
-          className={`px-4 py-2 border rounded-l ${
-            activeTab === "cars" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"
+          className={`px-4 py-2 font-medium ${
+            activeTab === "cars" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600"
           }`}
         >
           Каталог автомобилей
         </button>
         <button
           onClick={() => setActiveTab("parts")}
-          className={`px-4 py-2 border-t border-b border-r rounded-r ${
-            activeTab === "parts" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"
+          className={`px-4 py-2 font-medium ${
+            activeTab === "parts" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600"
           }`}
         >
           Каталог запчастей
         </button>
-      </div>
+      </nav>
+
       {loading ? <p className="text-center text-gray-500">Загрузка...</p> : renderTable()}
+      
       {editingItem && (
         <div className="mt-8 border border-gray-300 rounded-lg p-6 bg-white shadow-md">
           <h3 className="text-xl font-semibold mb-4">
@@ -270,15 +269,16 @@ const CatalogManagement = () => {
           )}
         </div>
       )}
+
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded shadow-md max-w-sm w-full">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
             <h3 className="text-lg font-semibold mb-4">Подтверждение удаления</h3>
-            <p className="mb-6">Вы уверены, что хотите удалить эту запись?</p>
+            <p className="mb-6">Вы уверены, что хотите удалить эту позицию? Отменить это действие будет невозможно.</p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
               >
                 Отмена
               </button>
@@ -286,12 +286,13 @@ const CatalogManagement = () => {
                 onClick={confirmDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
-                Да, удалить
+                Удалить
               </button>
             </div>
           </div>
         </div>
       )}
+
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );

@@ -37,8 +37,7 @@ const SendEmailModal = ({ email, applicationId, onClose }) => {
 
       setSuccess(true);
       setText("");
-      // Если нужно, можно закрыть модалку автоматически:
-      // setTimeout(() => onClose(), 2000);
+      setTimeout(() => onClose(), 2000);
     } catch (err) {
       setError(err.message);
     } finally {
