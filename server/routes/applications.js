@@ -227,7 +227,6 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Ошибка сервера при получении заявок" });
   }
 });
-
 // GET /api/applications/all — получить все заявки (только для модератора)
 router.get("/all", authMiddleware, isModerator, async (req, res) => {
   try {
