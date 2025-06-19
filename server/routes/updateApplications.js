@@ -10,12 +10,12 @@ function parseToArray(value) {
   return value.split(",").map(s => s.trim()).filter(Boolean);
 }
 
-// PUT /api/updateApplications/:id — обновление заявки с отдельной логикой
+// PUT /api/applications/:id — обновление заявки с отдельной логикой
 router.put("/:id", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const applicationId = req.params.id;
 
-  // Извлечение полей из тела запроса (можно менять, если логика другая)
+  // Извлечение полей из тела запроса
   const {
     description,
     country_car,
@@ -29,6 +29,9 @@ router.put("/:id", authMiddleware, async (req, res) => {
     mileage_to_car,
     gearbox_car,
     body_car,
+    drive_car,              
+    power_from_car,         
+    power_to_car,           
     body_part,
     country_part,
     brand_part,
@@ -68,9 +71,8 @@ router.put("/:id", authMiddleware, async (req, res) => {
       const brandCarArr = parseToArray(brand_car);
       const gearboxCarArr = parseToArray(gearbox_car);
       const bodyCarArr = parseToArray(body_car);
+      const driveCarArr = parseToArray(drive_car); 
 
-      // Здесь можешь реализовать свою логику для обновления полей car_applications,
-      // например не обновлять все поля или преобразовывать иначе.
       const updateCarQuery = `
         UPDATE car_applications SET
           country_car = $1,
@@ -83,8 +85,11 @@ router.put("/:id", authMiddleware, async (req, res) => {
           mileage_from_car = $8,
           mileage_to_car = $9,
           gearbox_car = $10,
-          body_car = $11
-        WHERE application_id = $12
+          body_car = $11,
+          drive_car = $12,
+          power_from_car = $13,
+          power_to_car = $14
+        WHERE application_id = $15
       `;
 
       await db.query(updateCarQuery, [
@@ -99,10 +104,12 @@ router.put("/:id", authMiddleware, async (req, res) => {
         mileage_to_car || null,
         gearboxCarArr.length ? gearboxCarArr : null,
         bodyCarArr.length ? bodyCarArr : null,
+        driveCarArr.length ? driveCarArr : null, 
+        power_from_car || null,                  
+        power_to_car || null,                    
         applicationId,
       ]);
     } else if (type === "part") {
-      // Аналогично для деталей — можешь менять логику обновления
       const updatePartQuery = `
         UPDATE part_applications SET
           country_part = $1,
