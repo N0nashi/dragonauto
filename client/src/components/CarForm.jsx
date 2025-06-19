@@ -19,7 +19,7 @@ const BODIES = [
   "Фургон"
 ];
 
-function MultiSelectDropdown({ label, options, selected, onChange, disabled }) {
+function MultiSelectDropdown({ label, options, selected, onChange, disabled, required }) {
   const [open, setOpen] = useState(false);
   const selectedLabel =
     selected.length === 0 ? `Выберите ${label.toLowerCase()}` : selected.join(", ");
@@ -41,7 +41,9 @@ function MultiSelectDropdown({ label, options, selected, onChange, disabled }) {
           disabled ? "bg-gray-100 cursor-not-allowed" : ""
         }`}
       >
-        <span className="block font-semibold">{label}</span>
+        <span className="block font-semibold">
+          {label} {required && <span className="text-red-600">*</span>}
+        </span>
         <span className="text-sm text-gray-600">{selectedLabel}</span>
       </div>
       {open && !disabled && (
@@ -212,6 +214,23 @@ export default function CarForm({
     return newErrors;
   };
 
+  const getErrorToastMessage = (errors) => {
+    const errorMessages = [];
+    
+    if (errors.country_car) errorMessages.push("• Страна: " + errors.country_car);
+    if (errors.brand_car) errorMessages.push("• Марка: " + errors.brand_car);
+    if (errors.price_from_car) errorMessages.push("• Цена от: " + errors.price_from_car);
+    if (errors.price_to_car) errorMessages.push("• Цена до: " + errors.price_to_car);
+    if (errors.year_from_car) errorMessages.push("• Год от: " + errors.year_from_car);
+    if (errors.year_to_car) errorMessages.push("• Год до: " + errors.year_to_car);
+    if (errors.mileage_from_car) errorMessages.push("• Пробег от: " + errors.mileage_from_car);
+    if (errors.mileage_to_car) errorMessages.push("• Пробег до: " + errors.mileage_to_car);
+    if (errors.power_from_car) errorMessages.push("• Мощность от: " + errors.power_from_car);
+    if (errors.power_to_car) errorMessages.push("• Мощность до: " + errors.power_to_car);
+
+    return "Исправьте следующие ошибки:\n" + errorMessages.join("\n");
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (readOnly) return;
@@ -222,7 +241,10 @@ export default function CarForm({
     if (Object.keys(validationErrors).length === 0) {
       onSubmit(form);
     } else {
-      toast.error("Исправьте ошибки в форме");
+      toast.error(getErrorToastMessage(validationErrors), {
+        autoClose: 5000,
+        closeButton: true,
+      });
     }
   };
 
@@ -232,11 +254,12 @@ export default function CarForm({
         {/* Страна */}
         <div>
           <MultiSelectDropdown
-            label="Страна (обязательно)"
+            label="Страна"
             options={COUNTRIES}
             selected={form.country_car}
             onChange={(vals) => setForm((prev) => ({ ...prev, country_car: vals }))}
             disabled={loading || readOnly}
+            required={true}
           />
           {errors.country_car && (
             <p className="text-red-600 text-sm mt-1">{errors.country_car}</p>
@@ -245,7 +268,9 @@ export default function CarForm({
 
         {/* Марка */}
         <div>
-          <label className="block font-semibold mb-1">Марка (обязательно):</label>
+          <label className="block font-semibold mb-1">
+            Марка: <span className="text-red-600">*</span>
+          </label>
           <input
             name="brand_car"
             value={form.brand_car}
@@ -261,7 +286,7 @@ export default function CarForm({
 
         {/* Модель */}
         <div>
-          <label className="block font-semibold mb-1">Модель (необязательно):</label>
+          <label className="block font-semibold mb-1">Модель:</label>
           <input
             name="model_car"
             value={form.model_car}
@@ -313,7 +338,9 @@ export default function CarForm({
         {/* Цена */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Цена от (₽, обязательно):</label>
+            <label className="block font-semibold mb-1">
+              Цена от (₽): <span className="text-red-600">*</span>
+            </label>
             <input
               name="price_from_car"
               value={form.price_from_car}
@@ -329,7 +356,9 @@ export default function CarForm({
             )}
           </div>
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Цена до (₽, обязательно):</label>
+            <label className="block font-semibold mb-1">
+              Цена до (₽): <span className="text-red-600">*</span>
+            </label>
             <input
               name="price_to_car"
               value={form.price_to_car}
@@ -349,7 +378,7 @@ export default function CarForm({
         {/* Пробег */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Пробег от (км, необязательно):</label>
+            <label className="block font-semibold mb-1">Пробег от (км):</label>
             <input
               name="mileage_from_car"
               value={form.mileage_from_car}
@@ -365,7 +394,7 @@ export default function CarForm({
             )}
           </div>
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Пробег до (км, необязательно):</label>
+            <label className="block font-semibold mb-1">Пробег до (км):</label>
             <input
               name="mileage_to_car"
               value={form.mileage_to_car}
@@ -385,7 +414,7 @@ export default function CarForm({
         {/* Мощность двигателя */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Мощность от (л.с., необязательно):</label>
+            <label className="block font-semibold mb-1">Мощность от (л.с.):</label>
             <input
               name="power_from_car"
               value={form.power_from_car}
@@ -401,7 +430,7 @@ export default function CarForm({
             )}
           </div>
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Мощность до (л.с., необязательно):</label>
+            <label className="block font-semibold mb-1">Мощность до (л.с.):</label>
             <input
               name="power_to_car"
               value={form.power_to_car}
@@ -421,7 +450,7 @@ export default function CarForm({
         {/* Привод */}
         <div>
           <MultiSelectDropdown
-            label="Привод (необязательно)"
+            label="Привод"
             options={DRIVES}
             selected={form.drive_car}
             onChange={(vals) => setForm((prev) => ({ ...prev, drive_car: vals }))}
@@ -432,7 +461,7 @@ export default function CarForm({
         {/* Коробка передач */}
         <div>
           <MultiSelectDropdown
-            label="Коробка передач (необязательно)"
+            label="Коробка передач"
             options={GEARBOXES}
             selected={form.gearbox_car}
             onChange={(vals) => setForm((prev) => ({ ...prev, gearbox_car: vals }))}
@@ -443,7 +472,7 @@ export default function CarForm({
         {/* Кузов */}
         <div>
           <MultiSelectDropdown
-            label="Кузов (необязательно)"
+            label="Кузов"
             options={BODIES}
             selected={form.body_car}
             onChange={(vals) => setForm((prev) => ({ ...prev, body_car: vals }))}
@@ -453,7 +482,7 @@ export default function CarForm({
 
         {/* Описание */}
         <div>
-          <label className="block font-semibold mb-1">Описание (необязательно):</label>
+          <label className="block font-semibold mb-1">Описание:</label>
           <textarea
             name="description"
             value={form.description}
@@ -492,7 +521,7 @@ export default function CarForm({
 
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={5000}
         hideProgressBar={false}
         newestOnTop
         closeOnClick
