@@ -129,85 +129,48 @@ export default function CarForm({
   const validate = () => {
     const newErrors = {};
     if (!readOnly) {
+      // Обязательные поля
       if (form.country_car.length === 0)
         newErrors.country_car = "Выберите хотя бы одну страну";
       if (!form.brand_car.trim()) newErrors.brand_car = "Введите марку автомобиля";
+      
+      // Год выпуска (обязательный)
+      if (form.year_from_car === "" || isNaN(Number(form.year_from_car)) || Number(form.year_from_car) < 1900) {
+        newErrors.year_from_car = "Введите корректный год выпуска 'от'";
+      }
+      if (form.year_to_car === "" || isNaN(Number(form.year_to_car)) || Number(form.year_to_car) < 1900) {
+        newErrors.year_to_car = "Введите корректный год выпуска 'до'";
+      } else if (Number(form.year_to_car) < Number(form.year_from_car)) {
+        newErrors.year_to_car = "Год 'до' не может быть меньше года 'от'";
+      }
 
-      // Цена
-      if (
-        form.price_from_car === "" ||
-        isNaN(Number(form.price_from_car)) ||
-        Number(form.price_from_car) < 0
-      ) {
+      // Цена (обязательная)
+      if (form.price_from_car === "" || isNaN(Number(form.price_from_car)) || Number(form.price_from_car) < 0) {
         newErrors.price_from_car = "Введите корректную минимальную цену";
       }
-      if (
-        form.price_to_car === "" ||
-        isNaN(Number(form.price_to_car)) ||
-        Number(form.price_to_car) < 0
-      ) {
+      if (form.price_to_car === "" || isNaN(Number(form.price_to_car)) || Number(form.price_to_car) < 0) {
         newErrors.price_to_car = "Введите корректную максимальную цену";
       } else if (Number(form.price_to_car) < Number(form.price_from_car)) {
         newErrors.price_to_car = "Максимальная цена не может быть меньше минимальной";
       }
 
-      // Год выпуска
-      if (
-        form.year_from_car !== "" &&
-        (isNaN(Number(form.year_from_car)) || Number(form.year_from_car) < 1900)
-      ) {
-        newErrors.year_from_car = "Введите корректный год";
+      // Пробег (обязательный)
+      if (form.mileage_from_car === "" || isNaN(Number(form.mileage_from_car)) || Number(form.mileage_from_car) < 0) {
+        newErrors.mileage_from_car = "Введите корректный пробег 'от'";
       }
-      if (
-        form.year_to_car !== "" &&
-        (isNaN(Number(form.year_to_car)) || Number(form.year_to_car) < 1900)
-      ) {
-        newErrors.year_to_car = "Введите корректный год";
-      } else if (
-        form.year_from_car !== "" &&
-        form.year_to_car !== "" &&
-        Number(form.year_to_car) < Number(form.year_from_car)
-      ) {
-        newErrors.year_to_car = "Год 'до' не может быть меньше года 'от'";
-      }
-
-      // Пробег
-      if (
-        form.mileage_from_car !== "" &&
-        (isNaN(Number(form.mileage_from_car)) || Number(form.mileage_from_car) < 0)
-      ) {
-        newErrors.mileage_from_car = "Введите корректный пробег";
-      }
-      if (
-        form.mileage_to_car !== "" &&
-        (isNaN(Number(form.mileage_to_car)) || Number(form.mileage_to_car) < 0)
-      ) {
-        newErrors.mileage_to_car = "Введите корректный пробег";
-      } else if (
-        form.mileage_from_car !== "" &&
-        form.mileage_to_car !== "" &&
-        Number(form.mileage_to_car) < Number(form.mileage_from_car)
-      ) {
+      if (form.mileage_to_car === "" || isNaN(Number(form.mileage_to_car)) || Number(form.mileage_to_car) < 0) {
+        newErrors.mileage_to_car = "Введите корректный пробег 'до'";
+      } else if (Number(form.mileage_to_car) < Number(form.mileage_from_car)) {
         newErrors.mileage_to_car = "Пробег 'до' не может быть меньше 'от'";
       }
 
-      // Мощность
-      if (
-        form.power_from_car !== "" &&
-        (isNaN(Number(form.power_from_car)) || Number(form.power_from_car) < 0)
-      ) {
-        newErrors.power_from_car = "Введите корректную мощность";
+      // Мощность (обязательная)
+      if (form.power_from_car === "" || isNaN(Number(form.power_from_car)) || Number(form.power_from_car) < 0) {
+        newErrors.power_from_car = "Введите корректную мощность 'от'";
       }
-      if (
-        form.power_to_car !== "" &&
-        (isNaN(Number(form.power_to_car)) || Number(form.power_to_car) < 0)
-      ) {
-        newErrors.power_to_car = "Введите корректную мощность";
-      } else if (
-        form.power_from_car !== "" &&
-        form.power_to_car !== "" &&
-        Number(form.power_to_car) < Number(form.power_from_car)
-      ) {
+      if (form.power_to_car === "" || isNaN(Number(form.power_to_car)) || Number(form.power_to_car) < 0) {
+        newErrors.power_to_car = "Введите корректную мощность 'до'";
+      } else if (Number(form.power_to_car) < Number(form.power_from_car)) {
         newErrors.power_to_car = "Мощность 'до' не может быть меньше 'от'";
       }
     }
@@ -219,10 +182,10 @@ export default function CarForm({
     
     if (errors.country_car) errorMessages.push("• Страна: " + errors.country_car);
     if (errors.brand_car) errorMessages.push("• Марка: " + errors.brand_car);
+    if (errors.year_from_car) errorMessages.push("• Год выпуска от: " + errors.year_from_car);
+    if (errors.year_to_car) errorMessages.push("• Год выпуска до: " + errors.year_to_car);
     if (errors.price_from_car) errorMessages.push("• Цена от: " + errors.price_from_car);
     if (errors.price_to_car) errorMessages.push("• Цена до: " + errors.price_to_car);
-    if (errors.year_from_car) errorMessages.push("• Год от: " + errors.year_from_car);
-    if (errors.year_to_car) errorMessages.push("• Год до: " + errors.year_to_car);
     if (errors.mileage_from_car) errorMessages.push("• Пробег от: " + errors.mileage_from_car);
     if (errors.mileage_to_car) errorMessages.push("• Пробег до: " + errors.mileage_to_car);
     if (errors.power_from_car) errorMessages.push("• Мощность от: " + errors.power_from_car);
@@ -300,7 +263,9 @@ export default function CarForm({
         {/* Год выпуска */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Год выпуска от:</label>
+            <label className="block font-semibold mb-1">
+              Год выпуска от: <span className="text-red-600">*</span>
+            </label>
             <input
               name="year_from_car"
               value={form.year_from_car}
@@ -317,7 +282,9 @@ export default function CarForm({
             )}
           </div>
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Год выпуска до:</label>
+            <label className="block font-semibold mb-1">
+              Год выпуска до: <span className="text-red-600">*</span>
+            </label>
             <input
               name="year_to_car"
               value={form.year_to_car}
@@ -378,7 +345,9 @@ export default function CarForm({
         {/* Пробег */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Пробег от (км):</label>
+            <label className="block font-semibold mb-1">
+              Пробег от (км): <span className="text-red-600">*</span>
+            </label>
             <input
               name="mileage_from_car"
               value={form.mileage_from_car}
@@ -394,7 +363,9 @@ export default function CarForm({
             )}
           </div>
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Пробег до (км):</label>
+            <label className="block font-semibold mb-1">
+              Пробег до (км): <span className="text-red-600">*</span>
+            </label>
             <input
               name="mileage_to_car"
               value={form.mileage_to_car}
@@ -414,7 +385,9 @@ export default function CarForm({
         {/* Мощность двигателя */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Мощность от (л.с.):</label>
+            <label className="block font-semibold mb-1">
+              Мощность от (л.с.): <span className="text-red-600">*</span>
+            </label>
             <input
               name="power_from_car"
               value={form.power_from_car}
@@ -430,7 +403,9 @@ export default function CarForm({
             )}
           </div>
           <div className="flex-1">
-            <label className="block font-semibold mb-1">Мощность до (л.с.):</label>
+            <label className="block font-semibold mb-1">
+              Мощность до (л.с.): <span className="text-red-600">*</span>
+            </label>
             <input
               name="power_to_car"
               value={form.power_to_car}
