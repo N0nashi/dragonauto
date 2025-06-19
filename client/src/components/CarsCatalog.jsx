@@ -213,7 +213,7 @@ const CarsCatalog = () => {
     );
   };
 
-  const createRequest = async (car) => {
+    const createRequest = async (car) => {
     if (!currentUserId) {
       toast.info("Пожалуйста, войдите в систему, чтобы создать заявку.");
       setTimeout(() => {
@@ -230,6 +230,7 @@ const CarsCatalog = () => {
         description: `Заявка на автомобиль ${car.brand} ${car.model} ${car.year} года`,
         country_car: car.country,
         brand_car: car.brand,
+        model_car: [car.model], // ✅ Добавлено: модель как массив
         price_from_car: car.price,
         price_to_car: car.price,
         year_from_car: car.year,
