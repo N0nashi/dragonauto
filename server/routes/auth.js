@@ -101,10 +101,19 @@ router.post("/verify-email", async (req, res) => {
     // Обновляем статус пользователя
     await db.query("UPDATE users SET is_verified = TRUE WHERE email = $1", [email]);
 
-    // Опционально: удаляем использованный код
+    // Удаляем использованный код
     await db.query("DELETE FROM password_resets WHERE email = $1", [email]);
 
-    res.json({ message: "Email успешно подтверждён" });
+    // Получаем пользователя для генерации токена
+    const userResult = await db.query("SELECT id, email FROM users WHERE email = $1", [email]);
+    const user = userResult.rows[0];
+
+    // Генерируем JWT токен
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.json({ message: "Email успешно подтверждён", token });
 
   } catch (error) {
     console.error("Ошибка подтверждения email:", error);
