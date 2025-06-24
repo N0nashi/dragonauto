@@ -83,7 +83,6 @@ const RegisterForm = () => {
         setShowVerification(true);
         toast.info("Код подтверждения отправлен на ваш email");
       } else {
-        // Если сервер не требует верификации — но по логике задачи она нужна
         toast.warning("Ожидается подтверждение email");
       }
     } catch (err) {
@@ -94,7 +93,9 @@ const RegisterForm = () => {
     }
   };
 
-  const handleVerifyEmail = async () => {
+  const handleVerifyEmail = async (e) => {
+    e.preventDefault();
+
     if (!verificationCode.trim()) {
       toast.error("Введите код подтверждения");
       return;
@@ -120,10 +121,9 @@ const RegisterForm = () => {
         throw new Error(data.error || "Ошибка подтверждения");
       }
 
-      // Сохраняем токен только после верификации
-      localStorage.setItem("token", data.token);
+      // ✅ Перенаправляем на /auth без сохранения токена
       toast.success("Email успешно подтверждён!");
-      navigate("/profile"); // Переход на профиль
+      navigate("/auth"); // ← Новое место назначения
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Неверный или просроченный код");
