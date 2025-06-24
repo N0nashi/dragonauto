@@ -15,9 +15,8 @@ const RegisterForm = ({ onRegisterSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [agreed, setAgreed] = useState(false);
-  const [showPolicy, setShowPolicy] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
+  const [agreed, setAgreed] = useState(false); // новое состояние для согласия
+  const [showPolicyModal, setShowPolicyModal] = useState(false); // модальное окно
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,7 +36,14 @@ const RegisterForm = ({ onRegisterSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.first_name || !form.last_name || !form.email || !form.password || !form.confirmPassword) {
+    // Валидация формы
+    if (
+      !form.first_name ||
+      !form.last_name ||
+      !form.email ||
+      !form.password ||
+      !form.confirmPassword
+    ) {
       toast.error("Все поля обязательны");
       return;
     }
@@ -48,7 +54,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
     }
 
     if (!agreed) {
-      toast.error("Необходимо согласиться с политикой конфиденциальности");
+      toast.error("Вы должны согласиться с политикой конфиденциальности");
       return;
     }
 
@@ -60,22 +66,26 @@ const RegisterForm = ({ onRegisterSuccess }) => {
       formData.append("last_name", form.last_name.trim());
       formData.append("email", form.email.trim());
       formData.append("password", form.password);
+
       if (avatar) {
         formData.append("file", avatar);
       }
 
-      const response = await fetch(`https://dragonauto74.ru/api/register?folder=avatars`, {
+      // Шаг 1: Регистрация пользователя
+      const response = await fetch("https://dragonauto74.ru/api/register?folder=avatars", {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || "Ошибка регистрации");
+      if (!response.ok) {
+        throw new Error(data.error || "Ошибка регистрации");
+      }
 
       if (data.requiresVerification) {
+        // Переход к этапу подтверждения
         setShowVerification(true);
-        setPendingEmail(form.email.trim()); // сохранить email для верификации
         toast.info("Код подтверждения отправлен на ваш email");
       } else {
         toast.success("Регистрация успешна!");
@@ -98,21 +108,25 @@ const RegisterForm = ({ onRegisterSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`https://dragonauto74.ru/api/verify-email`, {
+      const response = await fetch("https://dragonauto74.ru/api/verify-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          email: pendingEmail,
+          email: form.email,
           code: verificationCode,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || "Ошибка подтверждения");
+      if (!response.ok) {
+        throw new Error(data.error || "Ошибка подтверждения");
+      }
 
       toast.success("Email успешно подтверждён!");
-      onRegisterSuccess(data.token);
+      onRegisterSuccess(); // можно передать токен, если он приходит
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Неверный или просроченный код");
@@ -125,55 +139,153 @@ const RegisterForm = ({ onRegisterSuccess }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       {!showVerification ? (
         <>
-          <input type="text" name="first_name" placeholder="Имя" value={form.first_name} onChange={handleChange} disabled={loading} className="w-full px-4 py-2 border rounded" />
-          <input type="text" name="last_name" placeholder="Фамилия" value={form.last_name} onChange={handleChange} disabled={loading} className="w-full px-4 py-2 border rounded" />
-          <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} disabled={loading} className="w-full px-4 py-2 border rounded" />
-          <input type="password" name="password" placeholder="Пароль" value={form.password} onChange={handleChange} disabled={loading} className="w-full px-4 py-2 border rounded" />
-          <input type="password" name="confirmPassword" placeholder="Повторите пароль" value={form.confirmPassword} onChange={handleChange} disabled={loading} className="w-full px-4 py-2 border rounded" />
+          <input
+            type="text"
+            name="first_name"
+            placeholder="Имя"
+            value={form.first_name}
+            onChange={handleChange}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="text"
+            name="last_name"
+            placeholder="Фамилия"
+            value={form.last_name}
+            onChange={handleChange}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Пароль"
+            value={form.password}
+            onChange={handleChange}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Повторите пароль"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            required
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
           <div>
-            <label className="block text-sm font-medium mb-1">Аватар (необязательно, макс. 5MB)</label>
-            <input type="file" accept="image/*" onChange={handleFileChange} disabled={loading} className="w-full px-3 py-2 border rounded" />
-            {avatar && <p className="text-sm text-gray-500 mt-1">Выбран файл: {avatar.name}</p>}
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Аватар (необязательно, макс. 5MB)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              disabled={loading}
+              className="w-full px-3 py-2 border rounded-md"
+            />
+            {avatar && (
+              <div className="mt-1 text-sm text-gray-500">Выбран файл: {avatar.name}</div>
+            )}
           </div>
 
-          <div className="flex items-start gap-2">
-            <input type="checkbox" checked={agreed} onChange={() => setAgreed(!agreed)} disabled={loading} className="mt-1" />
-            <label className="text-sm text-gray-700">
-              Я согласен с{" "}
-              <button type="button" onClick={() => setShowPolicy(true)} className="text-blue-600 underline hover:text-blue-800">
-                политикой конфиденциальности
-              </button>
+          {/* Чекбокс согласия */}
+          <div className="flex items-start">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                disabled={loading}
+                className="rounded text-blue-600"
+              />
+              <span className="text-sm text-gray-600">
+                Я соглашаюсь с{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyModal(true)}
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  политикой конфиденциальности
+                </button>
+              </span>
             </label>
           </div>
 
-          <button type="submit" disabled={loading} className={`w-full bg-blue-600 text-white py-2 rounded ${loading ? "opacity-70 cursor-not-allowed" : ""}`}>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+          >
             {loading ? "Загрузка..." : "Зарегистрироваться"}
           </button>
         </>
       ) : (
         <div className="space-y-4">
-          <p className="text-center text-gray-600">Мы отправили код подтверждения на <strong>{pendingEmail}</strong></p>
-          <input type="text" placeholder="Введите код из письма" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} disabled={loading} className="w-full px-4 py-2 border rounded" />
-          <button type="button" onClick={handleVerifyEmail} disabled={loading} className={`w-full bg-green-600 text-white py-2 rounded ${loading ? "opacity-70 cursor-not-allowed" : ""}`}>
+          <p className="text-center text-gray-600">
+            Мы отправили код подтверждения на <strong>{form.email}</strong>
+          </p>
+
+          <input
+            type="text"
+            placeholder="Введите код из письма"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <button
+            type="button"
+            onClick={handleVerifyEmail}
+            disabled={loading}
+            className={`w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+          >
             {loading ? "Проверка..." : "Подтвердить email"}
           </button>
         </div>
       )}
 
-      {showPolicy && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-md w-full relative">
-            <h2 className="text-xl font-semibold mb-4">Политика конфиденциальности</h2>
-            <div className="text-sm text-gray-700 h-64 overflow-y-auto space-y-2">
-              <p>Мы собираем персональные данные исключительно для регистрации и обработки заявок.</p>
-              <p>Ваши данные не передаются третьим лицам и защищены в соответствии с действующим законодательством.</p>
-              <p>Вы можете запросить удаление данных, обратившись в службу поддержки.</p>
-              <p>Использование сайта означает согласие с данной политикой.</p>
-            </div>
-            <button onClick={() => setShowPolicy(false)} className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-              Закрыть
+      {/* Модальное окно */}
+      {showPolicyModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white w-11/12 md:w-2/3 max-h-[90vh] overflow-auto p-6 rounded shadow-lg relative">
+            <h2 className="text-xl font-bold mb-4">Политика конфиденциальности</h2>
+            <button
+              onClick={() => setShowPolicyModal(false)}
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-800"
+            >
+              &times;
             </button>
+            <div className="text-sm text-gray-700 space-y-2">
+              <p>Настоящая Политика конфиденциальности описывает, как мы собираем, используем и защищаем ваши личные данные.</p>
+              <p><strong>1. Сбор информации:</strong> Мы собираем имя, фамилию, email, пароль и аватар (если указан).</p>
+              <p><strong>2. Использование:</strong> Информация используется для регистрации и обеспечения безопасности.</p>
+              <p><strong>3. Хранение:</strong> Данные хранятся до тех пор, пока вы являетесь пользователем.</p>
+              <p><strong>4. Раскрытие:</strong> Мы не передаём данные третьим лицам без вашего согласия.</p>
+              <p><strong>5. Изменения:</strong> Политика может быть изменена. Все изменения публикуются на сайте.</p>
+            </div>
           </div>
         </div>
       )}
