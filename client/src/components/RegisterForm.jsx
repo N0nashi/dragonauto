@@ -1,11 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const RegisterForm = () => {
-  const navigate = useNavigate();
-
+const RegisterForm = ({ onRegisterSuccess }) => {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -18,8 +15,6 @@ const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [agreed, setAgreed] = useState(false);
-  const [showPolicyModal, setShowPolicyModal] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -39,18 +34,20 @@ const RegisterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.first_name || !form.last_name || !form.email || !form.password || !form.confirmPassword) {
+    // Валидация формы
+    if (
+      !form.first_name ||
+      !form.last_name ||
+      !form.email ||
+      !form.password ||
+      !form.confirmPassword
+    ) {
       toast.error("Все поля обязательны");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
       toast.error("Пароли не совпадают");
-      return;
-    }
-
-    if (!agreed) {
-      toast.error("Вы должны согласиться с политикой конфиденциальности");
       return;
     }
 
@@ -67,10 +64,14 @@ const RegisterForm = () => {
         formData.append("file", avatar);
       }
 
-      const response = await fetch("https://dragonauto74.ru/api/register?folder=avatars", {
-        method: "POST",
-        body: formData,
-      });
+      // Регистрация пользователя
+      const response = await fetch(
+        `https://dragonauto74.ru/api/register?folder=avatars`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
@@ -78,12 +79,18 @@ const RegisterForm = () => {
         throw new Error(data.error || "Ошибка регистрации");
       }
 
-      // Сервер говорит, что нужна верификация
       if (data.requiresVerification) {
+        // Переход к этапу подтверждения
         setShowVerification(true);
         toast.info("Код подтверждения отправлен на ваш email");
       } else {
-        toast.warning("Ожидается подтверждение email");
+        // Если верификация не нужна, получаем токен (предполагается, что он в data.token)
+        if (data.token) {
+          onRegisterSuccess(data.token);
+          toast.success("Регистрация успешна! Вы вошли в аккаунт.");
+        } else {
+          toast.success("Регистрация успешна!");
+        }
       }
     } catch (err) {
       console.error(err);
@@ -93,9 +100,7 @@ const RegisterForm = () => {
     }
   };
 
-  const handleVerifyEmail = async (e) => {
-    e.preventDefault();
-
+  const handleVerifyEmail = async () => {
     if (!verificationCode.trim()) {
       toast.error("Введите код подтверждения");
       return;
@@ -104,7 +109,7 @@ const RegisterForm = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://dragonauto74.ru/api/verify-email", {
+      const response = await fetch(`https://dragonauto74.ru/api/verify-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -121,9 +126,14 @@ const RegisterForm = () => {
         throw new Error(data.error || "Ошибка подтверждения");
       }
 
-      // ✅ Перенаправляем на /auth без сохранения токена
       toast.success("Email успешно подтверждён!");
-      navigate("/auth"); // ← Новое место назначения
+
+      // Получаем токен из ответа и вызываем вход
+      if (data.token) {
+        onRegisterSuccess(data.token);
+      } else {
+        toast.error("Не удалось получить токен после подтверждения");
+      }
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Неверный или просроченный код");
@@ -136,7 +146,6 @@ const RegisterForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       {!showVerification ? (
         <>
-          {/* Поля формы */}
           <input
             type="text"
             name="first_name"
@@ -200,31 +209,10 @@ const RegisterForm = () => {
               className="w-full px-3 py-2 border rounded-md"
             />
             {avatar && (
-              <div className="mt-1 text-sm text-gray-500">Выбран файл: {avatar.name}</div>
+              <div className="mt-1 text-sm text-gray-500">
+                Выбран файл: {avatar.name}
+              </div>
             )}
-          </div>
-
-          {/* Чекбокс политики */}
-          <div className="flex items-start">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                disabled={loading}
-                className="rounded text-blue-600"
-              />
-              <span className="text-sm text-gray-600">
-                Я соглашаюсь с{" "}
-                <button
-                  type="button"
-                  onClick={() => setShowPolicyModal(true)}
-                  className="text-blue-600 underline hover:text-blue-800"
-                >
-                  политикой конфиденциальности
-                </button>
-              </span>
-            </label>
           </div>
 
           <button
@@ -262,29 +250,6 @@ const RegisterForm = () => {
           >
             {loading ? "Проверка..." : "Подтвердить email"}
           </button>
-        </div>
-      )}
-
-      {/* Модальное окно с политикой */}
-      {showPolicyModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white w-11/12 md:w-2/3 max-h-[90vh] overflow-auto p-6 rounded shadow-lg relative">
-            <h2 className="text-xl font-bold mb-4">Политика конфиденциальности</h2>
-            <button
-              onClick={() => setShowPolicyModal(false)}
-              className="absolute top-3 right-4 text-gray-500 hover:text-gray-800 text-2xl"
-            >
-              &times;
-            </button>
-            <div className="text-sm text-gray-700 space-y-2">
-              <p>Настоящая Политика конфиденциальности описывает, как мы собираем, используем и защищаем ваши личные данные.</p>
-              <p><strong>1. Сбор информации:</strong> Мы собираем имя, фамилию, email, пароль и аватар (если указан).</p>
-              <p><strong>2. Использование:</strong> Информация используется для регистрации и обеспечения безопасности.</p>
-              <p><strong>3. Хранение:</strong> Данные хранятся до тех пор, пока вы являетесь пользователем.</p>
-              <p><strong>4. Раскрытие:</strong> Мы не передаём данные третьим лицам без вашего согласия.</p>
-              <p><strong>5. Изменения:</strong> Политика может быть изменена. Все изменения публикуются на сайте.</p>
-            </div>
-          </div>
         </div>
       )}
     </form>
