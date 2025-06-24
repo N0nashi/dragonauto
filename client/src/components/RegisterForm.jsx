@@ -17,6 +17,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [showPolicy, setShowPolicy] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -74,6 +75,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
 
       if (data.requiresVerification) {
         setShowVerification(true);
+        setPendingEmail(form.email.trim()); // сохранить email для верификации
         toast.info("Код подтверждения отправлен на ваш email");
       } else {
         toast.success("Регистрация успешна!");
@@ -100,7 +102,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: form.email,
+          email: pendingEmail,
           code: verificationCode,
         }),
       });
@@ -110,7 +112,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
       if (!response.ok) throw new Error(data.error || "Ошибка подтверждения");
 
       toast.success("Email успешно подтверждён!");
-      onRegisterSuccess();
+      onRegisterSuccess(data.token);
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Неверный или просроченный код");
@@ -151,7 +153,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
         </>
       ) : (
         <div className="space-y-4">
-          <p className="text-center text-gray-600">Мы отправили код подтверждения на <strong>{form.email}</strong></p>
+          <p className="text-center text-gray-600">Мы отправили код подтверждения на <strong>{pendingEmail}</strong></p>
           <input type="text" placeholder="Введите код из письма" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} disabled={loading} className="w-full px-4 py-2 border rounded" />
           <button type="button" onClick={handleVerifyEmail} disabled={loading} className={`w-full bg-green-600 text-white py-2 rounded ${loading ? "opacity-70 cursor-not-allowed" : ""}`}>
             {loading ? "Проверка..." : "Подтвердить email"}
