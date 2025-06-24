@@ -15,8 +15,6 @@ const RegisterForm = ({ onRegisterSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [agreed, setAgreed] = useState(false); // новое состояние для согласия
-  const [showPolicyModal, setShowPolicyModal] = useState(false); // модальное окно
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,24 +35,13 @@ const RegisterForm = ({ onRegisterSuccess }) => {
     e.preventDefault();
 
     // Валидация формы
-    if (
-      !form.first_name ||
-      !form.last_name ||
-      !form.email ||
-      !form.password ||
-      !form.confirmPassword
-    ) {
+    if (!form.first_name || !form.last_name || !form.email || !form.password || !form.confirmPassword) {
       toast.error("Все поля обязательны");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
       toast.error("Пароли не совпадают");
-      return;
-    }
-
-    if (!agreed) {
-      toast.error("Вы должны согласиться с политикой конфиденциальности");
       return;
     }
 
@@ -72,7 +59,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
       }
 
       // Шаг 1: Регистрация пользователя
-      const response = await fetch("https://dragonauto74.ru/api/register?folder=avatars", {
+      const response = await fetch(`https://dragonauto74.ru/api/register?folder=avatars`, {
         method: "POST",
         body: formData,
       });
@@ -108,7 +95,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://dragonauto74.ru/api/verify-email", {
+      const response = await fetch(`https://dragonauto74.ru/api/verify-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -206,29 +193,6 @@ const RegisterForm = ({ onRegisterSuccess }) => {
             )}
           </div>
 
-          {/* Чекбокс согласия */}
-          <div className="flex items-start">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                disabled={loading}
-                className="rounded text-blue-600"
-              />
-              <span className="text-sm text-gray-600">
-                Я соглашаюсь с{" "}
-                <button
-                  type="button"
-                  onClick={() => setShowPolicyModal(true)}
-                  className="text-blue-600 underline hover:text-blue-800"
-                >
-                  политикой конфиденциальности
-                </button>
-              </span>
-            </label>
-          </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -264,29 +228,6 @@ const RegisterForm = ({ onRegisterSuccess }) => {
           >
             {loading ? "Проверка..." : "Подтвердить email"}
           </button>
-        </div>
-      )}
-
-      {/* Модальное окно */}
-      {showPolicyModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white w-11/12 md:w-2/3 max-h-[90vh] overflow-auto p-6 rounded shadow-lg relative">
-            <h2 className="text-xl font-bold mb-4">Политика конфиденциальности</h2>
-            <button
-              onClick={() => setShowPolicyModal(false)}
-              className="absolute top-3 right-4 text-gray-500 hover:text-gray-800"
-            >
-              &times;
-            </button>
-            <div className="text-sm text-gray-700 space-y-2">
-              <p>Настоящая Политика конфиденциальности описывает, как мы собираем, используем и защищаем ваши личные данные.</p>
-              <p><strong>1. Сбор информации:</strong> Мы собираем имя, фамилию, email, пароль и аватар (если указан).</p>
-              <p><strong>2. Использование:</strong> Информация используется для регистрации и обеспечения безопасности.</p>
-              <p><strong>3. Хранение:</strong> Данные хранятся до тех пор, пока вы являетесь пользователем.</p>
-              <p><strong>4. Раскрытие:</strong> Мы не передаём данные третьим лицам без вашего согласия.</p>
-              <p><strong>5. Изменения:</strong> Политика может быть изменена. Все изменения публикуются на сайте.</p>
-            </div>
-          </div>
         </div>
       )}
     </form>
