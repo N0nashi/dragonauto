@@ -102,7 +102,7 @@ export default function CarForm({
         ...initialData,
         country_car: initialData.country_car || [],
         brand_car: Array.isArray(initialData.brand_car)
-          ? initialData.brand_car[0] || ""
+          ? initialData.brand_car || ""
           : initialData.brand_car || "",
         model_car: initialData.model_car || "",
         year_from_car: initialData.year_from_car || "",
