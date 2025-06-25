@@ -8,19 +8,23 @@ router.get("/filters", async (req, res) => {
   const { country, brand } = req.query;
 
   try {
+    // Бренды только для выбранной страны
     const brandsQuery = await db.query(
-      `SELECT DISTINCT brand FROM parts WHERE ($1::text IS NULL OR country = $1) ORDER BY brand`,
+      `SELECT DISTINCT brand FROM parts 
+       WHERE ($1::text IS NULL OR country = $1) 
+       ORDER BY brand`,
       [country]
     );
 
     const modelsQuery = await db.query(
       `SELECT DISTINCT model FROM parts 
-       WHERE ($1::text IS NULL OR brand = $1) 
-         AND ($2::text IS NULL OR country = $2) 
+       WHERE ($1::text IS NULL OR country = $1)
+         AND ($2::text IS NULL OR brand = $2)
        ORDER BY model`,
-      [brand, country]
+      [country, brand]
     );
 
+    // Остальные запросы без изменений
     const countriesQuery = await db.query(
       `SELECT DISTINCT country FROM parts ORDER BY country`
     );
@@ -58,7 +62,7 @@ router.post("/search", async (req, res) => {
     price_from,
     price_to
   } = req.body;
-
+  
   const filters = [];
   const values = [];
 
