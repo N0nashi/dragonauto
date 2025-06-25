@@ -213,7 +213,7 @@ const CarsCatalog = () => {
     );
   };
 
-    const createRequest = async (car) => {
+  const createRequest = async (car) => {
     if (!currentUserId) {
       toast.info("Пожалуйста, войдите в систему, чтобы создать заявку.");
       setTimeout(() => {
@@ -230,7 +230,7 @@ const CarsCatalog = () => {
         description: `Заявка на автомобиль ${car.brand} ${car.model} ${car.year} года`,
         country_car: car.country,
         brand_car: car.brand,
-        model_car: car.model, 
+        model_car: car.model,
         price_from_car: car.price,
         price_to_car: car.price,
         year_from_car: car.year,
@@ -355,7 +355,7 @@ const CarsCatalog = () => {
                       {car.year} год · {car.mileage?.toLocaleString() || "—"} км
                     </p>
                     <p className="text-lg font-bold mb-3">
-                      {car.price?.toLocaleString() || "—"} ₽
+                      {car.price ? `от ${car.price.toLocaleString()} ₽` : "— ₽"}
                     </p>
                     <button
                       onClick={() => createRequest(car)}
