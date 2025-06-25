@@ -34,11 +34,11 @@ export default function MainFrame2() {
   ];
 
   const parts = [
-    { id: 1, name: "Фильтр масляный", price: 1200, photo_url: "/images/part-placeholder.png" },
-    { id: 2, name: "Тормозные колодки", price: 3000, photo_url: "/images/part-placeholder.png" },
-    { id: 3, name: "Аккумулятор", price: 7000, photo_url: "/images/part-placeholder.png" },
-    { id: 4, name: "Фара левая", price: 8500, photo_url: "/images/part-placeholder.png" },
-    { id: 5, name: "Свечи зажигания", price: 2000, photo_url: "/images/part-placeholder.png" }
+    { id: 1, name: "Фильтр масляный", price: 1200, photo_url: "/фильтр.webp" },
+    { id: 2, name: "Тормозные колодки", price: 3000, photo_url: "/колодки.webp" },
+    { id: 3, name: "Аккумулятор", price: 7000, photo_url: "/аккум.webp" },
+    { id: 4, name: "Фара левая", price: 8500, photo_url: "/фара.webp" },
+    { id: 5, name: "Свечи зажигания", price: 2000, photo_url: "/свечи.webp" }
   ];
 
   const list = tab === "cars" ? cars : parts;
