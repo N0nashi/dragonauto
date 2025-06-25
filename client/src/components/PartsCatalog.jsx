@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -15,7 +15,6 @@ const PartsCatalog = () => {
   const [gridCols, setGridCols] = useState(3);
   const [availableGridOptions, setAvailableGridOptions] = useState([3, 6]);
   const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
-
   const token = localStorage.getItem("token");
 
   const getUserIdFromToken = () => {
@@ -34,6 +33,7 @@ const PartsCatalog = () => {
     const width = window.innerWidth;
     const portrait = window.matchMedia("(orientation: portrait)").matches;
     setIsPortrait(portrait);
+
     if (width < 768) {
       setAvailableGridOptions([]);
       setGridCols(portrait ? 1 : 2);
@@ -62,13 +62,35 @@ const PartsCatalog = () => {
     }
   }, [availableGridOptions]);
 
+  // Загрузка фильтров и построение карт связей
   useEffect(() => {
     const loadFilters = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/api/parts/filters`);
         if (!response.ok) throw new Error("Failed to load filters");
         const data = await response.json();
-        setFilters(data);
+
+        // Создаем карты для локальной фильтрации
+        const brandToCountryMap = {};
+        const modelToBrandMap = {};
+
+        data.parts?.forEach(part => {
+          if (!brandToCountryMap[part.brand]) {
+            brandToCountryMap[part.brand] = new Set();
+          }
+          brandToCountryMap[part.brand].add(part.country);
+
+          if (!modelToBrandMap[part.model]) {
+            modelToBrandMap[part.model] = new Set();
+          }
+          modelToBrandMap[part.model].add(part.brand);
+        });
+
+        setFilters({
+          ...data,
+          brandToCountryMap,
+          modelToBrandMap,
+        });
       } catch (err) {
         setError("Ошибка загрузки фильтров");
         console.error(err);
@@ -76,9 +98,11 @@ const PartsCatalog = () => {
         setLoadingFilters(false);
       }
     };
+
     loadFilters();
   }, []);
 
+  // Фильтрация частей
   useEffect(() => {
     const loadParts = async () => {
       setLoadingParts(true);
@@ -104,6 +128,30 @@ const PartsCatalog = () => {
   const handleFilterChange = (key, value) => {
     setSelectedFilters((prev) => ({ ...prev, [key]: value }));
   };
+
+  // Локальная фильтрация брендов
+  const availableBrands = useMemo(() => {
+    if (!filters?.brands) return [];
+    const country = selectedFilters.country;
+
+    if (!country) return filters.brands;
+
+    return filters.brands.filter(brand =>
+      filters.brandToCountryMap[brand]?.has(country)
+    );
+  }, [filters, selectedFilters.country]);
+
+  // Локальная фильтрация моделей
+  const availableModels = useMemo(() => {
+    if (!filters?.models) return [];
+    const brand = selectedFilters.brand;
+
+    if (!brand) return filters.models;
+
+    return filters.models.filter(model =>
+      filters.modelToBrandMap[model]?.has(brand)
+    );
+  }, [filters, selectedFilters.brand]);
 
   const renderFilterSelect = (label, key, options) => (
     <label className="block mb-4" key={key}>
@@ -150,7 +198,6 @@ const PartsCatalog = () => {
     const photoUrl = part.photo_url;
     const src = photoUrl?.startsWith("http") ? photoUrl : `${process.env.REACT_APP_API_URL}${photoUrl}`;
     const heightClass = gridCols === 3 ? "h-64" : "h-48";
-
     return (
       <img
         src={photoUrl ? src : placeholder}
@@ -216,9 +263,8 @@ const PartsCatalog = () => {
           ) : (
             <>
               {renderFilterSelect("Страна", "country", filters?.countries)}
-              {renderFilterSelect("Марка", "brand", filters?.brands)}
-              {renderFilterSelect("Модель", "model", filters?.models)}
-
+              {renderFilterSelect("Марка", "brand", availableBrands)} {/* Здесь уже отфильтрованные */}
+              {renderFilterSelect("Модель", "model", availableModels)} {/* Здесь тоже */}
               {showAdvancedFilters && (
                 <>
                   {renderRangeInput("Год выпуска", "year_from", "year_to")}
@@ -226,7 +272,6 @@ const PartsCatalog = () => {
                   {renderRangeInput("Цена (₽)", "price_from", "price_to")}
                 </>
               )}
-
               <button
                 className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
                 onClick={() => setShowAdvancedFilters((prev) => !prev)}
@@ -238,7 +283,6 @@ const PartsCatalog = () => {
             </>
           )}
         </aside>
-
         <main className="flex-1">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-xl">Запчасти ({parts.length})</h2>
@@ -260,7 +304,6 @@ const PartsCatalog = () => {
               </div>
             )}
           </div>
-
           {loadingParts ? (
             <p>Загрузка запчастей...</p>
           ) : error ? (
