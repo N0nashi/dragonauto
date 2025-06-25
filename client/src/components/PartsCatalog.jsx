@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const allGridOptions = [3, 6, 9];
+const allGridOptions = [3, 6];
 
 const PartsCatalog = () => {
   const [filters, setFilters] = useState(null);
@@ -11,15 +13,11 @@ const PartsCatalog = () => {
   const [error, setError] = useState(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [gridCols, setGridCols] = useState(3);
-  const [availableGridOptions, setAvailableGridOptions] = useState([3, 6, 9]);
-  const [isPortrait, setIsPortrait] = useState(
-    window.matchMedia("(orientation: portrait)").matches
-  );
+  const [availableGridOptions, setAvailableGridOptions] = useState([3, 6]);
+  const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
 
-  // Получаем токен из localStorage
   const token = localStorage.getItem("token");
 
-  // Функция для получения userId из токена
   const getUserIdFromToken = () => {
     if (!token) return null;
     try {
@@ -32,7 +30,6 @@ const PartsCatalog = () => {
 
   const currentUserId = getUserIdFromToken();
 
-  // Обновление доступных вариантов сетки
   const updateLayout = () => {
     const width = window.innerWidth;
     const portrait = window.matchMedia("(orientation: portrait)").matches;
@@ -65,7 +62,6 @@ const PartsCatalog = () => {
     }
   }, [availableGridOptions]);
 
-  // Загрузка фильтров
   useEffect(() => {
     const loadFilters = async () => {
       try {
@@ -83,7 +79,6 @@ const PartsCatalog = () => {
     loadFilters();
   }, []);
 
-  // Загрузка запчастей по фильтрам
   useEffect(() => {
     const loadParts = async () => {
       setLoadingParts(true);
@@ -153,13 +148,8 @@ const PartsCatalog = () => {
   const renderPartImage = (part) => {
     const placeholder = "/images/part-placeholder.png";
     const photoUrl = part.photo_url;
-
-    const src = photoUrl?.startsWith("http")
-      ? photoUrl
-      : `${process.env.REACT_APP_API_URL}${photoUrl}`;
-
-    const heightClass =
-      gridCols === 3 ? "h-64" : gridCols === 6 ? "h-48" : "h-40";
+    const src = photoUrl?.startsWith("http") ? photoUrl : `${process.env.REACT_APP_API_URL}${photoUrl}`;
+    const heightClass = gridCols === 3 ? "h-64" : "h-48";
 
     return (
       <img
@@ -175,7 +165,7 @@ const PartsCatalog = () => {
 
   const createRequest = async (part) => {
     if (!currentUserId) {
-      alert("Пожалуйста, войдите в систему, чтобы создать заявку.");
+      toast.error("Пожалуйста, войдите в систему, чтобы создать заявку.");
       return;
     }
 
@@ -192,8 +182,6 @@ const PartsCatalog = () => {
         body_part: part.body_type || part.body,
       };
 
-      console.log("Отправка данных заявки:", requestData);
-
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
         method: "POST",
         headers: {
@@ -209,122 +197,115 @@ const PartsCatalog = () => {
       }
 
       const data = await response.json();
-      alert(`Заявка №${data.applicationId} успешно создана!`);
+      toast.success(`Заявка №${data.applicationId} успешно создана!`);
     } catch (error) {
       console.error("Ошибка при создании заявки:", error);
-      alert(`Ошибка: ${error.message}`);
+      toast.error(`Ошибка: ${error.message}`);
     }
   };
 
   return (
-    <div className="flex flex-col lg:flex-row p-4 gap-6">
-      {/* Блок фильтров */}
-      <aside className="w-full md:w-64 bg-white border rounded p-4 h-fit shadow">
-        <h2 className="font-bold text-lg mb-4">Фильтры</h2>
+    <>
+      <div className="flex flex-col lg:flex-row p-4 gap-6">
+        <aside className="w-full md:w-64 bg-white border rounded p-4 h-fit shadow">
+          <h2 className="font-bold text-lg mb-4">Фильтры</h2>
+          {loadingFilters ? (
+            <p>Загрузка фильтров...</p>
+          ) : error ? (
+            <p className="text-red-600">{error}</p>
+          ) : (
+            <>
+              {renderFilterSelect("Страна", "country", filters?.countries)}
+              {renderFilterSelect("Марка", "brand", filters?.brands)}
+              {renderFilterSelect("Модель", "model", filters?.models)}
 
-        {loadingFilters ? (
-          <p>Загрузка фильтров...</p>
-        ) : error ? (
-          <p className="text-red-600">{error}</p>
-        ) : (
-          <>
-            {renderFilterSelect("Страна", "country", filters?.countries)}
-            {renderFilterSelect("Марка", "brand", filters?.brands)}
-            {renderFilterSelect("Модель", "model", filters?.models)}
+              {showAdvancedFilters && (
+                <>
+                  {renderRangeInput("Год выпуска", "year_from", "year_to")}
+                  {renderFilterSelect("Тип кузова", "body_type", filters?.bodies)}
+                  {renderRangeInput("Цена (₽)", "price_from", "price_to")}
+                </>
+              )}
 
-            {showAdvancedFilters && (
-              <>
-                {renderRangeInput("Год выпуска", "year_from", "year_to")}
-                {renderFilterSelect("Тип кузова", "body_type", filters?.bodies)}
-                {renderRangeInput("Цена (₽)", "price_from", "price_to")}
-              </>
+              <button
+                className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
+                onClick={() => setShowAdvancedFilters((prev) => !prev)}
+              >
+                {showAdvancedFilters
+                  ? "Скрыть дополнительные фильтры"
+                  : "Показать дополнительные фильтры"}
+              </button>
+            </>
+          )}
+        </aside>
+
+        <main className="flex-1">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-xl">Запчасти ({parts.length})</h2>
+            {availableGridOptions.length > 0 && (
+              <div className="flex gap-2">
+                {availableGridOptions.map((cols) => (
+                  <button
+                    key={cols}
+                    className={`px-3 py-1 border rounded transition ${
+                      gridCols === cols
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-blue-600 hover:bg-blue-50"
+                    }`}
+                    onClick={() => setGridCols(cols)}
+                  >
+                    {cols}
+                  </button>
+                ))}
+              </div>
             )}
+          </div>
 
-            <button
-              className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
-              onClick={() => setShowAdvancedFilters(prev => !prev)}
+          {loadingParts ? (
+            <p>Загрузка запчастей...</p>
+          ) : error ? (
+            <p className="text-red-600">{error}</p>
+          ) : parts.length === 0 ? (
+            <p className="text-gray-500">По вашему запросу запчастей не найдено</p>
+          ) : (
+            <div
+              className={`grid gap-6 ${
+                gridCols === 1
+                  ? "grid-cols-1"
+                  : gridCols === 2
+                  ? "grid-cols-2"
+                  : gridCols === 3
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                  : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+              }`}
             >
-              {showAdvancedFilters
-                ? "Скрыть дополнительные фильтры"
-                : "Показать дополнительные фильтры"}
-            </button>
-          </>
-        )}
-      </aside>
-
-      {/* Основной контент */}
-      <main className="flex-1">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-bold text-xl">Запчасти ({parts.length})</h2>
-          {availableGridOptions.length > 0 && (
-            <div className="flex gap-2">
-              {availableGridOptions.map(cols => (
-                <button
-                  key={cols}
-                  className={`px-3 py-1 border rounded transition ${
-                    gridCols === cols
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-blue-600 hover:bg-blue-50"
-                  }`}
-                  onClick={() => setGridCols(cols)}
-                >
-                  {cols}
-                </button>
+              {parts.map((part) => (
+                <div key={part.id} className="border rounded shadow hover:shadow-lg transition flex flex-col">
+                  {renderPartImage(part)}
+                  <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="font-semibold text-lg mb-1">{part.part_name}</h3>
+                    <p className="text-sm mb-2">
+                      Для: {part.brand} {part.model} ({part.year})
+                    </p>
+                    <p className="text-sm mb-2">Кузов: {part.body_type || part.body}</p>
+                    <p className="text-lg font-bold mb-3">
+                      {part.price ? `от ${part.price.toLocaleString()} ₽` : "— ₽"}
+                    </p>
+                    <button
+                      onClick={() => createRequest(part)}
+                      className="mt-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+                    >
+                      Подобрать
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
-        </div>
-
-        {loadingParts ? (
-          <p>Загрузка запчастей...</p>
-        ) : error ? (
-          <p className="text-red-600">{error}</p>
-        ) : parts.length === 0 ? (
-          <p className="text-gray-500">По вашему запросу запчастей не найдено</p>
-        ) : (
-          <div
-            className={`grid gap-6 ${
-              gridCols === 1
-                ? "grid-cols-1"
-                : gridCols === 2
-                ? "grid-cols-2"
-                : gridCols === 3
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                : gridCols === 6
-                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-                : "grid-cols-3 md:grid-cols-6 lg:grid-cols-9"
-            }`}
-          >
-            {parts.map(part => (
-              <div
-                key={part.id}
-                className="border rounded shadow hover:shadow-lg transition flex flex-col"
-              >
-                {renderPartImage(part)}
-                <div className="p-4 flex flex-col flex-grow">
-                  <h3 className="font-semibold text-lg mb-1">
-                    {part.part_name}
-                  </h3>
-                  <p className="text-sm mb-2">
-                    Для: {part.brand} {part.model} ({part.year})
-                  </p>
-                  <p className="text-sm mb-2">Кузов: {part.body_type || part.body}</p>
-                  <p className="text-lg font-bold mb-3">
-                    {part.price ? `от ${part.price.toLocaleString()} ₽` : '— ₽'}
-                  </p>
-                  <button
-                    onClick={() => createRequest(part)}
-                    className="mt-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-                  >
-                    Подобрать
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+        </main>
+      </div>
+      <ToastContainer position="top-right" autoClose={4000} />
+    </>
   );
 };
 
