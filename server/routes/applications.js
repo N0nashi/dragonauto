@@ -68,8 +68,7 @@ router.post("/", authMiddleware, async (req, res) => {
     if (type === "car") {
       const requiredFields = [
         { name: "country_car", value: country_car },
-        { name: "brand_car", value: brand_car },
-        { name: "model_car", value: model_car }, 
+        { name: "brand_car", value: brand_car }, 
         { name: "price_from_car", value: price_from_car },
         { name: "price_to_car", value: price_to_car },
         { name: "year_from_car", value: year_from_car },
