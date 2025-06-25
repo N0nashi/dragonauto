@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -15,6 +15,7 @@ const PartsCatalog = () => {
   const [gridCols, setGridCols] = useState(3);
   const [availableGridOptions, setAvailableGridOptions] = useState([3, 6]);
   const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
+
   const token = localStorage.getItem("token");
 
   const getUserIdFromToken = () => {
@@ -33,7 +34,6 @@ const PartsCatalog = () => {
     const width = window.innerWidth;
     const portrait = window.matchMedia("(orientation: portrait)").matches;
     setIsPortrait(portrait);
-
     if (width < 768) {
       setAvailableGridOptions([]);
       setGridCols(portrait ? 1 : 2);
@@ -62,35 +62,31 @@ const PartsCatalog = () => {
     }
   }, [availableGridOptions]);
 
-  // Загрузка фильтров и построение карт связей
+  // Загрузка фильтров при монтировании и при изменении выбранной страны и бренда
   useEffect(() => {
     const loadFilters = async () => {
+      setLoadingFilters(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/parts/filters`);
+        const queryParams = new URLSearchParams();
+        if (selectedFilters.country) queryParams.append("country", selectedFilters.country);
+        if (selectedFilters.brand) queryParams.append("brand", selectedFilters.brand);
+
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/parts/filters?${queryParams.toString()}`
+        );
+
         if (!response.ok) throw new Error("Failed to load filters");
         const data = await response.json();
 
-        // Создаем карты для локальной фильтрации
-        const brandToCountryMap = {};
-        const modelToBrandMap = {};
-
-        data.parts?.forEach(part => {
-          if (!brandToCountryMap[part.brand]) {
-            brandToCountryMap[part.brand] = new Set();
-          }
-          brandToCountryMap[part.brand].add(part.country);
-
-          if (!modelToBrandMap[part.model]) {
-            modelToBrandMap[part.model] = new Set();
-          }
-          modelToBrandMap[part.model].add(part.brand);
-        });
-
-        setFilters({
-          ...data,
-          brandToCountryMap,
-          modelToBrandMap,
-        });
+        setFilters((prev) => ({
+          ...prev,
+          brands: data.brands,
+          models: data.models,
+          countries: prev?.countries || data.countries,
+          bodies: prev?.bodies || data.bodies,
+          priceRange: prev?.priceRange || data.priceRange,
+        }));
+        setError(null);
       } catch (err) {
         setError("Ошибка загрузки фильтров");
         console.error(err);
@@ -100,9 +96,9 @@ const PartsCatalog = () => {
     };
 
     loadFilters();
-  }, []);
+  }, [selectedFilters.country, selectedFilters.brand]);
 
-  // Фильтрация частей
+  // Загрузка запчастей при изменении фильтров
   useEffect(() => {
     const loadParts = async () => {
       setLoadingParts(true);
@@ -115,6 +111,7 @@ const PartsCatalog = () => {
         if (!response.ok) throw new Error("Failed to load parts");
         const data = await response.json();
         setParts(data);
+        setError(null);
       } catch (err) {
         setError("Ошибка загрузки запчастей");
         console.error(err);
@@ -125,33 +122,21 @@ const PartsCatalog = () => {
     loadParts();
   }, [selectedFilters]);
 
+  // Обработчик изменения фильтров с логикой сброса зависимых фильтров
   const handleFilterChange = (key, value) => {
-    setSelectedFilters((prev) => ({ ...prev, [key]: value }));
+    setSelectedFilters((prev) => {
+      let updated = { ...prev, [key]: value };
+
+      if (key === "country") {
+        updated.brand = "";
+        updated.model = "";
+      } else if (key === "brand") {
+        updated.model = "";
+      }
+
+      return updated;
+    });
   };
-
-  // Локальная фильтрация брендов
-  const availableBrands = useMemo(() => {
-    if (!filters?.brands) return [];
-    const country = selectedFilters.country;
-
-    if (!country) return filters.brands;
-
-    return filters.brands.filter(brand =>
-      filters.brandToCountryMap[brand]?.has(country)
-    );
-  }, [filters, selectedFilters.country]);
-
-  // Локальная фильтрация моделей
-  const availableModels = useMemo(() => {
-    if (!filters?.models) return [];
-    const brand = selectedFilters.brand;
-
-    if (!brand) return filters.models;
-
-    return filters.models.filter(model =>
-      filters.modelToBrandMap[model]?.has(brand)
-    );
-  }, [filters, selectedFilters.brand]);
 
   const renderFilterSelect = (label, key, options) => (
     <label className="block mb-4" key={key}>
@@ -196,8 +181,11 @@ const PartsCatalog = () => {
   const renderPartImage = (part) => {
     const placeholder = "/images/part-placeholder.png";
     const photoUrl = part.photo_url;
-    const src = photoUrl?.startsWith("http") ? photoUrl : `${process.env.REACT_APP_API_URL}${photoUrl}`;
+    const src = photoUrl?.startsWith("http")
+      ? photoUrl
+      : `${process.env.REACT_APP_API_URL}${photoUrl}`;
     const heightClass = gridCols === 3 ? "h-64" : "h-48";
+
     return (
       <img
         src={photoUrl ? src : placeholder}
@@ -263,8 +251,9 @@ const PartsCatalog = () => {
           ) : (
             <>
               {renderFilterSelect("Страна", "country", filters?.countries)}
-              {renderFilterSelect("Марка", "brand", availableBrands)} {/* Здесь уже отфильтрованные */}
-              {renderFilterSelect("Модель", "model", availableModels)} {/* Здесь тоже */}
+              {renderFilterSelect("Марка", "brand", filters?.brands)}
+              {renderFilterSelect("Модель", "model", filters?.models)}
+
               {showAdvancedFilters && (
                 <>
                   {renderRangeInput("Год выпуска", "year_from", "year_to")}
@@ -272,6 +261,7 @@ const PartsCatalog = () => {
                   {renderRangeInput("Цена (₽)", "price_from", "price_to")}
                 </>
               )}
+
               <button
                 className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
                 onClick={() => setShowAdvancedFilters((prev) => !prev)}
@@ -283,6 +273,7 @@ const PartsCatalog = () => {
             </>
           )}
         </aside>
+
         <main className="flex-1">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-xl">Запчасти ({parts.length})</h2>
@@ -304,6 +295,7 @@ const PartsCatalog = () => {
               </div>
             )}
           </div>
+
           {loadingParts ? (
             <p>Загрузка запчастей...</p>
           ) : error ? (
@@ -323,7 +315,10 @@ const PartsCatalog = () => {
               }`}
             >
               {parts.map((part) => (
-                <div key={part.id} className="border rounded shadow hover:shadow-lg transition flex flex-col">
+                <div
+                  key={part.id}
+                  className="border rounded shadow hover:shadow-lg transition flex flex-col"
+                >
                   {renderPartImage(part)}
                   <div className="p-4 flex flex-col flex-grow">
                     <h3 className="font-semibold text-lg mb-1">{part.part_name}</h3>
