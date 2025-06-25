@@ -36,7 +36,7 @@ export default function MainFrame4() {
           <p className="mb-2 text-gray-700">
             Телефон:{" "}
             <a href="tel:+74951234567" className="text-[#00355B] hover:underline">
-              +7 (495) 123-45-67
+              +7 (982) 290-00-86
             </a>
           </p>
 
@@ -46,7 +46,7 @@ export default function MainFrame4() {
               href="mailto:info@dragonauto.ru"
               className="text-[#00355B] hover:underline"
             >
-              info@dragonauto.ru
+              nonashi@mail.ru
             </a>
           </p>
         </div>
