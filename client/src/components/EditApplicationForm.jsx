@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import CarForm from "./CarForm";
 import PartForm from "./PartForm";
 
+
 function Notification({ message, type, onClose }) {
-  // type: "success" | "error"
-  // Автоматически скрывается через 3 секунды
   useEffect(() => {
     if (!message) return;
     const timer = setTimeout(() => onClose(), 3000);
@@ -15,32 +14,34 @@ function Notification({ message, type, onClose }) {
 
   return (
     <div
-      className={`fixed top-5 right-5 z-50 max-w-xs px-4 py-3 rounded shadow-lg text-white
-        ${type === "success" ? "bg-green-600" : "bg-red-600"}
-        animate-fadeInDown`}
+      className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-white 
+        ${type === "success" ? "bg-green-600" : "bg-red-600"} animate-slideIn`}
       role="alert"
     >
-      {message}
-      <button
-        onClick={onClose}
-        className="ml-3 font-bold focus:outline-none"
-        aria-label="Закрыть уведомление"
-      >
-        ×
-      </button>
+      <div className="flex items-center justify-between gap-4">
+        <span>{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-4 font-bold text-white hover:text-gray-200 focus:outline-none"
+          aria-label="Закрыть уведомление"
+        >
+          ×
+        </button>
+      </div>
+
       <style>{`
-        @keyframes fadeInDown {
-          0% {
+        @keyframes slideIn {
+          from {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateX(100%);
           }
-          100% {
+          to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
           }
         }
-        .animate-fadeInDown {
-          animation: fadeInDown 0.3s ease forwards;
+        .animate-slideIn {
+          animation: slideIn 0.4s ease-out forwards;
         }
       `}</style>
     </div>
@@ -51,7 +52,6 @@ export default function EditApplicationForm({ applicationId, onSave, onCancel })
   const [applicationData, setApplicationData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Для уведомлений
   const [notification, setNotification] = useState({ message: "", type: "" });
 
   useEffect(() => {
@@ -64,12 +64,15 @@ export default function EditApplicationForm({ applicationId, onSave, onCancel })
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/applications/${applicationId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/applications/${applicationId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!res.ok) throw new Error("Ошибка загрузки заявки");
 
@@ -77,7 +80,10 @@ export default function EditApplicationForm({ applicationId, onSave, onCancel })
         setApplicationData(data);
       } catch (error) {
         console.error("Ошибка при загрузке заявки:", error);
-        setNotification({ message: "Не удалось загрузить данные заявки", type: "error" });
+        setNotification({
+          message: "Не удалось загрузить данные заявки",
+          type: "error",
+        });
         setApplicationData(null);
       } finally {
         setLoading(false);
@@ -92,14 +98,17 @@ export default function EditApplicationForm({ applicationId, onSave, onCancel })
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/updateApplications/${applicationId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/updateApplications/${applicationId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!res.ok) throw new Error("Ошибка при сохранении заявки");
 
@@ -139,6 +148,7 @@ export default function EditApplicationForm({ applicationId, onSave, onCancel })
         )}
       </div>
 
+      
       <Notification
         message={notification.message}
         type={notification.type}

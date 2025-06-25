@@ -1,4 +1,5 @@
 import React from "react";
+
 export default function MainFrame1() {
   const robotoFont = "'Roboto', sans-serif";
 
@@ -14,7 +15,7 @@ export default function MainFrame1() {
           fontFamily: robotoFont,
           width: "90%",
           maxWidth: 779,
-          marginTop: 120, // опускаем блок пониже на больших экранах
+          marginTop: 120,
         }}
       >
         {/* Заголовок */}
@@ -24,14 +25,14 @@ export default function MainFrame1() {
 
         {/* Основной текст */}
         <div className="text-white font-semibold text-xl sm:text-[26px] md:text-[30px] leading-[36px] w-full mb-6">
-          <p className="mb-6 indent-8">
+          <p className="mb-6">
             Удобный каталог, большая база данных.
           </p>
-          <p className="mb-6 indent-8">
+          <p className="mb-6">
             Аукционы и сервисы Китая, Японии и Кореи<br />
             обновляются ежедневно!
           </p>
-          <p className="indent-8">
+          <p>
             Моментальная связь с клиентом,<br />
             качественная поддержка и длительное<br />
             сопровождение.

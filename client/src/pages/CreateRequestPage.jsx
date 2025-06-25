@@ -49,6 +49,7 @@ export default function CreateRequest() {
       navigate("/");
     } catch (error) {
       toast.error("Ошибка при отправке заявки: " + error.message);
+    } finally {
       setLoading(false);
     }
   }
@@ -90,7 +91,18 @@ export default function CreateRequest() {
         <PartForm onSubmit={sendRequest} loading={loading} />
       )}
 
-      <ToastContainer />
+      {/* Контейнер для уведомлений */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </section>
   );
 }
