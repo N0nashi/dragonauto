@@ -8,27 +8,37 @@ router.get("/filters", async (req, res) => {
   const { country, brand } = req.query;
 
   try {
-    // Базовые запросы с учётом параметров
-    const [brandsQuery, modelsQuery, countriesQuery, bodiesQuery] = await Promise.all([
-      db.query(
-        `SELECT DISTINCT brand FROM parts ${country ? "WHERE country = $1" : ""} ORDER BY brand`,
-        country ? [country] : []
-      ),
-      db.query(
-        `SELECT DISTINCT model FROM parts ${
-          brand ? "WHERE brand = $1" : country ? "WHERE country = $1" : ""
-        } ORDER BY model`,
-        brand ? [brand] : country ? [country] : []
-      ),
-      db.query("SELECT DISTINCT country FROM parts ORDER BY country"),
-      db.query("SELECT DISTINCT body FROM parts ORDER BY body")
-    ]);
+    const brandsQuery = await db.query(
+      `SELECT DISTINCT brand FROM parts WHERE ($1::text IS NULL OR country = $1) ORDER BY brand`,
+      [country]
+    );
+
+    const modelsQuery = await db.query(
+      `SELECT DISTINCT model FROM parts 
+       WHERE ($1::text IS NULL OR brand = $1) 
+         AND ($2::text IS NULL OR country = $2) 
+       ORDER BY model`,
+      [brand, country]
+    );
+
+    const countriesQuery = await db.query(
+      `SELECT DISTINCT country FROM parts ORDER BY country`
+    );
+
+    const bodiesQuery = await db.query(
+      `SELECT DISTINCT body FROM parts ORDER BY body`
+    );
+
+    const pricesQuery = await db.query(
+      `SELECT MIN(price) as min, MAX(price) as max FROM parts`
+    );
 
     res.json({
       brands: brandsQuery.rows.map(r => r.brand),
       models: modelsQuery.rows.map(r => r.model),
       countries: countriesQuery.rows.map(r => r.country),
       bodies: bodiesQuery.rows.map(r => r.body),
+      priceRange: pricesQuery.rows[0],
     });
   } catch (err) {
     console.error("Ошибка в /api/parts/filters:", err.message);
