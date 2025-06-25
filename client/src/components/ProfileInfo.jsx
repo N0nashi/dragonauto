@@ -11,7 +11,7 @@ export default function ProfileInfo() {
   });
   const [newEmail, setNewEmail] = useState("");
   const [emailCode, setEmailCode] = useState("");
-  const [isEmailStep, setIsEmailStep] = useState(false); // true — ввод кода
+  const [isEmailStep, setIsEmailStep] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -26,7 +26,6 @@ export default function ProfileInfo() {
   });
   const [selectedFile, setSelectedFile] = useState(null);
 
-  // Получение полного URL аватара
   const getFullAvatarUrl = (url) => {
     if (!url) return "https://i.pravatar.cc/150?img=12";
     if (url.startsWith("http")) return url;
@@ -72,7 +71,6 @@ export default function ProfileInfo() {
     }, 5000);
   }, []);
 
-  // Шаг 1: запрос отправки кода для изменения email
   const handleSendEmailCode = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -81,7 +79,6 @@ export default function ProfileInfo() {
       showNotification("Введите новый email", "error");
       return;
     }
-    console.log("Финальный newEmail:", actualNewEmail);
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/request-email-change`, {
         method: "POST",
@@ -89,7 +86,7 @@ export default function ProfileInfo() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ newEmail: newEmail }),
+        body: JSON.stringify({ newEmail }),
       });
 
       if (!res.ok) throw new Error("Ошибка при отправке кода");
@@ -101,7 +98,6 @@ export default function ProfileInfo() {
     }
   };
 
-  // Шаг 2: проверка кода и изменение email
   const handleVerifyEmailCode = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -117,7 +113,7 @@ export default function ProfileInfo() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ newEmail: newEmail, code: emailCode }),
+        body: JSON.stringify({ newEmail, code: emailCode }),
       });
 
       if (!res.ok) throw new Error("Неверный или истёкший код");
@@ -184,7 +180,7 @@ export default function ProfileInfo() {
       throw new Error("Ошибка при загрузке изображения");
     }
     const data = await res.json();
-    return data.url; // URL для сохранения в профиле
+    return data.url;
   };
 
   const handleProfileSave = async (e) => {
@@ -213,7 +209,12 @@ export default function ProfileInfo() {
         const data = await res.json();
         throw new Error(data.message || "Ошибка при обновлении профиля");
       }
-      setProfile({ ...editProfile, avatarUrl: uploadedUrl });
+      setProfile((prev) => ({
+        ...prev,
+        firstName: editProfile.firstName,
+        lastName: editProfile.lastName,
+        avatarUrl: uploadedUrl,
+      }));
       setIsEditing(false);
       setSelectedFile(null);
       showNotification("Профиль успешно обновлен", "success");
@@ -222,7 +223,6 @@ export default function ProfileInfo() {
     }
   };
 
-  // Компоненты форм
   const ProfileCard = React.useMemo(() => (
     <section className="border border-gray-300 rounded shadow-sm bg-white p-4 max-w-md w-full mx-auto md:mx-0">
       <div className="flex flex-col items-center mb-6">
