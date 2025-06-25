@@ -79,7 +79,7 @@ export default function ReviewsCarousel() {
 
   return (
     <section className="py-10 bg-[#00355B]">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-5xl mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6 text-center text-white">
           Отзывы наших клиентов
         </h2>
@@ -88,7 +88,7 @@ export default function ReviewsCarousel() {
           {/* Левая стрелка */}
           <button
             onClick={prev}
-            className="absolute left-0 z-20 bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
+            className="absolute left-0 lg:-translate-x-full z-20 bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
             aria-label="Предыдущий отзыв"
           >
             &larr;
@@ -96,9 +96,11 @@ export default function ReviewsCarousel() {
 
           {/* Карточки */}
           {isMobile ? (
-            <div className="w-full flex justify-center">{renderCard(reviews[activeIndex], true)}</div>
+            <div className="w-full flex justify-center px-12">
+              {renderCard(reviews[activeIndex], true)}
+            </div>
           ) : (
-            <div className="flex gap-6 justify-center items-center">
+            <div className="flex gap-6 justify-center items-center px-12">
               {getDisplayItems().map((item, idx) => renderCard(item, idx === 1))}
             </div>
           )}
@@ -106,7 +108,7 @@ export default function ReviewsCarousel() {
           {/* Правая стрелка */}
           <button
             onClick={next}
-            className="absolute right-0 z-20 bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
+            className="absolute right-0 lg:translate-x-full z-20 bg-white p-3 rounded-full shadow-md hover:bg-gray-100 transition"
             aria-label="Следующий отзыв"
           >
             &rarr;
