@@ -21,11 +21,8 @@ const BODIES = [
 
 function MultiSelectDropdown({ label, options, selected, onChange, disabled, required }) {
   const [open, setOpen] = useState(false);
-  const selectedLabel =
-    selected.length === 0 ? `Выберите ${label.toLowerCase()}` : selected.join(", ");
-  const toggleOpen = () => {
-    if (!disabled) setOpen((v) => !v);
-  };
+  const selectedLabel = selected.length === 0 ? `Выберите ${label.toLowerCase()}` : selected.join(", ");
+  const toggleOpen = () => !disabled && setOpen((v) => !v);
   const onCheck = (option) => {
     if (selected.includes(option)) {
       onChange(selected.filter((v) => v !== option));
@@ -37,9 +34,7 @@ function MultiSelectDropdown({ label, options, selected, onChange, disabled, req
     <div className="relative">
       <div
         onClick={toggleOpen}
-        className={`border p-2 cursor-pointer select-none ${
-          disabled ? "bg-gray-100 cursor-not-allowed" : ""
-        }`}
+        className={`border p-2 cursor-pointer select-none ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
       >
         <span className="block font-semibold">
           {label} {required && <span className="text-red-600">*</span>}
@@ -102,7 +97,7 @@ export default function CarForm({
         ...initialData,
         country_car: initialData.country_car || [],
         brand_car: Array.isArray(initialData.brand_car)
-          ? initialData.brand_car || ""
+          ? initialData.brand_car.join(", ")
           : initialData.brand_car || "",
         model_car: initialData.model_car || "",
         year_from_car: initialData.year_from_car || "",
@@ -129,84 +124,69 @@ export default function CarForm({
   const validate = () => {
     const newErrors = {};
     if (!readOnly) {
-      // Обязательные поля
-      if (form.country_car.length === 0)
-        newErrors.country_car = "Выберите хотя бы одну страну";
-      if (!form.brand_car.trim()) newErrors.brand_car = "Введите марку автомобиля";
-      
-      // Год выпуска (обязательный)
-      if (form.year_from_car === "" || isNaN(Number(form.year_from_car)) || Number(form.year_from_car) < 1900) {
+      if (form.country_car.length === 0) newErrors.country_car = "Выберите хотя бы одну страну";
+      if (!form.brand_car || typeof form.brand_car !== "string" || !form.brand_car.trim())
+        newErrors.brand_car = "Введите марку автомобиля";
+
+      const isInvalid = (val) => val === "" || isNaN(Number(val)) || Number(val) < 0;
+
+      if (isInvalid(form.year_from_car) || Number(form.year_from_car) < 1900)
         newErrors.year_from_car = "Введите корректный год выпуска 'от'";
-      }
-      if (form.year_to_car === "" || isNaN(Number(form.year_to_car)) || Number(form.year_to_car) < 1900) {
+      if (isInvalid(form.year_to_car) || Number(form.year_to_car) < 1900)
         newErrors.year_to_car = "Введите корректный год выпуска 'до'";
-      } else if (Number(form.year_to_car) < Number(form.year_from_car)) {
+      else if (Number(form.year_to_car) < Number(form.year_from_car))
         newErrors.year_to_car = "Год 'до' не может быть меньше года 'от'";
-      }
 
-      // Цена (обязательная)
-      if (form.price_from_car === "" || isNaN(Number(form.price_from_car)) || Number(form.price_from_car) < 0) {
-        newErrors.price_from_car = "Введите корректную минимальную цену";
-      }
-      if (form.price_to_car === "" || isNaN(Number(form.price_to_car)) || Number(form.price_to_car) < 0) {
-        newErrors.price_to_car = "Введите корректную максимальную цену";
-      } else if (Number(form.price_to_car) < Number(form.price_from_car)) {
+      if (isInvalid(form.price_from_car)) newErrors.price_from_car = "Введите корректную минимальную цену";
+      if (isInvalid(form.price_to_car)) newErrors.price_to_car = "Введите корректную максимальную цену";
+      else if (Number(form.price_to_car) < Number(form.price_from_car))
         newErrors.price_to_car = "Максимальная цена не может быть меньше минимальной";
-      }
 
-      // Пробег (обязательный)
-      if (form.mileage_from_car === "" || isNaN(Number(form.mileage_from_car)) || Number(form.mileage_from_car) < 0) {
-        newErrors.mileage_from_car = "Введите корректный пробег 'от'";
-      }
-      if (form.mileage_to_car === "" || isNaN(Number(form.mileage_to_car)) || Number(form.mileage_to_car) < 0) {
-        newErrors.mileage_to_car = "Введите корректный пробег 'до'";
-      } else if (Number(form.mileage_to_car) < Number(form.mileage_from_car)) {
+      if (isInvalid(form.mileage_from_car)) newErrors.mileage_from_car = "Введите корректный пробег 'от'";
+      if (isInvalid(form.mileage_to_car)) newErrors.mileage_to_car = "Введите корректный пробег 'до'";
+      else if (Number(form.mileage_to_car) < Number(form.mileage_from_car))
         newErrors.mileage_to_car = "Пробег 'до' не может быть меньше 'от'";
-      }
 
-      // Мощность (обязательная)
-      if (form.power_from_car === "" || isNaN(Number(form.power_from_car)) || Number(form.power_from_car) < 0) {
-        newErrors.power_from_car = "Введите корректную мощность 'от'";
-      }
-      if (form.power_to_car === "" || isNaN(Number(form.power_to_car)) || Number(form.power_to_car) < 0) {
-        newErrors.power_to_car = "Введите корректную мощность 'до'";
-      } else if (Number(form.power_to_car) < Number(form.power_from_car)) {
+      if (isInvalid(form.power_from_car)) newErrors.power_from_car = "Введите корректную мощность 'от'";
+      if (isInvalid(form.power_to_car)) newErrors.power_to_car = "Введите корректную мощность 'до'";
+      else if (Number(form.power_to_car) < Number(form.power_from_car))
         newErrors.power_to_car = "Мощность 'до' не может быть меньше 'от'";
-      }
     }
     return newErrors;
   };
 
   const getErrorToastMessage = (errors) => {
-    const errorMessages = [];
-    
-    if (errors.country_car) errorMessages.push("• Страна: " + errors.country_car);
-    if (errors.brand_car) errorMessages.push("• Марка: " + errors.brand_car);
-    if (errors.year_from_car) errorMessages.push("• Год выпуска от: " + errors.year_from_car);
-    if (errors.year_to_car) errorMessages.push("• Год выпуска до: " + errors.year_to_car);
-    if (errors.price_from_car) errorMessages.push("• Цена от: " + errors.price_from_car);
-    if (errors.price_to_car) errorMessages.push("• Цена до: " + errors.price_to_car);
-    if (errors.mileage_from_car) errorMessages.push("• Пробег от: " + errors.mileage_from_car);
-    if (errors.mileage_to_car) errorMessages.push("• Пробег до: " + errors.mileage_to_car);
-    if (errors.power_from_car) errorMessages.push("• Мощность от: " + errors.power_from_car);
-    if (errors.power_to_car) errorMessages.push("• Мощность до: " + errors.power_to_car);
-
-    return "Исправьте следующие ошибки:\n" + errorMessages.join("\n");
+    const map = {
+      country_car: "Страна",
+      brand_car: "Марка",
+      year_from_car: "Год выпуска от",
+      year_to_car: "Год выпуска до",
+      price_from_car: "Цена от",
+      price_to_car: "Цена до",
+      mileage_from_car: "Пробег от",
+      mileage_to_car: "Пробег до",
+      power_from_car: "Мощность от",
+      power_to_car: "Мощность до"
+    };
+    return (
+      "Исправьте следующие ошибки:\n" +
+      Object.keys(errors)
+        .map((k) => `• ${map[k]}: ${errors[k]}`)
+        .join("\n")
+    );
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (readOnly) return;
-
     const validationErrors = validate();
     setErrors(validationErrors);
-
     if (Object.keys(validationErrors).length === 0) {
       onSubmit(form);
     } else {
       toast.error(getErrorToastMessage(validationErrors), {
         autoClose: 5000,
-        closeButton: true,
+        closeButton: true
       });
     }
   };
@@ -222,7 +202,7 @@ export default function CarForm({
             selected={form.country_car}
             onChange={(vals) => setForm((prev) => ({ ...prev, country_car: vals }))}
             disabled={loading || readOnly}
-            required={true}
+            required
           />
           {errors.country_car && (
             <p className="text-red-600 text-sm mt-1">{errors.country_car}</p>
