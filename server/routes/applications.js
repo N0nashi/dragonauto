@@ -145,6 +145,14 @@ router.get("/", authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
       `SELECT a.id, a.type, a.description, a.status, a.date, a.offered_price,
+        a.matched_item_id, a.matched_item_type,
+        CASE
+          WHEN a.matched_item_type = 'car'
+          THEN (SELECT row_to_json(mi) FROM (SELECT id, brand, model, year, price, photo_url, country, mileage, gearbox, drive, body, engine_power, description FROM cars WHERE id = a.matched_item_id) mi)
+          WHEN a.matched_item_type = 'part'
+          THEN (SELECT row_to_json(mi) FROM (SELECT id, part_name, price, photo_url, brand, model, year, body, country FROM parts WHERE id = a.matched_item_id) mi)
+          ELSE NULL
+        END AS matched_item,
         c.country_car, c.brand_car, c.model_car,
         c.price_from_car, c.price_to_car,
         c.year_from_car, c.year_to_car, c.year_range_car,

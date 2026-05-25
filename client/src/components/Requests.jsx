@@ -31,6 +31,7 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
   const [expanded, setExpanded] = useState(null);
   const [editing, setEditing]   = useState(null);
   const [unreadMap, setUnreadMap] = useState({});
+  const [itemModal, setItemModal] = useState(null);
 
   const token = localStorage.getItem("token");
 
@@ -144,8 +145,51 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
         <span className="font-mont text-xs text-charcoal/30 dark:text-cream/30">{apps.length} {lang === "en" ? "items" : "шт."}</span>
       </div>
 
+      {itemModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setItemModal(null)}>
+          <div className="bg-cream dark:bg-charcoal rounded-2xl w-full max-w-md overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            {itemModal.photo_url && (
+              <img
+                src={itemModal.photo_url.startsWith("http") ? itemModal.photo_url : `${API}${itemModal.photo_url}`}
+                alt=""
+                className="w-full h-56 object-cover"
+              />
+            )}
+            <div className="p-5">
+              <h3 className="font-mont font-black text-lg text-charcoal dark:text-cream mb-4">
+                {itemModal._type === "car"
+                  ? `${itemModal.brand} ${itemModal.model} ${itemModal.year}`
+                  : itemModal.part_name}
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {itemModal._type === "car" ? (<>
+                  {itemModal.country    && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Country" : "Страна"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.country}</p></div>}
+                  {itemModal.mileage != null && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Mileage" : "Пробег"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{Number(itemModal.mileage).toLocaleString("ru-RU")} км</p></div>}
+                  {itemModal.gearbox   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Gearbox" : "КПП"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.gearbox}</p></div>}
+                  {itemModal.drive     && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Drive" : "Привод"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.drive}</p></div>}
+                  {itemModal.body      && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Body" : "Кузов"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.body}</p></div>}
+                  {itemModal.engine_power && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Power" : "Мощность"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.engine_power} л.с.</p></div>}
+                </>) : (<>
+                  {itemModal.brand  && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Brand" : "Марка"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.brand}</p></div>}
+                  {itemModal.model  && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Model" : "Модель"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.model}</p></div>}
+                  {itemModal.year   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Year" : "Год"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.year}</p></div>}
+                  {itemModal.body   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Body" : "Кузов"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.body}</p></div>}
+                </>)}
+                <div className="col-span-2"><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Price" : "Цена"}</p><p className="font-mont font-black text-lg text-red-accent">{Number(itemModal.price).toLocaleString("ru-RU")} ₽</p></div>
+              </div>
+              {itemModal.description && (
+                <p className="font-mont text-sm text-charcoal/60 dark:text-cream/60 mt-3">{itemModal.description}</p>
+              )}
+              <button onClick={() => setItemModal(null)} className="mt-5 w-full font-mont font-black text-[10px] tracking-widest uppercase py-3 bg-charcoal/8 dark:bg-cream/8 text-charcoal dark:text-cream rounded-xl hover:opacity-80 transition">
+                {lang === "en" ? "Close" : "Закрыть"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {apps.map((app) => {
-        const { id, date, status, description, type, offered_price } = app;
+        const { id, date, status, description, type, offered_price, matched_item, matched_item_type } = app;
         const isOpen    = expanded === id;
         const hasUnread = unreadMap[id] > 0;
 
@@ -204,14 +248,41 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
                 {/* Offer block */}
                 {status === "предложение" && offered_price && (
                   <div className="bg-orange-500/8 dark:bg-orange-400/8 border border-orange-500/20 rounded-xl px-4 py-3 mb-4">
-                    <p className="font-mont font-bold text-sm text-orange-700 dark:text-orange-400">
+                    <p className="font-mont font-bold text-sm text-orange-700 dark:text-orange-400 mb-2">
                       {lang === "en" ? "Offer found:" : "Найден вариант:"}
                       {" "}
                       <span className="text-red-accent">
                         {Number(offered_price).toLocaleString("ru-RU")} ₽
                       </span>
                     </p>
-                    <p className="font-mont text-xs text-charcoal/50 dark:text-cream/50 mt-1">
+                    {matched_item && (
+                      <button
+                        onClick={() => setItemModal({ ...matched_item, _type: matched_item_type })}
+                        className="w-full flex items-center gap-3 bg-charcoal/5 dark:bg-cream/5 hover:bg-charcoal/10 dark:hover:bg-cream/10 rounded-xl px-3 py-2 mb-2 transition text-left"
+                      >
+                        {matched_item.photo_url && (
+                          <img
+                            src={matched_item.photo_url.startsWith("http") ? matched_item.photo_url : `${API}${matched_item.photo_url}`}
+                            alt=""
+                            className="w-16 h-12 object-cover rounded-lg shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-mont font-bold text-sm text-charcoal dark:text-cream">
+                            {matched_item_type === "car"
+                              ? `${matched_item.brand} ${matched_item.model} ${matched_item.year}`
+                              : matched_item.part_name}
+                          </p>
+                          <p className="font-mont text-xs text-charcoal/50 dark:text-cream/50">
+                            {Number(matched_item.price).toLocaleString("ru-RU")} ₽
+                          </p>
+                        </div>
+                        <span className="font-mont text-[10px] tracking-widest uppercase text-red-accent shrink-0">
+                          {lang === "en" ? "Details →" : "Подробнее →"}
+                        </span>
+                      </button>
+                    )}
+                    <p className="font-mont text-xs text-charcoal/50 dark:text-cream/50">
                       {lang === "en"
                         ? "Manager found a suitable option. Click \"Accept offer\" to confirm."
                         : "Менеджер нашёл подходящий вариант. Нажмите «Принять предложение» для подтверждения."}
