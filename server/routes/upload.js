@@ -22,10 +22,12 @@ function createMulterStorage(folderName) {
   });
 }
 
+const ALLOWED_FOLDERS = new Set(["avatars", "cars", "parts"]);
+
 function uploadMiddleware(req, res, next) {
   const folder = req.query.folder;
-  if (!folder) {
-    return res.status(400).json({ error: "Не указан параметр folder" });
+  if (!folder || !ALLOWED_FOLDERS.has(folder)) {
+    return res.status(400).json({ error: "Недопустимый параметр folder" });
   }
   const storage = createMulterStorage(folder);
 
@@ -46,7 +48,8 @@ function uploadMiddleware(req, res, next) {
 
   upload(req, res, function (err) {
     if (err) {
-      return res.status(400).json({ error: err.message });
+      const safe = err instanceof multer.MulterError || err.message?.startsWith("Разрешены");
+      return res.status(400).json({ error: safe ? err.message : "Ошибка загрузки файла" });
     }
     next();
   });
@@ -63,7 +66,32 @@ router.post("/", uploadMiddleware, (req, res) => {
   res.json({ url });
 });
 
+/**
+ * Middleware для загрузки аватарки при регистрации (папка "avatars" хардкодом).
+ * Не требует ?folder= в query.
+ */
+function avatarUploadMiddleware(req, res, next) {
+  const storage = createMulterStorage("avatars");
+  const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const allowed = /jpeg|jpg|png|webp/;
+      const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+      const mime = allowed.test(file.mimetype);
+      if (ext && mime) cb(null, true);
+      else cb(new Error("Разрешены только изображения jpeg/jpg/png/webp"));
+    },
+  }).single("file");
+
+  upload(req, res, function (err) {
+    if (err) return res.status(400).json({ error: err.message });
+    next();
+  });
+}
+
 module.exports = {
   router,
-  uploadMiddleware
+  uploadMiddleware,
+  avatarUploadMiddleware,
 };

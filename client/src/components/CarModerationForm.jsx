@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "../utils/toast";
+import { useLang } from "../context/LangContext";
 
 const COUNTRIES = ["Китай", "Корея", "Япония"];
 const DRIVES = ["Задний", "Передний", "4WD"];
@@ -27,11 +28,11 @@ function SelectDropdown({ label, options, value, onChange, disabled }) {
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="border p-2 w-full rounded"
+        className="w-full font-mont text-sm bg-cream dark:bg-charcoal border border-charcoal/20 dark:border-cream/20 rounded-xl px-3 py-2.5 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors"
       >
-        <option value="">Не выбрано</option>
+        <option value="" className="bg-cream dark:bg-charcoal">Не выбрано</option>
         {options.map((option) => (
-          <option key={option} value={option}>
+          <option key={option} value={option} className="bg-cream dark:bg-charcoal">
             {option}
           </option>
         ))}
@@ -41,6 +42,9 @@ function SelectDropdown({ label, options, value, onChange, disabled }) {
 }
 
 export default function CarForm({ initialData = null, onSubmit, onCancel, loading = false }) {
+  const { t } = useLang();
+  const tt = t.toasts;
+
   const [form, setForm] = useState({
     country: "",
     brand: "",
@@ -150,12 +154,12 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
 
       try {
         const uploadRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/upload?folder=cars`,
+          `${import.meta.env.VITE_API_URL}/api/upload?folder=cars`,
           formData
         );
         photoUrl = uploadRes.data.url;
       } catch (err) {
-        toast.error("Ошибка загрузки фото");
+        toast.error(tt.photoError);
         return;
       }
     }

@@ -65,7 +65,7 @@ export default function EditApplicationForm({ applicationId, onSave, onCancel })
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/applications/${applicationId}`,
+          `${import.meta.env.VITE_API_URL}/api/applications/${applicationId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -99,7 +99,7 @@ export default function EditApplicationForm({ applicationId, onSave, onCancel })
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/updateApplications/${applicationId}`,
+        `${import.meta.env.VITE_API_URL}/api/updateApplications/${applicationId}`,
         {
           method: "PUT",
           headers: {

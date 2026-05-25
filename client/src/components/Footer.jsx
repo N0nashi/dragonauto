@@ -1,19 +1,23 @@
 import React from "react";
+import { useLang } from "../context/LangContext";
 
 export default function Footer() {
-  return (
-    <footer className="w-full bg-[#00355B] text-white text-sm md:text-base font-semibold py-4 px-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-start items-end text-right md:text-left">
-        {/* Левый блок на десктопе, правый на мобилках */}
-        <div className="mb-4 md:mb-0">
-          <p className="mb-1">DragonAuto</p>
-          <p>ИП Иванов Георгий</p>
-        </div>
+  const { t } = useLang();
+  const f = t.footer;
 
-        {/* Второй блок — всегда по правому краю на мобилках */}
-        <div>
-          <p>г.Челябинск, Салавата Юлаева д.29</p>
-          <p className="mb-1">+7 982 290 00 86</p>
+  return (
+    <footer className="bg-charcoal transition-colors duration-300">
+      <div className="max-w-6xl mx-auto px-8 md:px-20 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="flex flex-col leading-snug">
+          <span className="font-mont text-sm text-cream/80">{f.company}</span>
+          <span className="font-mont text-xs text-cream/35">{f.legal}</span>
+        </div>
+        <div className="flex flex-col items-start sm:items-end leading-snug">
+          <a href={`tel:${f.phone.replace(/\s/g, "")}`}
+            className="font-mont text-sm text-cream/80 hover:text-cream transition-colors duration-200">
+            {f.phone}
+          </a>
+          <span className="font-mont text-xs text-cream/35">{f.address}</span>
         </div>
       </div>
     </footer>

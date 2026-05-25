@@ -1,6 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const authMiddleware = require("../middleware/authMiddleware");
+const isModerator   = require("../middleware/isModerator");
+
+// Strip PostgreSQL array literals: {"value"} → value
+const stripPg = (v) => {
+  if (typeof v !== "string" || !v.startsWith("{")) return v;
+  return v.slice(1, -1).replace(/^"|"$/g, "");
+};
 
 // Получение фильтров (списки уникальных значений и диапазон цен)
 router.get("/filters", async (req, res) => {
@@ -50,12 +58,12 @@ router.get("/filters", async (req, res) => {
     );
 
     res.json({
-      brands: brandsQuery.rows.map(r => r.brand),
-      models: modelsQuery.rows.map(r => r.model),
-      countries: countriesQuery.rows.map(r => r.country),
-      bodies: bodiesQuery.rows.map(r => r.body),
-      gearboxes: gearboxesQuery.rows.map(r => r.gearbox),
-      drives: drivesQuery.rows.map(r => r.drive),
+      brands:    brandsQuery.rows.map(r => stripPg(r.brand)).filter(Boolean),
+      models:    modelsQuery.rows.map(r => stripPg(r.model)).filter(Boolean),
+      countries: countriesQuery.rows.map(r => stripPg(r.country)).filter(Boolean),
+      bodies:    bodiesQuery.rows.map(r => stripPg(r.body)).filter(Boolean),
+      gearboxes: gearboxesQuery.rows.map(r => stripPg(r.gearbox)).filter(Boolean),
+      drives:    drivesQuery.rows.map(r => stripPg(r.drive)).filter(Boolean),
       priceRange: pricesQuery.rows[0],
     });
   } catch (err) {
@@ -129,7 +137,9 @@ router.post("/search", async (req, res) => {
     values.push(body);
   }
 
-  const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+  // Только одобренные объявления видны публично
+  filters.push(`status = 'approved'`);
+  const whereClause = `WHERE ${filters.join(" AND ")}`;
   const query = `SELECT * FROM cars ${whereClause} ORDER BY id DESC`;
 
   try {
@@ -157,13 +167,12 @@ router.get("/:id", async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
-  // limit и offset — из query, по умолчанию 10 и 0
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = parseInt(req.query.offset) || 0;
+  const limit  = Math.min(Math.max(1, parseInt(req.query.limit)  || 10), 100);
+  const offset = Math.max(0, parseInt(req.query.offset) || 0);
 
   try {
     const result = await db.query(
-      "SELECT id, country, brand, model, year, engine_power, mileage, gearbox, drive, body, photo_url, price FROM cars ORDER BY id DESC LIMIT $1 OFFSET $2",
+      "SELECT id, country, brand, model, year, engine_power, mileage, gearbox, drive, body, photo_url, price, status, created_at FROM cars ORDER BY id DESC LIMIT $1 OFFSET $2",
       [limit, offset]
     );
     res.json(result.rows);
@@ -174,7 +183,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST /api/cars — добавление новой машины
-router.post("/", async (req, res) => {
+router.post("/", authMiddleware, isModerator, async (req, res) => {
   const {
     country,
     brand,
@@ -231,7 +240,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT /api/cars/1
-router.put("/:id", async (req, res) => {
+router.put("/:id", authMiddleware, isModerator, async (req, res) => {
   const { id } = req.params;
 
   const {
@@ -247,6 +256,7 @@ router.put("/:id", async (req, res) => {
     engine_power: power,
     description,
     photo_url,
+    status,
   } = req.body;
 
   try {
@@ -263,8 +273,9 @@ router.put("/:id", async (req, res) => {
         mileage = $9,
         engine_power = $10,
         description = $11,
-        photo_url = $12
-      WHERE id = $13
+        photo_url = $12,
+        status = $13
+      WHERE id = $14
       RETURNING *`,
       [
         country,
@@ -279,6 +290,7 @@ router.put("/:id", async (req, res) => {
         power,
         description,
         photo_url,
+        status,
         id,
       ]
     );
@@ -295,7 +307,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE /api/cars/:id — удаление автомобиля
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authMiddleware, isModerator, async (req, res) => {
   const { id } = req.params;
 
   try {

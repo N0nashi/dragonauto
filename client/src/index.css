@@ -1,3 +1,123 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: "Mont";
+  src: url("/fonts/Mont-Regular.woff2") format("woff2"),
+       url("/fonts/Mont-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Mont";
+  src: url("/fonts/Mont-SemiBold.woff2") format("woff2"),
+       url("/fonts/Mont-SemiBold.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Mont";
+  src: url("/fonts/Mont-Bold.woff2") format("woff2"),
+       url("/fonts/Mont-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Advokat Modern";
+  src: url("/fonts/AdvokatModern.woff2") format("woff2"),
+       url("/fonts/AdvokatModern.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Kalissa";
+  src: url("/fonts/Kalissa.woff2") format("woff2"),
+       url("/fonts/Kalissa.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* ── Global custom scrollbar ─────────────────────────────────── */
+
+/* Webkit — all elements (Chrome, Safari, Edge) */
+::-webkit-scrollbar              { width: 6px; height: 6px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-corner       { background: transparent; }
+::-webkit-scrollbar-thumb        { background: rgba(45,45,45,0.20); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover  { background: rgba(139,26,26,0.60); }
+
+/* Dark mode — descendants of html.dark */
+.dark ::-webkit-scrollbar-thumb       { background: rgba(255,255,240,0.18); }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(139,26,26,0.70); }
+
+/* Root (html) scrollbar — dark class sits ON html itself, not above it */
+html.dark::-webkit-scrollbar-track       { background: #2D2D2D; }
+html.dark::-webkit-scrollbar-thumb       { background: rgba(255,255,240,0.18); }
+html.dark::-webkit-scrollbar-thumb:hover { background: rgba(139,26,26,0.70); }
+html::-webkit-scrollbar-track            { background: #FFFFF0; }
+
+/* Firefox */
+html                { scrollbar-width: thin; scrollbar-color: rgba(45,45,45,0.20)  #FFFFF0; }
+html.dark           { scrollbar-width: thin; scrollbar-color: rgba(255,255,240,0.18) #2D2D2D; }
+*                   { scrollbar-width: thin; scrollbar-color: rgba(45,45,45,0.20)  transparent; }
+.dark *             { scrollbar-width: thin; scrollbar-color: rgba(255,255,240,0.18) transparent; }
+
+/* hide scrollbar but keep scroll */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes road-scroll {
+  from { background-position-x: 0px; }
+  to   { background-position-x: 1800px; }
+}
+
+/* ── entrance animations ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-left {
+  from { opacity: 0; transform: translateX(-36px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-right {
+  from { opacity: 0; transform: translateX(36px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.anim-fade-up    { animation: fade-up   0.65s cubic-bezier(.22,.68,0,1.15) both; }
+.anim-fade-left  { animation: fade-left  0.7s cubic-bezier(.22,.68,0,1.1)  both; }
+.anim-fade-right { animation: fade-right 0.7s cubic-bezier(.22,.68,0,1.1)  both; }
+.anim-fade-in    { animation: fade-in    0.5s ease both; }
+.anim-scale-in   { animation: scale-in  0.55s cubic-bezier(.22,.68,0,1.2)  both; }
+
+.anim-d1  { animation-delay: 0.08s; }
+.anim-d2  { animation-delay: 0.18s; }
+.anim-d3  { animation-delay: 0.30s; }
+.anim-d4  { animation-delay: 0.44s; }
+.anim-d5  { animation-delay: 0.60s; }
+.anim-d6  { animation-delay: 0.76s; }
+
+/* ── Mobile menu slide-down ── */
+@keyframes slide-down-fade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-slide-down { animation: slide-down-fade 0.22s cubic-bezier(.22,.68,0,1.1) both; }
+
+/* ── Toast progress bar ── */
+@keyframes toast-progress {
+  from { width: 100%; }
+  to   { width: 0%; }
+}

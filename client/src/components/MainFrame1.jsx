@@ -1,57 +1,52 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { useLang } from "../context/LangContext";
 
 export default function MainFrame1() {
-  const robotoFont = "'Roboto', sans-serif";
+  const { t, lang } = useLang();
+  const heroSrc = lang === "en" ? "/hero-text-en.svg" : "/hero-text.svg";
+
+  const Buttons = ({ className = "" }) => (
+    <div className={`flex flex-col gap-3 w-[220px] ${className}`} style={{ animationFillMode: "both" }}>
+      <Link
+        to="/create-request"
+        className="bg-red-accent text-cream border-2 border-red-accent h-[44px] flex items-center justify-center text-base font-mont font-black tracking-normal rounded-md hover:opacity-90 transition"
+      >
+        {t.hero.order}
+      </Link>
+      <Link
+        to="/catalog"
+        className="bg-cream dark:bg-charcoal border-2 border-charcoal dark:border-cream text-charcoal dark:text-cream h-[44px] flex items-center justify-center text-base font-mont font-black tracking-normal rounded-md hover:bg-charcoal hover:text-cream dark:hover:bg-cream dark:hover:text-charcoal transition"
+      >
+        {t.hero.catalog}
+      </Link>
+    </div>
+  );
 
   return (
-    <section
-      className="w-full min-h-[calc(100vh-56px)] bg-cover bg-center relative flex justify-center md:justify-start items-start pb-10 md:pb-0"
-      style={{ backgroundImage: "url('/background1.png')" }}
-    >
-      <div
-        className="bg-[rgba(0,53,91,0.7)] overflow-y-auto rounded-[15px] flex flex-col justify-start items-start px-6 md:px-10 py-10 md:ml-20"
-        style={{
-          boxSizing: "border-box",
-          fontFamily: robotoFont,
-          width: "90%",
-          maxWidth: 779,
-          marginTop: 120,
-        }}
-      >
-        {/* Заголовок */}
-        <p className="text-white font-semibold text-2xl sm:text-3xl md:text-[36px] leading-[36px] mb-6">
-          Ищите авто из стран Азии?
-        </p>
+    <section className="min-h-[calc(100vh-64px)] bg-cream dark:bg-charcoal flex items-center justify-center px-4 md:px-8 overflow-hidden transition-colors duration-300">
 
-        {/* Основной текст */}
-        <div className="text-white font-semibold text-xl sm:text-[26px] md:text-[30px] leading-[36px] w-full mb-6">
-          <p className="mb-6">
-            Удобный каталог, большая база данных.
-          </p>
-          <p className="mb-6">
-            Аукционы и сервисы Китая, Японии и Кореи<br />
-            обновляются ежедневно!
-          </p>
-          <p>
-            Моментальная связь с клиентом,<br />
-            качественная поддержка и длительное<br />
-            сопровождение.
-          </p>
+      {/* ── Desktop layout ── */}
+      <div className="hidden md:flex flex-row items-center gap-6 w-full max-w-6xl">
+        <div className="flex flex-col items-center gap-8 shrink-0">
+          <img src={heroSrc} alt={t.hero.title}
+            className="w-72 xl:w-96 dark:invert anim-fade-left" />
+          <Buttons className="anim-fade-up anim-d3" />
         </div>
-
-        {/* Завершающая строка */}
-        <p className="text-white font-semibold text-2xl sm:text-3xl md:text-[36px] leading-[36px] mb-10">
-          DragonAuto для вас!
-        </p>
-
-        {/* Кнопка */}
-        <a
-          href="/create-request"
-          className="bg-white text-[#00355B] font-semibold text-base sm:text-lg md:text-xl py-2 sm:py-2.5 px-10 sm:px-20 rounded-full hover:bg-blue-600 hover:text-white transition w-full sm:w-auto text-center"
-        >
-          ПРИСТУПИТЬ К ПОДБОРУ
-        </a>
+        <div className="flex-1 min-w-0 anim-fade-right anim-d2">
+          <img src="/map.svg" alt="Asia map" className="w-full max-w-[740px] opacity-90 dark:invert" />
+        </div>
       </div>
+
+      {/* ── Mobile layout ── */}
+      <div className="flex md:hidden flex-col items-center gap-6 w-full">
+        <img src={heroSrc} alt={t.hero.title}
+          className="w-3/4 max-w-[260px] dark:invert anim-fade-left" />
+        <img src="/map.svg" alt="Asia map"
+          className="w-full max-w-[380px] opacity-90 dark:invert anim-fade-right anim-d2" />
+        <Buttons className="anim-fade-up anim-d4" />
+      </div>
+
     </section>
   );
 }

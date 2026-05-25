@@ -5,10 +5,9 @@ const authMiddleware = require("../middleware/authMiddleware");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 
-// Вспомогательная функция проверки email
 function isValidEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
+  const re = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  return re.test(email) && email.length <= 254;
 }
 
 // Хелпер для получения пользователя по id
@@ -29,7 +28,7 @@ router.get("/", authMiddleware, async (req, res) => {
       : req.userId;
 
     // Проверяем, является ли запрашивающий модератором
-    if (requestedUserId !== req.userId && req.user?.role !== "moderator") {
+    if (requestedUserId !== req.userId && req.userRole !== "moderator") {
       return res.status(403).json({ error: "Нет прав на просмотр других пользователей" });
     }
 
@@ -56,8 +55,14 @@ router.put("/", authMiddleware, async (req, res) => {
     if (!first_name || typeof first_name !== "string") {
       return res.status(400).json({ error: "first_name обязателен и должен быть строкой" });
     }
+    if (first_name.trim().length > 100) {
+      return res.status(400).json({ error: "first_name не должно превышать 100 символов" });
+    }
     if (!last_name || typeof last_name !== "string") {
       return res.status(400).json({ error: "last_name обязателен и должен быть строкой" });
+    }
+    if (last_name.trim().length > 100) {
+      return res.status(400).json({ error: "last_name не должно превышать 100 символов" });
     }
     if (photo_url !== undefined && typeof photo_url !== "string") {
       return res.status(400).json({ error: "photo_url должен быть строкой" });
@@ -134,7 +139,7 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
         pass: process.env.YANDEX_PASSWORD,
       },
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     });
 
@@ -156,7 +161,7 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
       `,
     });
 
-    console.log(`Код подтверждения ${code} отправлен на ${currentUser.email}`);
+    console.log(`Код подтверждения отправлен на ${currentUser.email}`);
     res.json({ 
       message: "Код подтверждения отправлен на вашу текущую почту",
       email: currentUser.email // Отправляем email для информации
@@ -164,10 +169,7 @@ router.post("/request-email-change", authMiddleware, async (req, res) => {
 
   } catch (error) {
     console.error("Ошибка отправки кода подтверждения:", error);
-    res.status(500).json({ 
-      error: "Произошла ошибка при отправке кода подтверждения",
-      details: error.message 
-    });
+    res.status(500).json({ error: "Произошла ошибка при отправке кода подтверждения" });
   }
 });
 
@@ -242,10 +244,7 @@ router.put("/email", authMiddleware, async (req, res) => {
 
   } catch (error) {
     console.error("Ошибка при обновлении email:", error);
-    res.status(500).json({ 
-      error: "Ошибка при обновлении email",
-      details: error.message 
-    });
+    res.status(500).json({ error: "Ошибка при обновлении email" });
   }
 });
 
@@ -257,6 +256,9 @@ router.put("/password", authMiddleware, async (req, res) => {
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: "Текущий и новый пароли обязательны" });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "Новый пароль должен содержать минимум 8 символов" });
     }
 
     const userResult = await db.query(`SELECT password FROM users WHERE id = $1`, [userId]);

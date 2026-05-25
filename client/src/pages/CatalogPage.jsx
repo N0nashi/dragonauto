@@ -1,29 +1,22 @@
 import React from "react";
-import{ useState } from "react";
 import CarsCatalog from "../components/CarsCatalog";
-import PartsCatalog from "../components/PartsCatalog";
+import { useLang } from "../context/LangContext";
 
 export default function CatalogPage() {
-  const [activeTab, setActiveTab] = useState("cars");
+  const { t } = useLang();
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-[#00355B] mb-6">Каталог</h1>
-      <div className="flex space-x-4 mb-6">
-        <button
-          className={`px-4 py-2 rounded ${activeTab === "cars" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-          onClick={() => setActiveTab("cars")}
-        >
-          Автомобили
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === "parts" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-          onClick={() => setActiveTab("parts")}
-        >
-          Запчасти
-        </button>
+    <div className="min-h-screen bg-cream dark:bg-charcoal transition-colors duration-300">
+
+      {/* ── Title ── */}
+      <div className="flex justify-start px-6 md:px-12 pt-8 pb-6">
+        <h1 className="font-mont font-black text-2xl tracking-widest text-charcoal dark:text-cream uppercase">
+          {t.nav.catalog}
+        </h1>
       </div>
-      {activeTab === "cars" ? <CarsCatalog /> : <PartsCatalog />}
+
+      {/* ── Catalog (tabs + filters + grid all inside) ── */}
+      <CarsCatalog />
     </div>
   );
 }

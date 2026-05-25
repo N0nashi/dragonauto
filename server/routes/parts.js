@@ -2,6 +2,13 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const authMiddleware = require("../middleware/authMiddleware");
+const isModerator   = require("../middleware/isModerator");
+
+const stripPg = (v) => {
+  if (typeof v !== "string" || !v.startsWith("{")) return v;
+  return v.slice(1, -1).replace(/^"|"$/g, "");
+};
 
 // GET /filters — получение уникальных значений для фильтров
 router.get("/filters", async (req, res) => {
@@ -38,10 +45,10 @@ router.get("/filters", async (req, res) => {
     );
 
     res.json({
-      brands: brandsQuery.rows.map(r => r.brand),
-      models: modelsQuery.rows.map(r => r.model),
-      countries: countriesQuery.rows.map(r => r.country),
-      bodies: bodiesQuery.rows.map(r => r.body),
+      brands:    brandsQuery.rows.map(r => stripPg(r.brand)).filter(Boolean),
+      models:    modelsQuery.rows.map(r => stripPg(r.model)).filter(Boolean),
+      countries: countriesQuery.rows.map(r => stripPg(r.country)).filter(Boolean),
+      bodies:    bodiesQuery.rows.map(r => stripPg(r.body)).filter(Boolean),
       priceRange: pricesQuery.rows[0],
     });
   } catch (err) {
@@ -99,21 +106,23 @@ router.post("/search", async (req, res) => {
     values.push(price_to);
   }
 
-  const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+  // Только одобренные запчасти видны публично
+  filters.push(`status = 'approved'`);
+  const whereClause = `WHERE ${filters.join(" AND ")}`;
 
   const query = `
-    SELECT 
-      id, 
-      country, 
-      brand, 
-      model, 
-      year, 
-      body AS body_type, 
-      part_name, 
+    SELECT
+      id,
+      country,
+      brand,
+      model,
+      year,
+      body AS body_type,
+      part_name,
       photo_url,
       price
-    FROM parts 
-    ${whereClause} 
+    FROM parts
+    ${whereClause}
     ORDER BY id DESC
   `;
 
@@ -155,7 +164,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST / — добавление новой запчасти
-router.post("/", async (req, res) => {
+router.post("/", authMiddleware, isModerator, async (req, res) => {
   const {
     country,
     brand,
@@ -182,7 +191,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT /:id — редактирование запчасти
-router.put("/:id", async (req, res) => {
+router.put("/:id", authMiddleware, isModerator, async (req, res) => {
   const { id } = req.params;
   const {
     country,
@@ -223,7 +232,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE /:id — удаление запчасти
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authMiddleware, isModerator, async (req, res) => {
   const id = parseInt(req.params.id);
 
   try {

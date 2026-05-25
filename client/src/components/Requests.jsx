@@ -1,217 +1,261 @@
-import React, { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
+import React, { useState, useEffect, useContext } from "react";
+import { toast } from "../utils/toast";
 import EditApplicationForm from "./EditApplicationForm";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import ApplicationComments from "./ApplicationComments";
+import StatusStepper from "./StatusStepper";
+import { useLang } from "../context/LangContext";
+import { translateDesc } from "../utils/translateDesc";
+import { AuthContext } from "../context/AuthContext";
+import { STATUS_COLORS, isFinal, USER_EDITABLE, USER_CANCELLABLE, USER_CLOSEABLE } from "../utils/statusConfig";
 
-export default function Requests() {
-  const [applications, setApplications] = useState([]);
-  const [expandedId, setExpandedId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editingApplication, setEditingApplication] = useState(null);
+const API = import.meta.env.VITE_API_URL;
 
-  async function loadApplications() {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setApplications([]);
-      setLoading(false);
-      return;
-    }
+export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
+  const { t, lang } = useLang();
+  const { refreshUnreadCount } = useContext(AuthContext);
+  const tr = t.requests;
+  const tt = t.toasts;
 
-    try {
-      const response = await fetch(`https://dragonauto74.ru/api/applications`, {
-        headers: { Authorization: "Bearer " + token },
-      });
-
-      if (!response.ok) throw new Error("Ошибка загрузки заявок");
-
-      const data = await response.json();
-      setApplications(data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Не удалось загрузить заявки");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadApplications();
-  }, []);
-
-  const toggleExpand = (id) => {
-    setExpandedId((prev) => (prev === id ? null : id));
+  const Badge = ({ status }) => {
+    const cls = STATUS_COLORS[status] ?? "bg-charcoal/8 text-charcoal/50 dark:text-cream/50";
+    const label = tr.statuses?.[status] ?? status;
+    return (
+      <span className={`font-mont font-bold text-[10px] tracking-widest uppercase px-3 py-1 rounded-full border border-transparent ${cls}`}>
+        {label}
+      </span>
+    );
   };
 
-  const cancelApplication = async (id) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.warn("Пожалуйста, войдите в систему");
-      return;
-    }
+  const [apps, setApps]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [expanded, setExpanded] = useState(null);
+  const [editing, setEditing]   = useState(null);
+  const [unreadMap, setUnreadMap] = useState({});
 
+  const token = localStorage.getItem("token");
+
+  const loadApps = async () => {
+    if (!token) { setLoading(false); return; }
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/applications/${id}`, {
-        method: "DELETE",
+      const r = await fetch(`${API}/api/applications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!res.ok) throw new Error("Ошибка отмены заявки");
-
-      await loadApplications();
-      toast.success("Заявка отменена");
-    } catch (error) {
-      console.error(error);
-      toast.error("Не удалось отменить заявку");
-    }
+      if (!r.ok) throw new Error();
+      setApps(await r.json());
+    } catch { toast.error(tt.requestsLoadFail); }
+    finally { setLoading(false); }
   };
 
-  const closeApplication = async (id) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.warn("Пожалуйста, войдите в систему");
-      return;
-    }
-
+  const loadUnread = async () => {
+    if (!token) return;
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/applications/${id}/close`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: "выполнена" }),
+      const r = await fetch(`${API}/api/notifications/per-application`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!res.ok) throw new Error("Ошибка закрытия заявки");
-
-      await loadApplications();
-      toast.success("Заявка успешно закрыта");
-    } catch (error) {
-      console.error(error);
-      toast.error("Не удалось закрыть заявку");
-    }
+      if (r.ok) setUnreadMap(await r.json());
+    } catch { /* silently */ }
   };
 
-  const startEditApplication = (application) => {
-    setEditingApplication(application);
+  useEffect(() => {
+    loadApps();
+    loadUnread();
+  }, []);
+
+  useEffect(() => {
+    if (!initialOpenId || apps.length === 0) return;
+    setExpanded(initialOpenId);
+    setTimeout(() => {
+      const el = document.getElementById(`app-card-${initialOpenId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+    onOpenIdConsumed?.();
+  }, [initialOpenId, apps]);
+
+  const cancel = async (id) => {
+    try {
+      const r = await fetch(`${API}/api/applications/${id}`, {
+        method: "DELETE", headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error();
+      await loadApps();
+      toast.success(tt.requestCancelled);
+    } catch { toast.error(tt.requestCancelFail); }
   };
 
-  const saveApplication = (updatedApp) => {
-    setApplications((prev) =>
-      prev.map((app) => (app.id === updatedApp.id ? updatedApp : app))
-    );
-    setEditingApplication(null);
-    toast.success("Заявка успешно обновлена");
+  const closeApp = async (id) => {
+    try {
+      const r = await fetch(`${API}/api/applications/${id}/close`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!r.ok) throw new Error();
+      await loadApps();
+      toast.success(tt.requestClosed);
+    } catch { toast.error(tt.requestCloseFail); }
   };
 
-  const cancelEdit = () => setEditingApplication(null);
-
-  const statusColor = {
-    выполнена: "bg-green-500",
-    обработка: "bg-yellow-400",
-    отменена: "bg-red-500",
-    отменено: "bg-red-500",
+  const confirmOffer = async (id) => {
+    try {
+      const r = await fetch(`${API}/api/applications/${id}/confirm-offer`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!r.ok) throw new Error();
+      await loadApps();
+      toast.success(tt.offerAccepted);
+    } catch { toast.error(tt.offerAcceptFail); }
   };
 
-  const isFinalStatus = (status) =>
-    status === "выполнена" || status.startsWith("отмен");
-
-  if (loading) return <p>Загрузка заявок...</p>;
-  if (applications.length === 0) return <p>У вас пока нет заявок.</p>;
-
-  if (editingApplication) {
+  if (editing) {
     return (
-      <section>
-        <EditApplicationForm
-          applicationId={editingApplication.id}
-          onSave={saveApplication}
-          onCancel={cancelEdit}
-        />
-      </section>
+      <EditApplicationForm
+        applicationId={editing.id}
+        onSave={() => {
+          setEditing(null);
+          loadApps();
+          toast.success(tt.requestUpdated);
+        }}
+        onCancel={() => setEditing(null)}
+      />
     );
   }
 
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <span className="font-mont text-sm text-charcoal/30 dark:text-cream/30 tracking-widest uppercase animate-pulse">
+        {tr.loading}
+      </span>
+    </div>
+  );
+
+  if (apps.length === 0) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-3 border border-charcoal/10 dark:border-cream/10 rounded-2xl">
+      <span className="font-mont text-4xl text-charcoal/10 dark:text-cream/10">∅</span>
+      <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30 tracking-widest uppercase">{tr.empty}</p>
+    </div>
+  );
+
   return (
-    <section>
-      <h2 className="text-2xl font-semibold mb-6 text-[#00355B]">Ваши заявки</h2>
-      <div className="overflow-x-auto rounded-lg border border-gray-300 shadow-sm">
-        <table className="w-full table-auto border-collapse">
-          <thead className="bg-gray-100 text-gray-700 rounded-t-lg">
-            <tr>
-              <th className="p-3 text-left rounded-tl-lg">№</th>
-              <th className="p-3 text-left">Дата</th>
-              <th className="p-3 text-left">Тип</th>
-              <th className="p-3 text-left rounded-tr-lg">Статус</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map(({ id, date, status, description, type }) => (
-              <React.Fragment key={id}>
-                <tr
-                  className="hover:bg-gray-50 transition cursor-pointer"
-                  onClick={() => toggleExpand(id)}
-                >
-                  <td className="p-3 border-t border-gray-200">{id}</td>
-                  <td className="p-3 border-t border-gray-200">
-                    {new Date(date).toLocaleDateString("ru-RU")}
-                  </td>
-                  <td className="p-3 border-t border-gray-200 capitalize">{type}</td>
-                  <td className="p-3 border-t border-gray-200 flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-white text-sm ${
-                        statusColor[status] || "bg-gray-400"
-                      }`}
-                    >
-                      {status === "выполнена" && <CheckCircle size={16} />}
-                      {(status === "отменена" || status === "отменено") && (
-                        <XCircle size={16} />
-                      )}
-                      {status}
-                    </span>
-                    {expandedId === id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  </td>
-                </tr>
-
-                {expandedId === id && (
-                  <tr>
-                    <td colSpan={4} className="bg-blue-50 px-6 py-4 border-t border-gray-200">
-                      <div className="mb-4">
-                        <strong>Описание:</strong>
-                        <p className="mt-2 text-gray-700">{description}</p>
-                      </div>
-                      {!isFinalStatus(status) && (
-                        <div className="flex flex-wrap gap-3">
-                          <button
-                            onClick={() => cancelApplication(id)}
-                            className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-700 transition-shadow shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                          >
-                            Отменить
-                          </button>
-
-                          <button
-                            onClick={() => startEditApplication({ id, date, status, description, type })}
-                            className="px-4 py-2 rounded-md bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition-shadow shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                          >
-                            Редактировать
-                          </button>
-
-                          <button
-                            onClick={() => closeApplication(id)}
-                            className="px-4 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700 transition-shadow shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                          >
-                            Закрыть заявку
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+          {tr.title}
+        </h3>
+        <span className="font-mont text-xs text-charcoal/30 dark:text-cream/30">{apps.length} {lang === "en" ? "items" : "шт."}</span>
       </div>
-    </section>
+
+      {apps.map((app) => {
+        const { id, date, status, description, type, offered_price } = app;
+        const isOpen    = expanded === id;
+        const hasUnread = unreadMap[id] > 0;
+
+        return (
+          <div key={id} id={`app-card-${id}`}
+            className={`border rounded-2xl overflow-hidden transition-all duration-200 ${isOpen ? "border-charcoal/25 dark:border-cream/25 ring-2 ring-red-accent/20" : "border-charcoal/10 dark:border-cream/10"}`}
+          >
+            {/* Row header */}
+            <button
+              onClick={() => {
+                setExpanded(p => p === id ? null : id);
+                if (!isOpen && hasUnread) {
+                  setUnreadMap(m => ({ ...m, [id]: 0 }));
+                  refreshUnreadCount?.();
+                }
+              }}
+              className="w-full flex items-center gap-4 px-5 py-4 text-left"
+            >
+              <span className="font-mont text-xs text-charcoal/25 dark:text-cream/25 tabular-nums w-6 shrink-0">
+                #{id}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-mont font-bold text-sm text-charcoal dark:text-cream">
+                  {type === "car" ? tr.typeCar : type === "part" ? tr.typePart : type}
+                </p>
+                <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 mt-0.5">
+                  {new Date(date).toLocaleDateString(lang === "en" ? "en-US" : "ru-RU", { day: "numeric", month: "long", year: "numeric" })}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {hasUnread && (
+                  <span className="w-2 h-2 rounded-full bg-red-accent animate-pulse" title="Есть новые сообщения" />
+                )}
+                <Badge status={status} />
+              </div>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                className={`text-charcoal/25 dark:text-cream/25 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                <path d="M3 6l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {/* Expanded panel */}
+            {isOpen && (
+              <div className="px-5 pb-5 border-t border-charcoal/10 dark:border-cream/10">
+
+                {/* Status stepper */}
+                <StatusStepper status={status} />
+
+                {/* Description */}
+                {description && (
+                  <p className="font-mont text-sm text-charcoal/55 dark:text-cream/55 leading-relaxed mt-4 mb-4">
+                    {translateDesc(description, lang)}
+                  </p>
+                )}
+
+                {/* Offer block */}
+                {status === "предложение" && offered_price && (
+                  <div className="bg-orange-500/8 dark:bg-orange-400/8 border border-orange-500/20 rounded-xl px-4 py-3 mb-4">
+                    <p className="font-mont font-bold text-sm text-orange-700 dark:text-orange-400">
+                      {lang === "en" ? "Offer found:" : "Найден вариант:"}
+                      {" "}
+                      <span className="text-red-accent">
+                        {Number(offered_price).toLocaleString("ru-RU")} ₽
+                      </span>
+                    </p>
+                    <p className="font-mont text-xs text-charcoal/50 dark:text-cream/50 mt-1">
+                      {lang === "en"
+                        ? "Manager found a suitable option. Click \"Accept offer\" to confirm."
+                        : "Менеджер нашёл подходящий вариант. Нажмите «Принять предложение» для подтверждения."}
+                    </p>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                {!isFinal(status) && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {USER_EDITABLE.includes(status) && (
+                      <button onClick={() => setEditing(app)}
+                        className="font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2 border-2 border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream rounded-xl hover:border-charcoal dark:hover:border-cream transition">
+                        {tr.edit}
+                      </button>
+                    )}
+                    {status === "предложение" && (
+                      <button onClick={() => confirmOffer(id)}
+                        className="font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2 bg-orange-500 text-white rounded-xl hover:opacity-90 transition">
+                        {lang === "en" ? "Accept offer" : "Принять предложение"}
+                      </button>
+                    )}
+                    {USER_CLOSEABLE.includes(status) && (
+                      <button onClick={() => closeApp(id)}
+                        className="font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2 bg-green-600 text-white rounded-xl hover:opacity-90 transition">
+                        {lang === "en" ? "Mark as done" : "Выполнено"}
+                      </button>
+                    )}
+                    {USER_CANCELLABLE.includes(status) && (
+                      <button onClick={() => cancel(id)}
+                        className="font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2 border-2 border-red-accent/20 text-red-accent rounded-xl hover:bg-red-accent/5 transition">
+                        {tr.cancel}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Comments thread */}
+                <ApplicationComments applicationId={id} authorRole="user" />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }

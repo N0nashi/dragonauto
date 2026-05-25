@@ -1,0 +1,13 @@
+{
+  "name": "dragonauto-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && node index.js",
+    "client": "cd client && npx vite"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

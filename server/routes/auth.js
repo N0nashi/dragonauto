@@ -4,16 +4,36 @@ const bcryptjs = require("bcryptjs");
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-const { uploadMiddleware } = require("./upload");
+const validator = require("validator");
+const { avatarUploadMiddleware } = require("./upload");
 
-const JWT_SECRET = process.env.JWT_SECRET || "mysecret";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET не задан в переменных окружения");
+  process.exit(1);
+}
 
 // 📌 Роут: Регистрация
-router.post("/register", uploadMiddleware, async (req, res) => {
-  const { email, password, first_name, last_name } = req.body;
+router.post("/register", avatarUploadMiddleware, async (req, res) => {
+  const { email, password, first_name, last_name, role } = req.body;
+
+  // Базовая валидация
+  if (!email || !password || !first_name || !last_name) {
+    return res.status(400).json({ error: "Все поля обязательны" });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: "Пароль должен содержать минимум 8 символов" });
+  }
+  if (!validator.isEmail(email)) {
+    return res.status(400).json({ error: "Некорректный формат email" });
+  }
+
+  // Допустимые роли
+  const allowedRoles = ["client", "supplier"];
+  const userRole = allowedRoles.includes(role) ? role : "client";
 
   try {
-    const existing = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+    const existing = await db.query("SELECT id FROM users WHERE email = $1", [email]);
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: "Пользователь с таким email уже существует" });
     }
@@ -26,9 +46,9 @@ router.post("/register", uploadMiddleware, async (req, res) => {
     const hashedPassword = await bcryptjs.hash(password, 10);
 
     const result = await db.query(
-      `INSERT INTO users (email, password, first_name, last_name, photo_url, is_verified)
-       VALUES ($1, $2, $3, $4, $5, false) RETURNING id, email`,
-      [email, hashedPassword, first_name, last_name, photoUrl]
+      `INSERT INTO users (email, password, first_name, last_name, photo_url, is_verified, role)
+       VALUES ($1, $2, $3, $4, $5, false, $6) RETURNING id, email, role`,
+      [email, hashedPassword, first_name, last_name, photoUrl, userRole]
     );
 
     const user = result.rows[0];
@@ -56,7 +76,7 @@ router.post("/register", uploadMiddleware, async (req, res) => {
         pass: process.env.YANDEX_PASSWORD,
       },
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     });
 
@@ -68,9 +88,9 @@ router.post("/register", uploadMiddleware, async (req, res) => {
       text: `Ваш код подтверждения: ${code}. Он действителен в течение 10 минут.`,
     });
 
-    console.log(`Код подтверждения ${code} отправлен на ${email}`);
+    console.log(`Код подтверждения отправлен на ${email}`);
 
-    res.json({ message: "Регистрация успешна. Код подтверждения отправлен на email", requiresVerification: true });
+    res.status(201).json({ message: "Регистрация успешна. Код подтверждения отправлен на email", requiresVerification: true });
 
   } catch (error) {
     console.error("Ошибка регистрации:", error);
@@ -105,11 +125,11 @@ router.post("/verify-email", async (req, res) => {
     await db.query("DELETE FROM password_resets WHERE email = $1", [email]);
 
     // Получаем пользователя для генерации токена
-    const userResult = await db.query("SELECT id, email FROM users WHERE email = $1", [email]);
+    const userResult = await db.query("SELECT id, email, role FROM users WHERE email = $1", [email]);
     const user = userResult.rows[0];
 
     // Генерируем JWT токен
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -125,23 +145,31 @@ router.post("/verify-email", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email и пароль обязательны" });
+  }
+
   try {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
     const user = result.rows[0];
-    if (!user) return res.status(400).json({ error: "Неверный email или пароль" });
+    if (!user) return res.status(401).json({ error: "Неверный email или пароль" });
 
     const isMatch = await bcryptjs.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Неверный email или пароль" });
+    if (!isMatch) return res.status(401).json({ error: "Неверный email или пароль" });
 
     if (!user.is_verified) {
       return res.status(403).json({ error: "Email не подтверждён" });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+    if (user.is_blocked) {
+      return res.status(403).json({ error: "Аккаунт заблокирован" });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.json({ token, user: { id: user.id, email: user.email } });
+    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
   } catch (error) {
     console.error("Ошибка входа:", error);
     res.status(500).json({ error: "Ошибка сервера" });
@@ -154,9 +182,10 @@ router.post("/forgot-password", async (req, res) => {
   if (!email) return res.status(400).json({ error: "Email обязателен" });
 
   try {
-    const userCheck = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+    const userCheck = await db.query("SELECT id FROM users WHERE email = $1", [email]);
     if (userCheck.rows.length === 0) {
-      return res.status(400).json({ error: "Пользователь с таким email не найден" });
+      // Не раскрываем существование аккаунта
+      return res.json({ message: "Если email зарегистрирован, код будет отправлен" });
     }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -181,7 +210,7 @@ router.post("/forgot-password", async (req, res) => {
         pass: process.env.YANDEX_PASSWORD,
       },
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     });
 
@@ -193,7 +222,7 @@ router.post("/forgot-password", async (req, res) => {
       text: `Ваш код восстановления: ${code}. Он действителен в течение 10 минут.`,
     });
 
-    console.log(`Код восстановления ${code} отправлен на ${email}`);
+    console.log(`Код восстановления отправлен на ${email}`);
     res.json({ message: "Код восстановления отправлен на email" });
 
   } catch (error) {
@@ -205,6 +234,10 @@ router.post("/forgot-password", async (req, res) => {
 // 🔐 Роут: Сброс пароля по коду
 router.post("/reset-password", async (req, res) => {
   const { email, otp, newPassword } = req.body;
+
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({ error: "Пароль должен содержать минимум 8 символов" });
+  }
 
   try {
     const result = await db.query(

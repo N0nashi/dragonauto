@@ -1,143 +1,150 @@
 import React, { useState } from "react";
 
 const ForgotPasswordForm = ({ onClose }) => {
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [otp, setOtp] = useState("");
+  const [email, setEmail]           = useState("");
+  const [otp, setOtp]               = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [isOTPSent, setIsOTPSent] = useState(false);
-  const [status, setStatus] = useState({
-    loading: false,
-    success: "",
-    error: "",
-  });
+  const [step, setStep]             = useState("email"); // "email" | "reset" | "done"
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState("");
 
-  const handleForgotPassword = async (e) => {
+  const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50";
+
+  const sendOtp = async (e) => {
     e.preventDefault();
-    setStatus({ loading: true, success: "", error: "" });
+    setError(""); setLoading(true);
     try {
-      await fetch(`${process.env.REACT_APP_API_URL}/api/forgot-password`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
+        body: JSON.stringify({ email }),
       });
-      setStatus({
-        loading: false,
-        success: "Инструкции по восстановлению отправлены на email",
-        error: "",
-      });
-      setIsOTPSent(true);
-    } catch (err) {
-      setStatus({
-        loading: false,
-        success: "",
-        error: "Ошибка при отправке запроса",
-      });
+      setStep("reset");
+    } catch {
+      setError("Ошибка при отправке запроса");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResetPassword = async (e) => {
+  const resetPassword = async (e) => {
     e.preventDefault();
-    setStatus({ loading: true, success: "", error: "" });
+    setError(""); setLoading(true);
     try {
-      await fetch(`${process.env.REACT_APP_API_URL}/api/reset-password`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, otp, newPassword }),
+        body: JSON.stringify({ email, otp, newPassword }),
       });
-      setStatus({
-        loading: false,
-        success: "Пароль успешно изменён",
-        error: "",
-      });
-      setTimeout(() => {
-        setIsOTPSent(false);
-        setForgotEmail("");
-        setOtp("");
-        setNewPassword("");
-        setStatus({ loading: false, success: "", error: "" });
-        onClose();
-      }, 2000);
-    } catch (err) {
-      setStatus({
-        loading: false,
-        success: "",
-        error: "Ошибка при сбросе пароля",
-      });
+      setStep("done");
+      setTimeout(onClose, 2000);
+    } catch {
+      setError("Ошибка при сбросе пароля");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow max-w-md w-full mx-auto">
-      <h3 className="text-xl font-semibold mb-4">Восстановление пароля</h3>
-      {!isOTPSent ? (
-        <form onSubmit={handleForgotPassword} className="space-y-4" autoComplete="off">
-          <input
-            type="email"
-            placeholder="Введите email"
-            value={forgotEmail}
-            onChange={(e) => setForgotEmail(e.target.value)}
-            required
-            disabled={status.loading}
-            autoComplete="off"
-            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            disabled={status.loading}
-            className={`w-full py-2 rounded ${
-              status.loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            } text-white transition`}
-          >
-            {status.loading ? "Отправка..." : "Отправить"}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleResetPassword} className="space-y-4" autoComplete="off">
-          <input
-            type="text"
-            placeholder="Введите код из письма"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-            disabled={status.loading}
-            autoComplete="off"
-            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="password"
-            placeholder="Новый пароль"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            disabled={status.loading}
-            autoComplete="new-password"
-            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            disabled={status.loading}
-            className={`w-full py-2 rounded ${
-              status.loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
-            } text-white transition`}
-          >
-            {status.loading ? "Смена..." : "Сменить пароль"}
-          </button>
-        </form>
-      )}
-      {status.success && <p className="mt-4 text-green-600">{status.success}</p>}
-      {status.error && <p className="mt-4 text-red-600">{status.error}</p>}
-      <p className="mt-4">
+    <div className="fixed inset-0 bg-charcoal/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-cream dark:bg-charcoal border border-charcoal/15 dark:border-cream/15 rounded-2xl p-8 max-w-sm w-full relative">
+
+        {/* Close */}
         <button
           onClick={onClose}
-          className="text-blue-600 underline"
+          className="absolute top-5 right-5 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"
         >
-          Отмена
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
         </button>
-      </p>
+
+        <h3 className="font-mont font-black text-xl text-charcoal dark:text-cream mb-2">
+          Восстановление пароля
+        </h3>
+
+        {step === "email" && (
+          <>
+            <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">
+              Введите email — вышлем код для сброса пароля
+            </p>
+            <form onSubmit={sendOtp} className="flex flex-col gap-3">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                autoComplete="off"
+                className={inputCls}
+              />
+              {error && <p className="font-mont text-xs text-red-accent">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-1 w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Отправка..." : "Отправить код"}
+              </button>
+            </form>
+          </>
+        )}
+
+        {step === "reset" && (
+          <>
+            <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">
+              Код отправлен на <span className="text-charcoal dark:text-cream font-bold">{email}</span>
+            </p>
+            <form onSubmit={resetPassword} className="flex flex-col gap-3" autoComplete="off">
+              <input
+                type="text"
+                placeholder="Код из письма"
+                value={otp}
+                onChange={e => setOtp(e.target.value)}
+                required
+                disabled={loading}
+                autoComplete="off"
+                className={inputCls}
+              />
+              <input
+                type="password"
+                placeholder="Новый пароль"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                required
+                disabled={loading}
+                autoComplete="new-password"
+                className={inputCls}
+              />
+              {error && <p className="font-mont text-xs text-red-accent">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-1 w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Смена..." : "Сменить пароль"}
+              </button>
+            </form>
+          </>
+        )}
+
+        {step === "done" && (
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="w-12 h-12 rounded-full bg-red-accent/10 flex items-center justify-center">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            <p className="font-mont font-bold text-charcoal dark:text-cream text-center">
+              Пароль успешно изменён
+            </p>
+            <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 text-center">
+              Закрываем окно...
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

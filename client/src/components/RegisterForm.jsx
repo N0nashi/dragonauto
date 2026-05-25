@@ -1,31 +1,68 @@
 import React, { useState } from "react";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "../utils/toast";
+import { useLang } from "../context/LangContext";
+
+const Field = ({ type = "text", name, placeholder, value, onChange, disabled, extra = "" }) => {
+  const [show, setShow] = useState(false);
+  const isPassword = type === "password";
+
+  return (
+    <div className="relative">
+      <input
+        type={isPassword && show ? "text" : type}
+        name={name}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        required
+        disabled={disabled}
+        className={`w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50 ${isPassword ? "pr-12" : ""} ${extra}`}
+      />
+      {isPassword && (
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setShow(p => !p)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"
+        >
+          {show ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
+  );
+};
 
 const RegisterForm = ({ onRegisterSuccess }) => {
+  const { t } = useLang();
+  const tt = t.toasts;
+  const [role, setRole] = useState("client"); // "client" | "supplier"
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    first_name: "", last_name: "", email: "", password: "", confirmPassword: "",
   });
-
   const [avatar, setAvatar] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
-  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [showPolicy, setShowPolicy] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleFileChange = (e) => {
+  const handleFile = (e) => {
     const file = e.target.files[0];
     if (file && file.size > 5 * 1024 * 1024) {
-      toast.error("Размер файла не должен превышать 5MB");
+      toast.error(tt.fileTooLarge);
       return;
     }
     setAvatar(file);
@@ -33,272 +70,209 @@ const RegisterForm = ({ onRegisterSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (
-      !form.first_name ||
-      !form.last_name ||
-      !form.email ||
-      !form.password ||
-      !form.confirmPassword
-    ) {
-      toast.error("Все поля обязательны");
-      return;
+    if (!form.first_name || !form.last_name || !form.email || !form.password || !form.confirmPassword) {
+      toast.error(tt.fillAllFields); return;
     }
-
     if (form.password !== form.confirmPassword) {
-      toast.error("Пароли не совпадают");
-      return;
+      toast.error(tt.passwordMismatch); return;
     }
-
     if (!acceptedPolicy) {
-      toast.error("Вы должны согласиться с политикой конфиденциальности");
-      return;
+      toast.error(tt.acceptPrivacy); return;
     }
-
     setLoading(true);
-
     try {
-      const formData = new FormData();
-      formData.append("first_name", form.first_name.trim());
-      formData.append("last_name", form.last_name.trim());
-      formData.append("email", form.email.trim());
-      formData.append("password", form.password);
-      if (avatar) {
-        formData.append("file", avatar);
-      }
+      const fd = new FormData();
+      fd.append("first_name", form.first_name.trim());
+      fd.append("last_name",  form.last_name.trim());
+      fd.append("email",      form.email.trim());
+      fd.append("password",   form.password);
+      fd.append("role",       role);
+      if (avatar) fd.append("file", avatar);
 
-      const response = await fetch(
-        `https://dragonauto74.ru/api/register?folder=avatars`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Ошибка регистрации");
-      }
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/register?folder=avatars`, { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ошибка регистрации");
 
       if (data.requiresVerification) {
         setShowVerification(true);
-        toast.info("Код подтверждения отправлен на ваш email");
+        toast.info(tt.codeSent);
       } else {
-        if (data.token) {
-          onRegisterSuccess(data.token);
-          toast.success("Регистрация успешна! Вы вошли в аккаунт.");
-        } else {
-          toast.success("Регистрация успешна!");
-        }
+        data.token ? onRegisterSuccess(data.token) : toast.success(tt.registerSuccess);
       }
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Ошибка регистрации");
+      toast.error(err.message || tt.submitError);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyEmail = async () => {
-    if (!verificationCode.trim()) {
-      toast.error("Введите код подтверждения");
-      return;
-    }
-
+  const handleVerify = async () => {
+    if (!verificationCode.trim()) { toast.error(tt.enterCode); return; }
     setLoading(true);
-
     try {
-      const response = await fetch(`https://dragonauto74.ru/api/verify-email`, {
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/verify-email`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          code: verificationCode,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, code: verificationCode }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Ошибка подтверждения");
-      }
-
-      toast.success("Email успешно подтверждён!");
-
-      if (data.token) {
-        onRegisterSuccess(data.token);
-      } else {
-        toast.error("Не удалось получить токен после подтверждения");
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ошибка подтверждения");
+      toast.success(tt.emailConfirmed);
+      data.token ? onRegisterSuccess(data.token) : toast.error(tt.tokenFail);
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Неверный или просроченный код");
+      toast.error(err.message || tt.codeInvalid);
     } finally {
       setLoading(false);
     }
   };
+
+  const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50";
+
+  if (showVerification) {
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="font-mont text-sm text-charcoal/50 dark:text-cream/50 text-center leading-relaxed">
+          Код отправлен на <span className="text-charcoal dark:text-cream font-bold">{form.email}</span>
+        </p>
+        <input
+          type="text"
+          placeholder="Код из письма"
+          value={verificationCode}
+          onChange={e => setVerificationCode(e.target.value)}
+          disabled={loading}
+          className={inputCls}
+        />
+        <button
+          type="button"
+          onClick={handleVerify}
+          disabled={loading}
+          className="w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Проверка..." : "Подтвердить email"}
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {!showVerification ? (
-        <>
-          <input
-            type="text"
-            name="first_name"
-            placeholder="Имя"
-            value={form.first_name}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            className="w-full px-4 py-2 border rounded focus:outline-none"
-          />
-          <input
-            type="text"
-            name="last_name"
-            placeholder="Фамилия"
-            value={form.last_name}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            className="w-full px-4 py-2 border rounded focus:outline-none"
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            className="w-full px-4 py-2 border rounded focus:outline-none"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Пароль"
-            value={form.password}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            className="w-full px-4 py-2 border rounded focus:outline-none"
-          />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Повторите пароль"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            className="w-full px-4 py-2 border rounded focus:outline-none"
-          />
+    <>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
 
-          <div>
-            <label className="block text-sm mb-1">Аватар (до 5MB, не обяз.)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              disabled={loading}
-              className="w-full px-3 py-2 border rounded-md"
-            />
-            {avatar && (
-              <div className="mt-1 text-sm text-gray-500">Файл: {avatar.name}</div>
+<div className="flex gap-2 mb-1">
+          {[
+            { key: "client",   label: "Клиент",    desc: "Подбираю авто и запчасти" },
+            { key: "supplier", label: "Поставщик",  desc: "Добавляю товары в каталог" },
+          ].map(({ key, label, desc }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setRole(key)}
+              className={`flex-1 flex flex-col items-start gap-0.5 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                role === key
+                  ? "border-red-accent bg-red-accent/5 dark:bg-red-accent/10"
+                  : "border-charcoal/15 dark:border-cream/15 hover:border-charcoal/30 dark:hover:border-cream/30"
+              }`}
+            >
+              <span className={`font-mont font-black text-xs tracking-widest uppercase ${role === key ? "text-red-accent" : "text-charcoal/60 dark:text-cream/60"}`}>
+                {label}
+              </span>
+              <span className="font-mont text-[10px] text-charcoal/35 dark:text-cream/35 leading-tight">
+                {desc}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-3">
+          <Field name="first_name" placeholder="Имя"     value={form.first_name} onChange={handleChange} disabled={loading} />
+          <Field name="last_name"  placeholder="Фамилия" value={form.last_name}  onChange={handleChange} disabled={loading} />
+        </div>
+        <Field type="email"    name="email"           placeholder="Email"            value={form.email}           onChange={handleChange} disabled={loading} />
+        <Field type="password" name="password"        placeholder="Пароль"           value={form.password}        onChange={handleChange} disabled={loading} />
+        <Field type="password" name="confirmPassword" placeholder="Повторите пароль" value={form.confirmPassword} onChange={handleChange} disabled={loading} />
+
+        {/* Avatar upload */}
+        <label className="flex items-center gap-3 border border-dashed border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 cursor-pointer hover:border-charcoal/40 dark:hover:border-cream/40 transition-colors duration-200 group">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+            className="text-charcoal/30 dark:text-cream/30 group-hover:text-charcoal dark:group-hover:text-cream shrink-0 transition-colors">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 group-hover:text-charcoal dark:group-hover:text-cream transition-colors flex-1 truncate">
+            {avatar ? avatar.name : "Аватар (до 5MB, не обязательно)"}
+          </span>
+          <input type="file" accept="image/*" onChange={handleFile} disabled={loading} className="hidden" />
+        </label>
+
+        {/* Policy */}
+        <label className="flex items-start gap-3 cursor-pointer select-none mt-1">
+          <div
+            onClick={() => setAcceptedPolicy(p => !p)}
+            className={`w-5 h-5 shrink-0 mt-0.5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer ${
+              acceptedPolicy
+                ? "bg-red-accent border-red-accent"
+                : "border-charcoal/25 dark:border-cream/25"
+            }`}
+          >
+            {acceptedPolicy && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4l3 3 5-6" stroke="#FCF9E9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             )}
           </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="policy"
-              checked={acceptedPolicy}
-              onChange={(e) => setAcceptedPolicy(e.target.checked)}
-              disabled={loading}
-            />
-            <label htmlFor="policy" className="text-sm text-gray-700">
-              Я принимаю{" "}
-              <button
-                type="button"
-                onClick={() => setShowPolicyModal(true)}
-                className="text-blue-600 underline"
-              >
-                политику конфиденциальности
-              </button>
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {loading ? "Загрузка..." : "Зарегистрироваться"}
-          </button>
-        </>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-center text-gray-600">
-            Мы отправили код подтверждения на <strong>{form.email}</strong>
-          </p>
-
-          <input
-            type="text"
-            placeholder="Введите код из письма"
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value)}
-            disabled={loading}
-            className="w-full px-4 py-2 border rounded focus:outline-none"
-          />
-
-          <button
-            type="button"
-            onClick={handleVerifyEmail}
-            disabled={loading}
-            className={`w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {loading ? "Проверка..." : "Подтвердить email"}
-          </button>
-        </div>
-      )}
-
-      {showPolicyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow max-w-lg w-full relative">
+          <span className="font-mont text-xs text-charcoal/50 dark:text-cream/50 leading-relaxed pt-0.5">
+            Я принимаю{" "}
             <button
-              onClick={() => setShowPolicyModal(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-black"
+              type="button"
+              onClick={() => setShowPolicy(true)}
+              className="text-charcoal dark:text-cream underline underline-offset-2 hover:text-red-accent transition-colors duration-200"
             >
-              ✕
+              политику конфиденциальности
             </button>
-            <h2 className="text-xl font-bold mb-4">Политика конфиденциальности</h2>
-            <div className="text-sm text-gray-700 space-y-2 max-h-[60vh] overflow-y-auto">
-              <p>
-                Мы уважаем вашу конфиденциальность. Ваши данные используются исключительно
-                для регистрации и работы сервиса DragonAuto.
-              </p>
-              <p>
-                Мы не передаём вашу информацию третьим лицам без вашего согласия, за
-                исключением случаев, предусмотренных законодательством.
-              </p>
-              <p>
-                Email используется только для отправки кода подтверждения и уведомлений
-                о ваших заявках.
-              </p>
-              <p>
-                Если у вас есть вопросы — свяжитесь с нами через форму обратной связи.
-              </p>
+          </span>
+        </label>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-2 w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Создаём аккаунт..." : "Зарегистрироваться"}
+        </button>
+      </form>
+
+      {/* Policy modal */}
+      {showPolicy && (
+        <div className="fixed inset-0 bg-charcoal/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-cream dark:bg-charcoal border border-charcoal/15 dark:border-cream/15 rounded-2xl p-8 max-w-md w-full relative max-h-[80vh] flex flex-col">
+            <button
+              onClick={() => setShowPolicy(false)}
+              className="absolute top-5 right-5 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <h2 className="font-mont font-black text-xl text-charcoal dark:text-cream mb-4">
+              Политика конфиденциальности
+            </h2>
+            <div className="font-mont text-sm text-charcoal/60 dark:text-cream/60 leading-relaxed space-y-3 overflow-y-auto">
+              <p>Мы уважаем вашу конфиденциальность. Ваши данные используются исключительно для регистрации и работы сервиса DragonAuto.</p>
+              <p>Мы не передаём вашу информацию третьим лицам без вашего согласия, за исключением случаев, предусмотренных законодательством.</p>
+              <p>Email используется только для отправки кода подтверждения и уведомлений о ваших заявках.</p>
+              <p>Если у вас есть вопросы — свяжитесь с нами через форму обратной связи.</p>
             </div>
+            <button
+              onClick={() => { setAcceptedPolicy(true); setShowPolicy(false); }}
+              className="mt-6 w-full bg-red-accent text-cream font-mont font-black text-xs tracking-widest uppercase py-3 rounded-xl hover:opacity-90 transition-opacity duration-200"
+            >
+              Принять
+            </button>
           </div>
         </div>
       )}
-    </form>
+    </>
   );
 };
 

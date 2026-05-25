@@ -1,47 +1,22 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const authRoutes = require("./routes/auth");
-const profileRoutes = require("./routes/profile");
-const { router: uploadRouter, uploadMiddleware } = require("./routes/upload");
-const carsRoutes = require("./routes/cars");
-const applicationsRouter = require("./routes/applications");
-const updateApplicationsRouter = require("./routes/updateApplications");
-const partsRouter = require("./routes/parts"); 
-const adminRoutes = require("./routes/adminRoutes");
-
 require("dotenv").config();
+const { rateLimit } = require("express-rate-limit");
+const app = require("./app");
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-}));
-app.use(express.json()); // вместо bodyParser.json()
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// Подключаем роуты
-app.use("/api", authRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/upload", uploadRouter);
-app.use("/api/cars", carsRoutes);
-app.use("/api/applications", applicationsRouter);
-app.use("/api/updateApplications", updateApplicationsRouter);
-app.use("/api/parts", partsRouter); 
-app.use("/api/adminRoutes", adminRoutes);
-
-// Обработка 404
-app.use((req, res) => {
-  res.status(404).json({ error: "Маршрут не найден" });
+// Rate limiting на auth-эндпоинты (защита от брутфорса)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Слишком много запросов, попробуйте позже" },
 });
-
-// Глобальный обработчик ошибок
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Внутренняя ошибка сервера" });
-});
+app.use("/api/login",           authLimiter);
+app.use("/api/forgot-password", authLimiter);
+app.use("/api/reset-password",  authLimiter);
+app.use("/api/verify-email",    authLimiter);
+app.use("/api/register",        authLimiter);
 
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);

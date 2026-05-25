@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "../utils/toast";
 import CarForm from "./CarModerationForm";
 import PartForm from "./PartModerationForm";
+import { useLang } from "../context/LangContext";
 
 const PAGE_SIZE = 10;
 
 const CatalogManagement = () => {
+  const { t } = useLang();
+  const tt = t.toasts;
   const [activeTab, setActiveTab] = useState("cars");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ const CatalogManagement = () => {
   }, [activeTab]);
 
   const fetchData = async (offsetParam) => {
-    const url = `${process.env.REACT_APP_API_URL}/api/${activeTab}?limit=${PAGE_SIZE}&offset=${offsetParam}`;
+    const url = `${import.meta.env.VITE_API_URL}/api/${activeTab}?limit=${PAGE_SIZE}&offset=${offsetParam}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("Ошибка сети");
     return await res.json();
@@ -36,7 +38,7 @@ const CatalogManagement = () => {
       setHasMore(data.length === PAGE_SIZE);
       setEditingItem(null);
     } catch (error) {
-      toast.error("Ошибка при загрузке данных");
+      toast.error(tt.loadError);
       console.error("Ошибка при загрузке данных:", error);
     } finally {
       setLoading(false);
@@ -51,7 +53,7 @@ const CatalogManagement = () => {
       setOffset((prev) => prev + data.length);
       setHasMore(data.length === PAGE_SIZE);
     } catch (error) {
-      toast.error("Ошибка при подгрузке данных");
+      toast.error(tt.loadError);
       console.error("Ошибка при подгрузке:", error);
     } finally {
       setLoading(false);
@@ -60,12 +62,12 @@ const CatalogManagement = () => {
 
   const handleEdit = async (item) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/${activeTab}/${item.id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${activeTab}/${item.id}`);
       if (!response.ok) throw new Error("Не удалось загрузить данные");
       const fullItem = await response.json();
       setEditingItem({ ...fullItem, id: item.id });
     } catch (err) {
-      toast.error("Ошибка при загрузке данных для редактирования");
+      toast.error(tt.loadError);
       console.error(err);
     }
   };
@@ -76,17 +78,19 @@ const CatalogManagement = () => {
   };
 
   const confirmDelete = async () => {
+    const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/${activeTab}/${confirmDeleteId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${activeTab}/${confirmDeleteId}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Не удалось удалить запись");
-      toast.success("Запись успешно удалена");
+      toast.success(tt.deleteSuccess);
       setShowConfirmModal(false);
       setConfirmDeleteId(null);
       resetAndFetch();
     } catch (err) {
-      toast.error("Ошибка при удалении записи");
+      toast.error(tt.deleteError);
       console.error(err);
     }
   };
@@ -95,14 +99,18 @@ const CatalogManagement = () => {
     const isNew = !updatedData.id;
     const dataToSend = { ...updatedData };
     const endpoint = isNew
-      ? `${process.env.REACT_APP_API_URL}/api/${activeTab}`
-      : `${process.env.REACT_APP_API_URL}/api/${activeTab}/${updatedData.id}`;
+      ? `${import.meta.env.VITE_API_URL}/api/${activeTab}`
+      : `${import.meta.env.VITE_API_URL}/api/${activeTab}/${updatedData.id}`;
     const method = isNew ? "POST" : "PUT";
 
+    const token = localStorage.getItem("token");
     try {
       const response = await fetch(endpoint, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(dataToSend),
       });
 
@@ -112,10 +120,10 @@ const CatalogManagement = () => {
         throw new Error("Не удалось сохранить изменения");
       }
 
-      toast.success(isNew ? "Позиция успешно добавлена" : "Изменения успешно сохранены");
+      toast.success(isNew ? tt.itemAdded : tt.changesSaved);
       resetAndFetch();
     } catch (err) {
-      toast.error("Ошибка при сохранении изменений");
+      toast.error(tt.saveError);
       console.error("Ошибка в handleSave:", err.message);
     }
   };
@@ -293,7 +301,6 @@ const CatalogManagement = () => {
         </div>
       )}
 
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

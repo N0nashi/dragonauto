@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "../utils/toast";
+import { useLang } from "../context/LangContext";
 
 export default function PartModerationForm({ initialData = null, onSubmit, onCancel, loading = false }) {
+  const { t } = useLang();
+  const tt = t.toasts;
   const [form, setForm] = useState({
     part_name: "",
     country: "",
@@ -94,12 +97,12 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
 
       try {
         const uploadRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/upload?folder=parts`,
+          `${import.meta.env.VITE_API_URL}/api/upload?folder=parts`,
           formData
         );
         photoUrl = uploadRes.data.url;
       } catch (err) {
-        toast.error("Ошибка загрузки фото");
+        toast.error(tt.photoError);
         return;
       }
     }

@@ -18,3 +18,9 @@ backend/uploads/
 
 # VSCode settings
 .vscode/
+
+# Claude Code
+.claude/
+.claire/
+*.orig.jsx
+*.orig.js

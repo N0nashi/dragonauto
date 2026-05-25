@@ -1,6 +1,10 @@
 const jwt = require("jsonwebtoken");
 const db = require("../db"); // Добавляем доступ к БД
-const JWT_SECRET = process.env.JWT_SECRET || "mysecret";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET не задан в переменных окружения");
+  process.exit(1);
+}
 
 async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;

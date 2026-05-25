@@ -1,54 +1,20 @@
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
-const isModerator = require("../middleware/isModerator");
-const db = require("../db");
-const nodemailer = require("nodemailer");
-require("dotenv").config(); // ← обязательно подключи dotenv
+const isModerator    = require("../middleware/isModerator");
+const db   = require("../db");
+const { sendMail } = require("../utils/mailer");
 
-// Настройка почтового транспортера для Yandex
-const transporter = nodemailer.createTransport({
-  host: "smtp.yandex.ru",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.YANDEX_EMAIL,
-    pass: process.env.YANDEX_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-
-// Проверка подключения
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP ошибка:", error);
-  } else {
-    console.log("SMTP соединение успешно");
-  }
-});
-
-// ➕ Маршрут отправки писем
+// POST /api/admin/send-email
 router.post("/send-email", authMiddleware, isModerator, async (req, res) => {
   const { to, subject, text } = req.body;
-
-  if (!to || !subject || !text) {
+  if (!to || !subject || !text)
     return res.status(400).json({ message: "Все поля обязательны" });
-  }
-
   try {
-    await transporter.sendMail({
-      from: `"DragonAuto" <${process.env.YANDEX_EMAIL}>`,
-      to,
-      subject,
-      text,
-    });
-
+    await sendMail({ to, subject, text });
     res.json({ message: "Письмо успешно отправлено" });
-  } catch (error) {
-    console.error("Ошибка отправки письма:", error);
+  } catch (err) {
+    console.error("Ошибка отправки письма:", err);
     res.status(500).json({ message: "Не удалось отправить письмо" });
   }
 });

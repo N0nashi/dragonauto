@@ -1,419 +1,237 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import React, { useState, useEffect } from "react";
+import { toast } from "../utils/toast";
+import { useLang } from "../context/LangContext";
 
-export default function ProfileInfo() {
-  const [profile, setProfile] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    avatarUrl: "https://i.pravatar.cc/150?img=12",
-  });
-  const [newEmail, setNewEmail] = useState("");
-  const [emailCode, setEmailCode] = useState("");
-  const [isEmailStep, setIsEmailStep] = useState(false);
+const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200";
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+const Section = ({ title, children }) => (
+  <div className="border border-charcoal/10 dark:border-cream/10 rounded-2xl p-6">
+    <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-5">
+      {title}
+    </h3>
+    {children}
+  </div>
+);
 
-  const [notification, setNotification] = useState({ message: "", type: "" });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editProfile, setEditProfile] = useState({
-    firstName: "",
-    lastName: "",
-    avatarUrl: "",
-  });
+export default function ProfileInfo({ onProfileLoad }) {
+  const { t } = useLang();
+  const tp = t.profileInfo;
+  const tt = t.toasts;
+
+  const [profile, setProfile] = useState({ firstName: "", lastName: "", email: "", avatarUrl: "" });
+  const [editMode, setEditMode]       = useState(false);
+  const [editData, setEditData]       = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const getFullAvatarUrl = (url) => {
-    if (!url) return "https://i.pravatar.cc/150?img=12";
+  const [newEmail, setNewEmail]       = useState("");
+  const [emailCode, setEmailCode]     = useState("");
+  const [emailStep, setEmailStep]     = useState(false);
+
+  const [curPwd, setCurPwd]           = useState("");
+  const [newPwd, setNewPwd]           = useState("");
+  const [conPwd, setConPwd]           = useState("");
+
+  const token = localStorage.getItem("token");
+
+  const getAvatarUrl = (url) => {
+    if (!url) return null;
     if (url.startsWith("http")) return url;
-    return `${process.env.REACT_APP_API_URL}${url}`;
+    return `${import.meta.env.VITE_API_URL}${url}`;
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Пользователь не авторизован");
-      return;
-    }
-    fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    if (!token) return;
+    fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Ошибка при загрузке профиля");
-        const data = await res.json();
-        setProfile({
-          firstName: data.first_name,
-          lastName: data.last_name,
-          email: data.email,
-          avatarUrl: data.photo_url || "https://i.pravatar.cc/150?img=12",
-        });
-        setEditProfile({
-          firstName: data.first_name,
-          lastName: data.last_name,
-          avatarUrl: data.photo_url || "https://i.pravatar.cc/150?img=12",
-        });
+      .then(r => r.json())
+      .then(data => {
+        const p = { firstName: data.first_name, lastName: data.last_name, email: data.email, avatarUrl: data.photo_url || "" };
+        setProfile(p);
+        setEditData(p);
+        onProfileLoad?.(data);
       })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Не удалось загрузить профиль");
-      });
+      .catch(() => toast.error(tt.profileLoadFail));
   }, []);
 
-  const showNotification = useCallback((message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => {
-      setNotification({ message: "", type: "" });
-    }, 5000);
-  }, []);
-
-  const handleSendEmailCode = async (e) => {
+  const saveProfile = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    const actualNewEmail = newEmail.trim();
-    if (!token || !newEmail) {
-      showNotification("Введите новый email", "error");
-      return;
-    }
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/request-email-change`, {
+      let photoUrl = editData.avatarUrl;
+      if (selectedFile) {
+        const fd = new FormData();
+        fd.append("file", selectedFile);
+        const r = await fetch(`${import.meta.env.VITE_API_URL}/api/upload?folder=avatars`, {
+          method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd,
+        });
+        if (!r.ok) throw new Error("Ошибка загрузки фото");
+        photoUrl = (await r.json()).url;
+      }
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ first_name: editData.firstName, last_name: editData.lastName, photo_url: photoUrl }),
+      });
+      if (!r.ok) throw new Error();
+      setProfile({ ...editData, avatarUrl: photoUrl });
+      setEditMode(false);
+      setSelectedFile(null);
+      toast.success(tt.profileSaved);
+    } catch { toast.error(tt.profileSaveError); }
+  };
+
+  const sendEmailCode = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/request-email-change`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ newEmail }),
       });
-
-      if (!res.ok) throw new Error("Ошибка при отправке кода");
-
-      setIsEmailStep(true);
-      showNotification("Код отправлен на текущий email", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
-    }
+      if (!r.ok) throw new Error();
+      setEmailStep(true);
+      toast.info(tp.codeSent);
+    } catch { toast.error(tt.codeSendError); }
   };
 
-  const handleVerifyEmailCode = async (e) => {
+  const verifyEmailCode = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token || !emailCode) {
-      showNotification("Введите код", "error");
-      return;
-    }
-
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/email`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/email`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ newEmail, code: emailCode }),
       });
-
-      if (!res.ok) throw new Error("Неверный или истёкший код");
-
-      setProfile((prev) => ({ ...prev, email: newEmail }));
-      setNewEmail("");
-      setEmailCode("");
-      setIsEmailStep(false);
-      showNotification("Email успешно изменён", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
-    }
+      if (!r.ok) throw new Error();
+      setProfile(p => ({ ...p, email: newEmail }));
+      setNewEmail(""); setEmailCode(""); setEmailStep(false);
+      toast.success(tt.emailUpdated);
+    } catch { toast.error(tt.codeInvalid); }
   };
 
-  const handlePasswordChange = async (e) => {
+  const changePassword = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token || !currentPassword || !newPassword || !confirmPassword) {
-      showNotification("Заполните все поля", "error");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      showNotification("Новый пароль и подтверждение не совпадают", "error");
-      return;
-    }
+    if (newPwd !== conPwd) { toast.error(tt.passwordMismatch); return; }
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile/password`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/password`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: curPwd, newPassword: newPwd }),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Ошибка при смене пароля");
-      }
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      showNotification("Пароль успешно обновлен", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
-    }
+      if (!r.ok) { const d = await r.json(); throw new Error(d.error); }
+      setCurPwd(""); setNewPwd(""); setConPwd("");
+      toast.success(tt.passwordUpdated);
+    } catch (err) { toast.error(err.message || tt.profileSaveError); }
   };
 
-  const handleFileUpload = async () => {
-    if (!selectedFile) return editProfile.avatarUrl;
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/upload?folder=avatars`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    if (!res.ok) {
-      throw new Error("Ошибка при загрузке изображения");
-    }
-    const data = await res.json();
-    return data.url;
-  };
+  const avatarSrc = selectedFile
+    ? URL.createObjectURL(selectedFile)
+    : getAvatarUrl(editMode ? editData.avatarUrl : profile.avatarUrl);
 
-  const handleProfileSave = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) {
-      showNotification("Пользователь не авторизован", "error");
-      return;
-    }
-    try {
-      const uploadedUrl = await handleFileUpload();
-      const bodyData = {
-        first_name: editProfile.firstName.trim(),
-        last_name: editProfile.lastName.trim(),
-        photo_url: uploadedUrl,
-      };
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(bodyData),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Ошибка при обновлении профиля");
-      }
-      setProfile((prev) => ({
-        ...prev,
-        firstName: editProfile.firstName,
-        lastName: editProfile.lastName,
-        avatarUrl: uploadedUrl,
-      }));
-      setIsEditing(false);
-      setSelectedFile(null);
-      showNotification("Профиль успешно обновлен", "success");
-    } catch (err) {
-      showNotification(err.message, "error");
-    }
-  };
-
-  const ProfileCard = React.useMemo(() => (
-    <section className="border border-gray-300 rounded shadow-sm bg-white p-4 max-w-md w-full mx-auto md:mx-0">
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-blue-600 mb-4">
-          {isEditing ? (
-            <img
-              src={
-                selectedFile
-                  ? URL.createObjectURL(selectedFile)
-                  : getFullAvatarUrl(editProfile.avatarUrl)
-              }
-              alt="Предпросмотр"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img
-              src={getFullAvatarUrl(profile.avatarUrl)}
-              alt="Фото профиля"
-              className="w-full h-full object-cover"
-            />
-          )}
-        </div>
-        {isEditing ? (
-          <>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="mb-2"
-            />
-            <input
-              type="text"
-              value={editProfile.firstName}
-              onChange={(e) =>
-                setEditProfile((prev) => ({ ...prev, firstName: e.target.value }))
-              }
-              placeholder="Имя"
-              className="mb-2 w-full border border-gray-300 rounded px-3 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              value={editProfile.lastName}
-              onChange={(e) =>
-                setEditProfile((prev) => ({ ...prev, lastName: e.target.value }))
-              }
-              placeholder="Фамилия"
-              className="mb-4 w-full border border-gray-300 rounded px-3 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoComplete="off"
-            />
-            <div className="flex gap-2 w-full">
-              <button
-                onClick={handleProfileSave}
-                className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 transition flex-grow"
-              >
-                Сохранить
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditProfile(profile);
-                  setSelectedFile(null);
-                }}
-                className="bg-gray-400 text-white px-4 py-1 rounded hover:bg-gray-500 transition flex-grow"
-              >
-                Отмена
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <h2 className="text-xl font-semibold mb-1">{profile.firstName}</h2>
-            <h3 className="text-lg text-gray-600 mb-3">{profile.lastName}</h3>
-            <p className="text-gray-700 break-words text-center">{profile.email}</p>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="mt-4 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
-            >
-              Редактировать профиль
-            </button>
-          </>
-        )}
-      </div>
-    </section>
-  ), [profile, editProfile, isEditing, selectedFile]);
-
-  const EmailChangeCard = React.useMemo(() => (
-    <section className="bg-white border border-gray-300 rounded shadow-sm p-4 mb-6 max-w-lg w-full mx-auto md:mx-0">
-      <h3 className="text-lg font-semibold mb-4">Смена электронной почты</h3>
-      {!isEmailStep ? (
-        <form onSubmit={handleSendEmailCode} className="flex flex-col gap-2" autoComplete="off">
-          <input
-            type="email"
-            placeholder="Новый email"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white rounded py-1 hover:bg-blue-700 transition"
-          >
-            Отправить код
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleVerifyEmailCode} className="flex flex-col gap-2" autoComplete="off">
-          <input
-            type="text"
-            placeholder="Код из письма"
-            value={emailCode}
-            onChange={(e) => setEmailCode(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            className="bg-green-600 text-white rounded py-1 hover:bg-green-700 transition"
-          >
-            Подтвердить код
-          </button>
-        </form>
-      )}
-    </section>
-  ), [newEmail, emailCode, isEmailStep]);
-
-  const PasswordChangeCard = React.useMemo(() => (
-    <section className="bg-white border border-gray-300 rounded shadow-sm p-4 max-w-lg w-full mx-auto md:mx-0">
-      <h3 className="text-lg font-semibold mb-4">Смена пароля</h3>
-      <form onSubmit={handlePasswordChange} className="flex flex-col gap-2" autoComplete="off">
-        <input
-          type="password"
-          placeholder="Текущий пароль"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          autoComplete="off"
-        />
-        <input
-          type="password"
-          placeholder="Новый пароль"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          autoComplete="off"
-        />
-        <input
-          type="password"
-          placeholder="Подтверждение нового пароля"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          autoComplete="off"
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white rounded py-1 hover:bg-blue-700 transition"
-        >
-          Обновить пароль
-        </button>
-      </form>
-    </section>
-  ), [currentPassword, newPassword, confirmPassword]);
+  const initials = `${profile.firstName?.[0] || ""}${profile.lastName?.[0] || ""}`.toUpperCase();
 
   return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} />
-      {notification.message && (
-        <div
-          className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded shadow-md font-semibold z-50 ${
-            notification.type === "error"
-              ? "bg-red-600 text-white"
-              : "bg-green-600 text-white"
-          }`}
-        >
-          {notification.message}
+    <div className="flex flex-col gap-5">
+
+      <Section title={tp.personal}>
+        <div className="flex flex-col sm:flex-row gap-6 items-start">
+          <div className="relative shrink-0">
+            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-charcoal/10 dark:border-cream/10 bg-charcoal/5 dark:bg-cream/5 flex items-center justify-center">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-mont font-black text-2xl text-charcoal/30 dark:text-cream/30">{initials}</span>
+              )}
+            </div>
+            {editMode && (
+              <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-red-accent rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <input type="file" accept="image/*" className="hidden" onChange={e => setSelectedFile(e.target.files[0])} />
+              </label>
+            )}
+          </div>
+
+          {editMode ? (
+            <form onSubmit={saveProfile} className="flex-1 flex flex-col gap-3">
+              <div className="flex gap-3">
+                <input className={inputCls} placeholder={tp.firstName} value={editData.firstName}
+                  onChange={e => setEditData(p => ({ ...p, firstName: e.target.value }))} />
+                <input className={inputCls} placeholder={tp.lastName} value={editData.lastName}
+                  onChange={e => setEditData(p => ({ ...p, lastName: e.target.value }))} />
+              </div>
+              <div className="flex gap-2 mt-1">
+                <button type="submit"
+                  className="font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-90 transition">
+                  {tp.save}
+                </button>
+                <button type="button" onClick={() => { setEditMode(false); setEditData(profile); setSelectedFile(null); }}
+                  className="font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 border-2 border-charcoal/20 dark:border-cream/20 text-charcoal/50 dark:text-cream/50 rounded-xl hover:border-charcoal dark:hover:border-cream hover:text-charcoal dark:hover:text-cream transition">
+                  {tp.cancel}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex-1">
+              <p className="font-mont font-black text-xl text-charcoal dark:text-cream">
+                {profile.firstName} {profile.lastName}
+              </p>
+              <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mt-0.5">{profile.email}</p>
+              <button onClick={() => setEditMode(true)}
+                className="mt-4 font-mont font-black text-xs tracking-widest uppercase px-5 py-2 border-2 border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream rounded-xl hover:border-charcoal dark:hover:border-cream transition">
+                {tp.edit}
+              </button>
+            </div>
+          )}
         </div>
-      )}
-      <main className="p-4 flex flex-col items-center gap-6 max-w-4xl mx-auto md:flex-row md:items-start md:justify-between">
-        {ProfileCard}
-        <div className="flex flex-col gap-6 flex-grow">
-          {EmailChangeCard}
-          {PasswordChangeCard}
-        </div>
-      </main>
-    </>
+      </Section>
+
+      <Section title={tp.emailChange}>
+        {!emailStep ? (
+          <form onSubmit={sendEmailCode} className="flex flex-col gap-3">
+            <input type="email" className={inputCls} placeholder={tp.newEmail}
+              value={newEmail} onChange={e => setNewEmail(e.target.value)} required />
+            <button type="submit"
+              className="self-start font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-90 transition">
+              {tp.sendCode}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={verifyEmailCode} className="flex flex-col gap-3">
+            <p className="font-mont text-sm text-charcoal/50 dark:text-cream/50">
+              {tp.codeSent}
+            </p>
+            <input type="text" className={inputCls} placeholder={tp.codeLabel}
+              value={emailCode} onChange={e => setEmailCode(e.target.value)} required />
+            <div className="flex gap-2">
+              <button type="submit"
+                className="font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-90 transition">
+                {tp.confirm}
+              </button>
+              <button type="button" onClick={() => setEmailStep(false)}
+                className="font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 border-2 border-charcoal/20 dark:border-cream/20 rounded-xl text-charcoal/50 dark:text-cream/50 hover:border-charcoal dark:hover:border-cream transition">
+                {tp.back}
+              </button>
+            </div>
+          </form>
+        )}
+      </Section>
+
+      <Section title={tp.passwordChange}>
+        <form onSubmit={changePassword} className="flex flex-col gap-3">
+          <input type="password" className={inputCls} placeholder={tp.currentPassword}
+            value={curPwd} onChange={e => setCurPwd(e.target.value)} required autoComplete="current-password" />
+          <input type="password" className={inputCls} placeholder={tp.newPassword}
+            value={newPwd} onChange={e => setNewPwd(e.target.value)} required autoComplete="new-password" />
+          <input type="password" className={inputCls} placeholder={tp.repeatPassword}
+            value={conPwd} onChange={e => setConPwd(e.target.value)} required autoComplete="new-password" />
+          <button type="submit"
+            className="self-start font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-90 transition">
+            {tp.updatePassword}
+          </button>
+        </form>
+      </Section>
+    </div>
   );
 }

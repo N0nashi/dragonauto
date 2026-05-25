@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "../utils/toast";
+import { useLang } from "../context/LangContext";
 
 const allGridOptions = [3, 6];
 
 const PartsCatalog = () => {
+  const { t, lang } = useLang();
+  const tt = t.toasts;
+  const tc = t.catalog;
   const [filters, setFilters] = useState(null);
   const [selectedFilters, setSelectedFilters] = useState({});
   const [parts, setParts] = useState([]);
@@ -39,10 +42,10 @@ const PartsCatalog = () => {
       setGridCols(portrait ? 1 : 2);
     } else if (width >= 768 && width < 1024) {
       setAvailableGridOptions([3, 6]);
-      if (![3, 6].includes(gridCols)) setGridCols(3);
+      setGridCols(prev => (prev < 3 ? 3 : prev));
     } else {
       setAvailableGridOptions(allGridOptions);
-      if (!allGridOptions.includes(gridCols)) setGridCols(3);
+      setGridCols(prev => (prev < 3 ? 3 : prev));
     }
   };
 
@@ -72,7 +75,7 @@ const PartsCatalog = () => {
         if (selectedFilters.brand) queryParams.append("brand", selectedFilters.brand);
 
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/parts/filters?${queryParams.toString()}`
+          `${import.meta.env.VITE_API_URL}/api/parts/filters?${queryParams.toString()}`
         );
 
         if (!response.ok) throw new Error("Failed to load filters");
@@ -103,7 +106,7 @@ const PartsCatalog = () => {
     const loadParts = async () => {
       setLoadingParts(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/parts/search`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/parts/search`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(selectedFilters),
@@ -183,7 +186,7 @@ const PartsCatalog = () => {
     const photoUrl = part.photo_url;
     const src = photoUrl?.startsWith("http")
       ? photoUrl
-      : `${process.env.REACT_APP_API_URL}${photoUrl}`;
+      : `${import.meta.env.VITE_API_URL}${photoUrl}`;
     const heightClass = gridCols === 3 ? "h-64" : "h-48";
 
     return (
@@ -200,14 +203,14 @@ const PartsCatalog = () => {
 
   const createRequest = async (part) => {
     if (!currentUserId) {
-      toast.error("Пожалуйста, войдите в систему, чтобы создать заявку.");
+      toast.error(tt.loginRequired);
       return;
     }
 
     try {
       const requestData = {
         type: "part",
-        description: `Заявка на запчасть ${part.part_name} для ${part.brand} ${part.model}`,
+        description: `${tc.ui.reqPartDesc} ${part.part_name} ${tc.ui.reqFor} ${part.brand} ${part.model}`,
         country_part: part.country,
         brand_part: part.brand,
         model_part: part.model,
@@ -217,7 +220,7 @@ const PartsCatalog = () => {
         body_part: part.body_type || part.body,
       };
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/applications`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -232,10 +235,10 @@ const PartsCatalog = () => {
       }
 
       const data = await response.json();
-      toast.success(`Заявка №${data.applicationId} успешно создана!`);
+      toast.success(`${tt.requestSent} ${tc.ui.requestNum}${data.applicationId} — ${part.part_name}`);
     } catch (error) {
       console.error("Ошибка при создании заявки:", error);
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(error.message || tt.submitError);
     }
   };
 
@@ -342,7 +345,6 @@ const PartsCatalog = () => {
           )}
         </main>
       </div>
-      <ToastContainer position="top-right" autoClose={4000} />
     </>
   );
 };

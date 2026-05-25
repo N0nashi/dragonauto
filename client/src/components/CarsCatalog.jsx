@@ -1,376 +1,654 @@
-import React, { useEffect, useState, useRef } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { toast } from "../utils/toast";
+import { useLang } from "../context/LangContext";
 
-const allGridOptions = [3, 6];
+const PAGE = 12;
+const API  = import.meta.env.VITE_API_URL;
+
+const CatalogFilterSelect = ({ placeholder, options, currentValue, onSelect, getLabel }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const seen = new Set();
+  const deduped = (options || []).filter(Boolean).filter(o => {
+    const label = getLabel(o);
+    if (seen.has(label)) return false;
+    seen.add(label);
+    return true;
+  });
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen(v => !v)}
+        className="w-full font-mont text-sm text-left flex items-center justify-between gap-2 bg-cream dark:bg-charcoal border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 focus:outline-none transition-colors duration-200 hover:border-charcoal/40 dark:hover:border-cream/40">
+        <span className={`truncate ${!currentValue ? "text-charcoal/35 dark:text-cream/35" : "text-charcoal dark:text-cream"}`}>
+          {currentValue ? getLabel(currentValue) : placeholder}
+        </span>
+        <svg width="11" height="6" viewBox="0 0 11 6" fill="none"
+          className="shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform duration-200"
+          style={{ transform: open ? "rotate(180deg)" : "" }}>
+          <path d="M1 1l4.5 4 4.5-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute z-30 mt-1 w-full bg-cream dark:bg-charcoal border border-charcoal/10 dark:border-cream/10 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+          {deduped.length === 0 ? (
+            <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 text-center py-4 px-4">
+              Нет данных
+            </p>
+          ) : (
+            <>
+              <button type="button"
+                onClick={() => { onSelect(undefined); setOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-charcoal/5 dark:hover:bg-cream/5 transition-colors text-left">
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${!currentValue ? "bg-red-accent" : "bg-charcoal/10 dark:bg-cream/10"}`}>
+                  {!currentValue && <div className="w-2 h-2 rounded-full bg-cream" />}
+                </div>
+                <span className={`font-mont text-sm ${!currentValue ? "text-red-accent font-semibold" : "text-charcoal/40 dark:text-cream/40"}`}>{placeholder}</span>
+              </button>
+              {deduped.map(o => {
+                const label = getLabel(o);
+                const sel = currentValue === o;
+                return (
+                  <button key={o} type="button"
+                    onClick={() => { onSelect(o); setOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-charcoal/5 dark:hover:bg-cream/5 transition-colors text-left">
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${sel ? "bg-red-accent" : "bg-charcoal/10 dark:bg-cream/10"}`}>
+                      {sel && <div className="w-2 h-2 rounded-full bg-cream" />}
+                    </div>
+                    <span className={`font-mont text-sm ${sel ? "text-red-accent font-semibold" : "text-charcoal dark:text-cream"}`}>{label}</span>
+                  </button>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CarsCatalog = () => {
-  const [filters, setFilters] = useState({
-    countries: [],
-    brands: [],
-    models: [],
-    bodies: [],
-    gearboxes: [],
-    drives: [],
-    priceRange: { min: 0, max: 0 },
-  });
+  const { t, lang } = useLang();
+  const tc = t.catalog;
+
+  const [activeTab, setActiveTab] = useState("cars");
+
+  const [filters, setFilters] = useState({ countries: [], brands: [], models: [], bodies: [], gearboxes: [], drives: [] });
   const [selectedFilters, setSelectedFilters] = useState({});
-  const [cars, setCars] = useState([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const [allItems, setAllItems]       = useState([]);
+  const [visibleCount, setVisibleCount] = useState(PAGE);
+  const [animStart, setAnimStart]     = useState(0);
   const [loadingFilters, setLoadingFilters] = useState(true);
-  const [loadingCars, setLoadingCars] = useState(false);
+  const [loadingItems, setLoadingItems]     = useState(false);
+  const [loadingMore, setLoadingMore]       = useState(false);
   const [error, setError] = useState(null);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [gridCols, setGridCols] = useState(3);
-  const [availableGridOptions, setAvailableGridOptions] = useState([3, 6]);
-  const [isPortrait, setIsPortrait] = useState(
-    window.matchMedia("(orientation: portrait)").matches
-  );
+
+  const [gridCols, setGridCols]       = useState(3);
+  const [availableGrid, setAvailableGrid] = useState([3, 4]);
 
   const prevCountryRef = useRef(null);
-  const prevBrandRef = useRef(null);
-
+  const prevBrandRef   = useRef(null);
   const token = localStorage.getItem("token");
 
-  const getUserIdFromToken = () => {
+  const getUserId = () => {
     if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload.userId || payload.id || null;
-    } catch {
-      return null;
-    }
+    try { const p = JSON.parse(atob(token.split(".")[1])); return p.userId || p.id || null; }
+    catch { return null; }
   };
+  const currentUserId = getUserId();
 
-  const currentUserId = getUserIdFromToken();
-
-  const updateLayout = () => {
-    const width = window.innerWidth;
-    const portrait = window.matchMedia("(orientation: portrait)").matches;
-    setIsPortrait(portrait);
-    if (width < 768) {
-      setAvailableGridOptions([]);
-      setGridCols(portrait ? 1 : 2);
-    } else if (width >= 768 && width < 1024) {
-      setAvailableGridOptions([3, 6]);
-      if (![3, 6].includes(gridCols)) setGridCols(3);
+  const updateLayout = useCallback(() => {
+    const w = window.innerWidth;
+    if (w < 768) {
+      setAvailableGrid([]);
+      setGridCols(window.matchMedia("(orientation: portrait)").matches ? 1 : 2);
     } else {
-      setAvailableGridOptions(allGridOptions);
-      if (!allGridOptions.includes(gridCols)) setGridCols(3);
+      setAvailableGrid([3, 4]);
+      setGridCols(prev => (prev < 3 ? 3 : prev));
     }
-  };
-
-  const loadFilters = async () => {
-    try {
-      const url = new URL(`${process.env.REACT_APP_API_URL}/api/cars/filters`);
-      if (selectedFilters.country)
-        url.searchParams.append("country", selectedFilters.country);
-      if (selectedFilters.brand)
-        url.searchParams.append("brand", selectedFilters.brand);
-
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to load filters");
-      const data = await response.json();
-      setFilters(data);
-
-      if (prevCountryRef.current !== selectedFilters.country) {
-        setSelectedFilters((prev) => ({ ...prev, brand: "", model: "" }));
-      }
-      if (prevBrandRef.current !== selectedFilters.brand) {
-        setSelectedFilters((prev) => ({ ...prev, model: "" }));
-      }
-
-      prevCountryRef.current = selectedFilters.country;
-      prevBrandRef.current = selectedFilters.brand;
-    } catch (err) {
-      setError("Ошибка загрузки фильтров");
-      console.error(err);
-    } finally {
-      setLoadingFilters(false);
-    }
-  };
-
-  const loadCars = async () => {
-    setLoadingCars(true);
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/cars/search`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(selectedFilters),
-      });
-      if (!response.ok) throw new Error("Failed to load cars");
-      const data = await response.json();
-      setCars(data);
-    } catch (err) {
-      setError("Ошибка загрузки автомобилей");
-      console.error(err);
-    } finally {
-      setLoadingCars(false);
-    }
-  };
-
-  const handleFilterChange = (key, value) => {
-    setSelectedFilters((prev) => {
-      const newFilters = { ...prev, [key]: value || undefined };
-      if (key === "country") {
-        newFilters.brand = "";
-        newFilters.model = "";
-      } else if (key === "brand") {
-        newFilters.model = "";
-      }
-      return newFilters;
-    });
-  };
+  }, []);
 
   useEffect(() => {
     updateLayout();
     window.addEventListener("resize", updateLayout);
     window.addEventListener("orientationchange", updateLayout);
-    return () => {
-      window.removeEventListener("resize", updateLayout);
-      window.removeEventListener("orientationchange", updateLayout);
+    return () => { window.removeEventListener("resize", updateLayout); window.removeEventListener("orientationchange", updateLayout); };
+  }, [updateLayout]);
+
+  useEffect(() => {
+    setSelectedFilters({});
+    setAllItems([]);
+    setVisibleCount(PAGE);
+    setAnimStart(0);
+    setFilters({ countries: [], brands: [], models: [], bodies: [], gearboxes: [], drives: [] });
+  }, [activeTab]);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoadingFilters(true);
+      try {
+        const base = activeTab === "cars" ? `${API}/api/cars/filters` : `${API}/api/parts/filters`;
+        const url = new URL(base);
+        if (selectedFilters.country) url.searchParams.append("country", selectedFilters.country);
+        if (selectedFilters.brand)   url.searchParams.append("brand",   selectedFilters.brand);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setFilters(data);
+        if (prevCountryRef.current !== selectedFilters.country)
+          setSelectedFilters(p => ({ ...p, brand: "", model: "" }));
+        if (prevBrandRef.current !== selectedFilters.brand)
+          setSelectedFilters(p => ({ ...p, model: "" }));
+        prevCountryRef.current = selectedFilters.country;
+        prevBrandRef.current   = selectedFilters.brand;
+        setError(null);
+      } catch { setError(tc.ui.loading); }
+      finally  { setLoadingFilters(false); }
     };
-  }, []);
+    load();
+  }, [activeTab, selectedFilters.country, selectedFilters.brand]);
 
   useEffect(() => {
-    if (availableGridOptions.length > 0 && !availableGridOptions.includes(gridCols)) {
-      setGridCols(availableGridOptions[0]);
+    const load = async () => {
+      setLoadingItems(true);
+      setVisibleCount(PAGE);
+      setAnimStart(0);
+      try {
+        const endpoint = activeTab === "cars" ? `${API}/api/cars/search` : `${API}/api/parts/search`;
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(selectedFilters),
+        });
+        if (!res.ok) throw new Error();
+        setAllItems(await res.json());
+        setError(null);
+      } catch { setError(tc.ui.loading); }
+      finally  { setLoadingItems(false); }
+    };
+    load();
+  }, [activeTab, selectedFilters]);
+
+  const handleFilter = (key, value) => {
+    setSelectedFilters(prev => {
+      const next = { ...prev, [key]: value || undefined };
+      if (key === "country") { next.brand = ""; next.model = ""; }
+      else if (key === "brand") { next.model = ""; }
+      return next;
+    });
+  };
+
+  const loadMore = () => {
+    setAnimStart(visibleCount);
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount(p => Math.min(p + PAGE, allItems.length));
+      setLoadingMore(false);
+    }, 250);
+  };
+
+  const visibleItems = allItems.slice(0, visibleCount);
+  const hasMore = visibleCount < allItems.length;
+
+  const createRequest = async (item) => {
+    if (!currentUserId) {
+      toast.info(tc.ui.loginRequired);
+      setTimeout(() => { window.location.href = "/auth"; }, 2000);
+      return;
     }
-  }, [availableGridOptions]);
+    try {
+      const body = activeTab === "cars"
+        ? {
+            type: "car",
+            description: `${tc.ui.reqCarDesc} ${item.brand} ${item.model} ${item.year}`,
+            country_car: item.country, brand_car: item.brand, model_car: item.model,
+            price_from_car: item.price, price_to_car: item.price,
+            year_from_car: item.year, year_to_car: item.year,
+            mileage_from_car: item.mileage, mileage_to_car: item.mileage,
+            gearbox_car: item.gearbox, body_car: item.body,
+            drive_car: item.drive ? [item.drive] : null,
+            power_from_car: item.engine_power ? Number(item.engine_power) : null,
+            power_to_car:   item.engine_power ? Number(item.engine_power) : null,
+          }
+        : {
+            type: "part",
+            description: `${tc.ui.reqPartDesc} ${item.part_name} ${tc.ui.reqFor} ${item.brand} ${item.model}`,
+            country_part: item.country, brand_part: item.brand, model_part: item.model,
+            part_name: item.part_name,
+            price_from_part: item.price, price_to_part: item.price,
+            body_part: item.body_type || item.body,
+          };
+      const res = await fetch(`${API}/api/applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+      const d = await res.json();
+      const itemName = activeTab === "cars"
+        ? `${item.brand} ${item.model} ${item.year}`
+        : item.part_name;
+      toast.success(`${tc.ui.requestSent} ${tc.ui.requestNum}${d.applicationId} — ${itemName}`);
+    } catch (e) { toast.error(e.message || t.toasts.submitError); }
+  };
 
-  useEffect(() => {
-    loadFilters();
-  }, [selectedFilters.country, selectedFilters.brand]);
+  const xlat = (map, val) => (map && map[val]) ? map[val] : val;
 
-  useEffect(() => {
-    loadCars();
-  }, [selectedFilters]);
+  const getMap = (filterKey) => {
+    if (!tc.countryMap) return null;
+    if (filterKey === "country") return tc.countryMap;
+    if (filterKey === "gearbox") return tc.gearboxMap;
+    if (filterKey === "drive")   return tc.driveMap;
+    if (filterKey === "body")    return tc.bodyMap;
+    return null;
+  };
 
-  const renderFilterSelect = (label, key, options) => (
-    <label className="block mb-4" key={key}>
-      <span className="block font-semibold mb-1">{label}</span>
-      <select
-        value={selectedFilters[key] || ""}
-        onChange={(e) => handleFilterChange(key, e.target.value || undefined)}
-        className="w-full border rounded px-2 py-1"
-      >
-        <option value="">Все</option>
-        {options?.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-    </label>
+  const FilterSelect = ({ placeholder, filterKey, options }) => (
+    <CatalogFilterSelect
+      placeholder={placeholder}
+      options={options}
+      currentValue={selectedFilters[filterKey] || ""}
+      onSelect={(val) => handleFilter(filterKey, val)}
+      getLabel={(o) => xlat(getMap(filterKey), o)}
+    />
   );
 
-  const renderRangeInput = (label, key) => (
-    <div className="mb-4" key={key}>
-      <span className="block font-semibold mb-1">{label}</span>
+  const RangeRow = ({ label, filterKey }) => (
+    <div className="flex flex-col gap-1.5">
+      <span className="font-mont text-[10px] tracking-widest text-charcoal/40 dark:text-cream/40 uppercase pr-0.5">
+        {label}
+      </span>
       <div className="flex gap-2">
-        <input
-          type="number"
-          placeholder="от"
-          value={selectedFilters[key]?.min || ""}
-          onChange={(e) =>
-            handleFilterChange(key, {
-              ...selectedFilters[key],
-              min: e.target.value ? Number(e.target.value) : undefined,
-            })
-          }
-          className="w-1/2 border rounded px-2 py-1"
-        />
-        <input
-          type="number"
-          placeholder="до"
-          value={selectedFilters[key]?.max || ""}
-          onChange={(e) =>
-            handleFilterChange(key, {
-              ...selectedFilters[key],
-              max: e.target.value ? Number(e.target.value) : undefined,
-            })
-          }
-          className="w-1/2 border rounded px-2 py-1"
-        />
+        {["min","max"].map(k => (
+          <input key={k} type="number" placeholder={k === "min" ? tc.f.from : tc.f.to}
+            value={selectedFilters[filterKey]?.[k] || ""}
+            onChange={e => handleFilter(filterKey, { ...selectedFilters[filterKey], [k]: e.target.value ? Number(e.target.value) : undefined })}
+            className="w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-3 py-2.5 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        ))}
       </div>
     </div>
   );
 
-  const renderCarImage = (car) => {
-    const photoUrl = car.photo_url;
-    const src = photoUrl?.startsWith("http")
-      ? photoUrl
-      : `${process.env.REACT_APP_API_URL}${photoUrl}`;
-    const heightClass = gridCols === 3 ? "h-64" : gridCols === 6 ? "h-48" : "h-40";
+  const Chip = ({ children }) => (
+    <span className="font-mont text-[10px] tracking-wide px-2.5 py-1 rounded-lg bg-charcoal/8 dark:bg-cream/6 text-charcoal/55 dark:text-cream/60 whitespace-nowrap">
+      {children}
+    </span>
+  );
+
+  const SkeletonCard = ({ compact }) => (
+    <div className="rounded-2xl border border-charcoal/10 dark:border-cream/10 overflow-hidden animate-pulse bg-cream dark:bg-charcoal">
+      <div className={`${compact ? "h-32" : "h-52"} bg-charcoal/8 dark:bg-cream/8`} />
+      <div className="p-4 flex flex-col gap-3">
+        {!compact && <>
+          <div className="h-3.5 bg-charcoal/8 dark:bg-cream/8 rounded-lg w-2/3" />
+          <div className="flex gap-2">
+            <div className="h-6 w-16 bg-charcoal/6 dark:bg-cream/6 rounded-lg" />
+            <div className="h-6 w-20 bg-charcoal/6 dark:bg-cream/6 rounded-lg" />
+          </div>
+          <div className="h-3 bg-charcoal/5 dark:bg-cream/5 rounded-lg w-1/3" />
+        </>}
+        {compact && <div className="h-3.5 bg-charcoal/8 dark:bg-cream/8 rounded-lg w-3/4" />}
+        <div className="flex justify-between items-end pt-3 border-t border-charcoal/10 dark:border-cream/6 mt-auto gap-2">
+          <div className="h-6 w-28 bg-charcoal/10 dark:bg-cream/8 rounded-lg" />
+          <div className="h-9 w-24 bg-charcoal/10 dark:bg-cream/8 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const CarCard = ({ car, idx }) => {
+    const src = car.photo_url?.startsWith("http") ? car.photo_url : `${API}${car.photo_url}`;
+    const compact = gridCols === 4;
+    const isNew = idx >= animStart;
+
     return (
-      <img
-        src={src || "/placeholder-car.jpg"}
-        alt={`${car.brand} ${car.model}`}
-        className={`w-full ${heightClass} object-cover rounded-t`}
-        onError={(e) => {
-          e.target.src = "/placeholder-car.jpg";
-        }}
-      />
+      <div
+        className={`group rounded-2xl overflow-hidden border flex flex-col bg-cream dark:bg-charcoal
+          border-charcoal/15 dark:border-cream/10
+          hover:border-charcoal/30 dark:hover:border-cream/20
+          shadow-[0_1px_4px_rgba(47,48,50,0.06)] dark:shadow-none
+          hover:shadow-[0_16px_48px_rgba(47,48,50,0.13)] dark:hover:shadow-[0_16px_48px_rgba(0,0,0,0.45)]
+          transition-all duration-300
+          ${isNew ? "anim-fade-up" : ""}`}
+        style={isNew ? { animationDelay: `${(idx - animStart) * 0.055}s` } : undefined}
+      >
+<div className={`relative ${compact ? "h-36" : "h-52"} overflow-hidden bg-charcoal/5 dark:bg-cream/5 shrink-0`}>
+          <img src={src || "/placeholder-car.jpg"} alt={`${car.brand} ${car.model}`}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+            onError={e => { e.target.src = "/placeholder-car.jpg"; }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+
+          {car.country && (
+            <span className="absolute top-3 left-3 font-mont font-black text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white/90">
+              {xlat(tc.countryMap, car.country)}
+            </span>
+          )}
+          {car.year && (
+            <span className="absolute top-3 right-3 font-mont font-black text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white/90">
+              {car.year}
+            </span>
+          )}
+          {!compact && (
+            <div className="absolute bottom-3 left-4 right-4">
+              <p className="font-mont font-black text-white text-lg leading-tight drop-shadow">{car.brand}</p>
+              <p className="font-mont text-white/65 text-sm leading-tight">{car.model}</p>
+            </div>
+          )}
+        </div>
+
+<div className="p-4 flex flex-col flex-grow gap-2.5">
+          {compact && (
+            <div>
+              <p className="font-mont font-bold text-charcoal dark:text-cream text-sm leading-tight">{car.brand} {car.model}</p>
+              <p className="font-mont text-[11px] text-charcoal/40 dark:text-cream/40 mt-0.5">{car.year}</p>
+            </div>
+          )}
+
+          {!compact && (
+            <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+              {car.gearbox && <Chip>{xlat(tc.gearboxMap, car.gearbox)}</Chip>}
+              {car.drive   && <Chip>{xlat(tc.driveMap,   car.drive)}</Chip>}
+              {car.body    && <Chip>{xlat(tc.bodyMap,    car.body)}</Chip>}
+              {car.engine_power && <Chip>{car.engine_power} л.с.</Chip>}
+            </div>
+          )}
+
+          {!compact && car.mileage > 0 && (
+            <div className="flex items-center gap-1.5 text-charcoal/40 dark:text-cream/40">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2z"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span className="font-mont text-xs">{car.mileage.toLocaleString("ru-RU")} км</span>
+            </div>
+          )}
+
+          <div className="flex items-end justify-between mt-auto pt-3 border-t border-charcoal/10 dark:border-cream/10 gap-2">
+            <div>
+              <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30">{tc.ui.priceFrom}</p>
+              <p className="font-mont font-black text-red-accent text-[17px] leading-tight">
+                {car.price ? car.price.toLocaleString("ru-RU") + " ₽" : "—"}
+              </p>
+            </div>
+            <button onClick={() => createRequest(car)}
+              className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-85 active:scale-95 transition-all duration-200">
+              {tc.ui.select}
+            </button>
+          </div>
+        </div>
+      </div>
     );
   };
 
-  const createRequest = async (car) => {
-    if (!currentUserId) {
-      toast.info("Пожалуйста, войдите в систему, чтобы создать заявку.");
-      setTimeout(() => {
-        window.location.href = "/auth";
-      }, 2000);
-      return;
-    }
+  const PartCard = ({ part, idx }) => {
+    const placeholder = "/images/part-placeholder.png";
+    const src = part.photo_url?.startsWith("http") ? part.photo_url : `${API}${part.photo_url}`;
+    const compact = gridCols === 4;
+    const isNew = idx >= animStart;
 
-    try {
-      const enginePower = car.engine_power ? Number(car.engine_power) : null;
+    return (
+      <div
+        className={`group rounded-2xl overflow-hidden border flex flex-col bg-cream dark:bg-charcoal
+          border-charcoal/15 dark:border-cream/10
+          hover:border-charcoal/30 dark:hover:border-cream/20
+          shadow-[0_1px_4px_rgba(47,48,50,0.06)] dark:shadow-none
+          hover:shadow-[0_16px_48px_rgba(47,48,50,0.13)] dark:hover:shadow-[0_16px_48px_rgba(0,0,0,0.45)]
+          transition-all duration-300
+          ${isNew ? "anim-fade-up" : ""}`}
+        style={isNew ? { animationDelay: `${(idx - animStart) * 0.055}s` } : undefined}
+      >
+<div className={`relative ${compact ? "h-36" : "h-48"} overflow-hidden bg-charcoal/5 dark:bg-cream/5 shrink-0`}>
+          <img src={part.photo_url ? src : placeholder} alt={part.part_name}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+            onError={e => { e.target.src = placeholder; }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
 
-      const requestData = {
-        type: "car",
-        description: `Заявка на автомобиль ${car.brand} ${car.model} ${car.year} года`,
-        country_car: car.country,
-        brand_car: car.brand,
-        model_car: car.model,
-        price_from_car: car.price,
-        price_to_car: car.price,
-        year_from_car: car.year,
-        year_to_car: car.year,
-        mileage_from_car: car.mileage,
-        mileage_to_car: car.mileage,
-        gearbox_car: car.gearbox,
-        body_car: car.body,
-        drive_car: car.drive ? [car.drive] : null,
-        power_from_car: enginePower,
-        power_to_car: enginePower,
-      };
+          {part.country && (
+            <span className="absolute top-3 left-3 font-mont font-black text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white/90">
+              {xlat(tc.countryMap, part.country)}
+            </span>
+          )}
+          {!compact && (
+            <div className="absolute bottom-3 left-4 right-4">
+              <p className="font-mont font-black text-white text-base leading-snug drop-shadow">{part.part_name}</p>
+            </div>
+          )}
+        </div>
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/applications`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      });
+<div className="p-4 flex flex-col flex-grow gap-2.5">
+          {compact && (
+            <p className="font-mont font-bold text-charcoal dark:text-cream text-sm leading-tight">{part.part_name}</p>
+          )}
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Ошибка создания заявки");
-      }
+          {!compact && (
+            <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+              {part.brand && <Chip>{part.brand}{part.model ? ` ${part.model}` : ""}</Chip>}
+              {(part.body_type || part.body) && <Chip>{xlat(tc.bodyMap, part.body_type || part.body)}</Chip>}
+              {part.year && <Chip>{part.year}</Chip>}
+            </div>
+          )}
 
-      const data = await response.json();
-      toast.success(`Заявка №${data.applicationId} успешно создана!`);
-    } catch (error) {
-      console.error("Ошибка при создании заявки:", error);
-      toast.error(`Ошибка: ${error.message}`);
-    }
+          <div className="flex items-end justify-between mt-auto pt-3 border-t border-charcoal/10 dark:border-cream/10 gap-2">
+            <div>
+              <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30">{tc.ui.priceFrom}</p>
+              <p className="font-mont font-black text-red-accent text-[17px] leading-tight">
+                {part.price ? part.price.toLocaleString("ru-RU") + " ₽" : "—"}
+              </p>
+            </div>
+            <button onClick={() => createRequest(part)}
+              className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-85 active:scale-95 transition-all duration-200">
+              {tc.ui.select}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
+
+  const GridIcon = ({ cols }) => cols === 3
+    ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        {[1,5.25,9.5].map(x => [1,8].map(y =>
+          <rect key={`${x}${y}`} x={x} y={y} width="3.5" height="5" rx="0.5" fill="currentColor" opacity="0.7"/>
+        ))}
+      </svg>
+    : <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        {[0.5,4,7.5,11].map(x => [1,8].map(y =>
+          <rect key={`${x}${y}`} x={x} y={y} width="2.5" height="5" rx="0.5" fill="currentColor" opacity="0.7"/>
+        ))}
+      </svg>;
+
+  const gridClass = gridCols === 1 ? "grid-cols-1"
+    : gridCols === 2 ? "grid-cols-2"
+    : gridCols === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row p-4 gap-6">
-        <aside className="w-full md:w-64 bg-white border rounded p-4 h-fit shadow">
-          <h2 className="font-bold text-lg mb-4">Фильтры</h2>
-          {loadingFilters ? (
-            <p>Загрузка фильтров...</p>
-          ) : error ? (
-            <p className="text-red-600">{error}</p>
-          ) : (
-            <>
-              {renderFilterSelect("Страна", "country", filters.countries)}
-              {renderFilterSelect("Марка", "brand", filters.brands)}
-              {renderFilterSelect("Модель", "model", filters.models)}
-              {showAdvancedFilters && (
+      <div className="flex flex-col lg:flex-row px-6 md:px-12 pb-16 gap-6 items-start">
+
+<aside className="w-full lg:w-64 shrink-0">
+          <div className="border border-charcoal/15 dark:border-cream/10 rounded-2xl sticky top-4">
+
+<div className="flex p-3 gap-2">
+              {[
+                { key: "cars",  label: tc.tabCars.toUpperCase() },
+                { key: "parts", label: tc.parts.toUpperCase() },
+              ].map(({ key, label }) => (
+                <button key={key} onClick={() => setActiveTab(key)}
+                  className={`flex-1 font-mont font-black text-xs tracking-widest py-2 rounded-lg border-2 transition-all duration-200 ${
+                    activeTab === key
+                      ? "bg-red-accent border-red-accent text-cream"
+                      : "bg-transparent border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream hover:border-charcoal dark:hover:border-cream"
+                  }`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-full h-px bg-charcoal/10 dark:bg-cream/10" />
+
+            <div className="p-4 flex flex-col gap-3">
+              {loadingFilters ? (
+                <div className="flex flex-col gap-3 py-2">
+                  {[1,2,3].map(i => <div key={i} className="h-11 rounded-xl bg-charcoal/6 dark:bg-cream/6 animate-pulse" />)}
+                </div>
+              ) : error ? (
+                <p className="font-mont text-sm text-red-accent">{error}</p>
+              ) : (
                 <>
-                  {renderRangeInput("Год выпуска", "year")}
-                  {renderRangeInput("Цена (₽)", "price")}
-                  {renderRangeInput("Пробег (км)", "mileage")}
-                  {renderFilterSelect("Коробка передач", "gearbox", filters.gearboxes)}
-                  {renderFilterSelect("Привод", "drive", filters.drives)}
-                  {renderFilterSelect("Кузов", "body", filters.bodies)}
+                  <FilterSelect placeholder={tc.f.country} filterKey="country" options={filters.countries} />
+                  <FilterSelect placeholder={tc.f.brand}   filterKey="brand"   options={filters.brands}    />
+                  <FilterSelect placeholder={tc.f.model}   filterKey="model"   options={filters.models}    />
+
+                  <div className="h-px bg-charcoal/8 dark:bg-cream/8 my-0.5" />
+
+                  <RangeRow label={tc.f.price} filterKey="price" />
+                  <RangeRow label={tc.f.year}  filterKey="year"  />
+
+                  <button
+                    onClick={() => setShowAdvanced(p => !p)}
+                    className="font-mont text-[10px] tracking-widest uppercase text-charcoal/35 dark:text-cream/35 hover:text-red-accent transition-colors duration-200 text-left mt-1 flex items-center gap-1.5"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+                      style={{ transform: showAdvanced ? "rotate(90deg)" : "", transition: "transform .2s" }}>
+                      <path d="M3 1.5l3.5 3.5L3 8.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {showAdvanced ? tc.f.hide : tc.f.more}
+                  </button>
+
+                  {showAdvanced && (
+                    <div className="flex flex-col gap-3 pt-1 anim-fade-up">
+                      <div className="h-px bg-charcoal/8 dark:bg-cream/8" />
+                      <RangeRow label={tc.f.mileage} filterKey="mileage" />
+                      {activeTab === "cars" && (
+                        <>
+                          <FilterSelect placeholder={tc.f.gearbox} filterKey="gearbox" options={filters.gearboxes} />
+                          <FilterSelect placeholder={tc.f.drive}   filterKey="drive"   options={filters.drives}    />
+                        </>
+                      )}
+                      <FilterSelect placeholder={tc.f.body} filterKey="body" options={filters.bodies} />
+                    </div>
+                  )}
                 </>
               )}
-              <button
-                className="text-blue-600 mt-2 text-sm hover:text-blue-800 transition"
-                onClick={() => setShowAdvancedFilters((prev) => !prev)}
-              >
-                {showAdvancedFilters
-                  ? "Скрыть дополнительные фильтры"
-                  : "Показать дополнительные фильтры"}
-              </button>
-            </>
-          )}
+            </div>
+          </div>
         </aside>
 
-        <main className="flex-1">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-xl">Автомобили ({cars.length})</h2>
-            {availableGridOptions.length > 0 && (
-              <div className="flex gap-2">
-                {availableGridOptions.map((cols) => (
-                  <button
-                    key={cols}
-                    className={`px-3 py-1 border rounded transition ${
+<main className="flex-1 min-w-0">
+
+{lang === "en" && (
+            <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-xl bg-charcoal/5 dark:bg-cream/5">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" className="shrink-0 text-charcoal/35 dark:text-cream/35">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M8 7v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                <circle cx="8" cy="5" r="0.7" fill="currentColor"/>
+              </svg>
+              <span className="font-mont text-[11px] text-charcoal/40 dark:text-cream/40 leading-snug">
+                {tc.ui.langNotice}
+              </span>
+            </div>
+          )}
+
+<div className="flex justify-between items-center mb-5">
+            <span className="font-mont text-xs text-charcoal/40 dark:text-cream/40 tracking-widest uppercase">
+              {loadingItems ? "…" : `${allItems.length} ${activeTab === "cars" ? tc.ui.carsCount : tc.ui.partsCount}`}
+            </span>
+            {availableGrid.length > 0 && (
+              <div className="flex gap-1.5">
+                {availableGrid.map(cols => (
+                  <button key={cols} onClick={() => setGridCols(cols)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
                       gridCols === cols
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-blue-600 hover:bg-blue-50"
-                    }`}
-                    onClick={() => setGridCols(cols)}
-                  >
-                    {cols}
+                        ? "border-charcoal dark:border-cream bg-charcoal dark:bg-cream text-cream dark:text-charcoal"
+                        : "border-charcoal/20 dark:border-cream/20 text-charcoal/40 dark:text-cream/40 hover:border-charcoal/50 dark:hover:border-cream/50"
+                    }`}>
+                    <GridIcon cols={cols} />
                   </button>
                 ))}
               </div>
             )}
           </div>
-          {loadingCars ? (
-            <p>Загрузка автомобилей...</p>
-          ) : error ? (
-            <p className="text-red-600">{error}</p>
-          ) : cars.length === 0 ? (
-            <p className="text-gray-500">По вашему запросу автомобилей не найдено</p>
-          ) : (
-            <div
-              className={`grid gap-6 ${
-                gridCols === 1
-                  ? "grid-cols-1"
-                  : gridCols === 2
-                  ? "grid-cols-2"
-                  : gridCols === 3
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                  : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-              }`}
-            >
-              {cars.map((car) => (
-                <div
-                  key={car.id}
-                  className="border rounded shadow hover:shadow-lg transition flex flex-col"
-                >
-                  {renderCarImage(car)}
-                  <div className="p-4 flex flex-col flex-grow">
-                    <h3 className="font-semibold text-lg mb-1">
-                      {car.brand} {car.model}
-                    </h3>
-                    <p className="text-sm mb-2">
-                      {car.year} год · {car.mileage?.toLocaleString() || "—"} км
-                    </p>
-                    <p className="text-lg font-bold mb-3">
-                      {car.price ? `от ${car.price.toLocaleString()} ₽` : "— ₽"}
-                    </p>
-                    <button
-                      onClick={() => createRequest(car)}
-                      className="mt-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-                    >
-                      Подобрать
-                    </button>
-                  </div>
-                </div>
+
+          {/* Skeleton */}
+          {loadingItems && (
+            <div className={`grid gap-5 ${gridClass}`}>
+              {Array.from({ length: PAGE }, (_, i) => (
+                <SkeletonCard key={i} compact={gridCols === 4} />
               ))}
             </div>
           )}
+
+          {/* Empty */}
+          {!loadingItems && allItems.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+              <span className="font-mont text-4xl text-charcoal/10 dark:text-cream/10">∅</span>
+              <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30 tracking-widest uppercase">
+                {tc.ui.empty}
+              </p>
+            </div>
+          )}
+
+          {/* Grid */}
+          {!loadingItems && visibleItems.length > 0 && (
+            <>
+              <div className={`grid gap-5 ${gridClass}`}>
+                {visibleItems.map((item, i) =>
+                  activeTab === "cars"
+                    ? <CarCard key={item.id} car={item} idx={i} />
+                    : <PartCard key={item.id} part={item} idx={i} />
+                )}
+              </div>
+
+              {/* Load more */}
+              {(hasMore || loadingMore) && (
+                <div className="flex flex-col items-center gap-3 mt-10">
+                  <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 tracking-widest uppercase">
+                    {visibleCount} из {allItems.length}
+                  </p>
+                  <div className="w-full max-w-xs h-0.5 bg-charcoal/8 dark:bg-cream/8 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-red-accent rounded-full transition-all duration-500"
+                      style={{ width: `${(visibleCount / allItems.length) * 100}%` }}
+                    />
+                  </div>
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="mt-2 font-mont font-black text-xs tracking-widest uppercase px-8 py-3 border-2 border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream rounded-xl hover:border-red-accent hover:text-red-accent transition-all duration-200 disabled:opacity-40 flex items-center gap-2"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round"/>
+                        </svg>
+                        Загрузка…
+                      </>
+                    ) : "Загрузить ещё"}
+                  </button>
+                </div>
+              )}
+
+              {/* All loaded */}
+              {!hasMore && !loadingMore && allItems.length > PAGE && (
+                <p className="text-center font-mont text-xs text-charcoal/25 dark:text-cream/25 tracking-widest uppercase mt-10">
+                  Все {allItems.length} показаны
+                </p>
+              )}
+            </>
+          )}
         </main>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} />
+
     </>
   );
 };
