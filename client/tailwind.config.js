@@ -10,9 +10,9 @@ module.exports = {
         "red-accent": "#8B1A1A",
       },
       fontFamily: {
-        mont: ['"Mont"', '"Montserrat"', "sans-serif"],
-        advokat: ['"Advokat Modern"', "sans-serif"],
-        kalissa: ['"Kalissa"', '"Dancing Script"', "cursive"],
+        mont: ['"Montserrat"', "sans-serif"],
+        advokat: ['"Playfair Display"', "serif"],
+        kalissa: ['"Dancing Script"', "cursive"],
       },
       keyframes: {
         "fade-in": {
