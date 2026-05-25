@@ -827,7 +827,7 @@ function CatalogSection() {
             style={{ animationDelay: `${i * 35}ms` }}>
             <div className="flex items-center gap-3 min-w-0">
               {item.photo_url
-                ? <img src={item.photo_url} alt="" className="w-12 h-10 object-cover rounded-lg shrink-0" />
+                ? <img src={item.photo_url.startsWith("http") ? item.photo_url : `${API}${item.photo_url}`} alt="" className="w-12 h-10 object-cover rounded-lg shrink-0" />
                 : <div className="w-12 h-10 rounded-lg bg-charcoal/8 dark:bg-cream/8 shrink-0" />
               }
               <div className="min-w-0">
