@@ -39,7 +39,7 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
         country: "",
         brand: "",
         model: "",
-        year: "",
+        year: new Date().getFullYear(),
         body: "",
         price: "",
         photo_url: "",
@@ -48,9 +48,21 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
     }
   }, [initialData]);
 
+  const TEXT_FIELDS = ["brand", "model", "part_name"];
+  const MAX_TEXT = 50;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (TEXT_FIELDS.includes(name)) {
+      const sanitized = value.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT);
+      setForm((prev) => ({ ...prev, [name]: sanitized }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const blockSpecialNumeric = (e) => {
+    if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
   };
 
   const handleFileChange = (e) => {
@@ -128,9 +140,10 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
             name="part_name"
             value={form.part_name}
             onChange={handleChange}
+            maxLength={MAX_TEXT}
             className={`border p-2 w-full rounded ${errors.part_name ? "border-red-500" : ""}`}
             disabled={loading}
-            placeholder="Например, Фара передняя"
+            placeholder="Front bumper"
           />
           {errors.part_name && <p className="text-red-600 text-sm">{errors.part_name}</p>}
         </div>
@@ -154,9 +167,10 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
             name="brand"
             value={form.brand}
             onChange={handleChange}
+            maxLength={MAX_TEXT}
             className={`border p-2 w-full rounded ${errors.brand ? "border-red-500" : ""}`}
             disabled={loading}
-            placeholder="Например, Toyota"
+            placeholder="Toyota"
           />
           {errors.brand && <p className="text-red-600 text-sm">{errors.brand}</p>}
         </div>
@@ -167,9 +181,10 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
             name="model"
             value={form.model}
             onChange={handleChange}
+            maxLength={MAX_TEXT}
             className={`border p-2 w-full rounded ${errors.model ? "border-red-500" : ""}`}
             disabled={loading}
-            placeholder="Например, Camry"
+            placeholder="Camry"
           />
           {errors.model && <p className="text-red-600 text-sm">{errors.model}</p>}
         </div>
@@ -180,9 +195,10 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
             name="year"
             value={form.year}
             onChange={handleChange}
+            onKeyDown={blockSpecialNumeric}
             type="number"
             min="1900"
-            max={new Date().getFullYear()}
+            max={new Date().getFullYear() + 1}
             className={`border p-2 w-full rounded ${errors.year ? "border-red-500" : ""}`}
             disabled={loading}
           />
@@ -208,6 +224,7 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
             name="price"
             value={form.price}
             onChange={handleChange}
+            onKeyDown={blockSpecialNumeric}
             type="number"
             min="0"
             className={`border p-2 w-full rounded ${errors.price ? "border-red-500" : ""}`}

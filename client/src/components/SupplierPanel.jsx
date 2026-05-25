@@ -11,13 +11,20 @@ const authH = (json = true) => ({
   Authorization: `Bearer ${tok()}`,
 });
 
+const TEXT_FIELDS_SP = ["brand", "model", "part_name"];
+const MAX_TEXT_SP = 50;
+const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT_SP);
+const blockSpecialNumeric = (e) => {
+  if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
+};
+
 function AddCarForm({ onSuccess }) {
   const { t } = useLang();
   const tf = t.supplier.form;
   const tt = t.toasts;
 
   const [form, setForm] = useState({
-    brand: "", model: "", year: "", price: "", country: "",
+    brand: "", model: "", year: new Date().getFullYear(), price: "", country: "",
     mileage: "", body: "", gearbox: "", drive: "", engine_power: "",
   });
   const [photo, setPhoto]   = useState(null);
@@ -52,7 +59,7 @@ function AddCarForm({ onSuccess }) {
       });
       if (!r.ok) { const d = await r.json(); throw new Error(d.error); }
       toast.success(tt.carSubmitted);
-      setForm({ brand: "", model: "", year: "", price: "", country: "", mileage: "", body: "", gearbox: "", drive: "", engine_power: "" });
+      setForm({ brand: "", model: "", year: new Date().getFullYear(), price: "", country: "", mileage: "", body: "", gearbox: "", drive: "", engine_power: "" });
       setPhoto(null);
       onSuccess?.();
     } catch (err) { toast.error(err.message || tt.genericError); }
@@ -63,20 +70,20 @@ function AddCarForm({ onSuccess }) {
     <form onSubmit={submit} className="flex flex-col gap-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input label={tf.brand} required placeholder="Toyota"
-          value={form.brand} onChange={e => set("brand", e.target.value)} disabled={loading} />
+          value={form.brand} onChange={e => set("brand", sanitizeText(e.target.value))} disabled={loading} />
         <Input label={tf.model} required placeholder="Land Cruiser"
-          value={form.model} onChange={e => set("model", e.target.value)} disabled={loading} />
+          value={form.model} onChange={e => set("model", sanitizeText(e.target.value))} disabled={loading} />
         <SingleSelect label={tf.country} required placeholder="Выберите…"
           options={COUNTRIES} value={form.country}
           onChange={v => set("country", v)} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input label={tf.year} required type="number" min="1900" max="2030" placeholder="2023"
-          value={form.year} onChange={e => set("year", e.target.value)} disabled={loading} />
+          value={form.year} onChange={e => set("year", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
         <Input label={tf.price} required type="number" min="0" placeholder="3 500 000"
-          value={form.price} onChange={e => set("price", e.target.value)} disabled={loading} />
+          value={form.price} onChange={e => set("price", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
         <Input label={tf.mileage} type="number" min="0" placeholder="15 000"
-          value={form.mileage} onChange={e => set("mileage", e.target.value)} disabled={loading} />
+          value={form.mileage} onChange={e => set("mileage", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <SingleSelect label={tf.body} placeholder="—" options={BODIES}
@@ -86,7 +93,7 @@ function AddCarForm({ onSuccess }) {
         <SingleSelect label={tf.drive} placeholder="—" options={DRIVES}
           value={form.drive} onChange={v => set("drive", v)} disabled={loading} />
         <Input label={tf.power} type="number" min="0" placeholder="249"
-          value={form.engine_power} onChange={e => set("engine_power", e.target.value)} disabled={loading} />
+          value={form.engine_power} onChange={e => set("engine_power", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <PhotoUpload file={photo} onChange={setPhoto} label={tf.carPhoto} />
       <SubmitBtn loading={loading} label={tf.submit} loadingLabel={tf.submitting} />
@@ -144,24 +151,24 @@ function AddPartForm({ onSuccess }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label={tf.partName} required placeholder="Амортизатор задний"
-          value={form.part_name} onChange={e => set("part_name", e.target.value)} disabled={loading} />
+        <Input label={tf.partName} required placeholder="Front bumper"
+          value={form.part_name} onChange={e => set("part_name", sanitizeText(e.target.value))} disabled={loading} />
         <Input label={tf.price} required type="number" min="0" placeholder="12 000"
-          value={form.price} onChange={e => set("price", e.target.value)} disabled={loading} />
+          value={form.price} onChange={e => set("price", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <SingleSelect label={tf.country} placeholder="—" options={COUNTRIES}
           value={form.country} onChange={v => set("country", v)} disabled={loading} />
         <Input label={tf.carBrand} placeholder="Toyota"
-          value={form.brand} onChange={e => set("brand", e.target.value)} disabled={loading} />
+          value={form.brand} onChange={e => set("brand", sanitizeText(e.target.value))} disabled={loading} />
         <Input label={tf.carModel} placeholder="Land Cruiser"
-          value={form.model} onChange={e => set("model", e.target.value)} disabled={loading} />
+          value={form.model} onChange={e => set("model", sanitizeText(e.target.value))} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <SingleSelect label={tf.body} placeholder="—" options={BODIES}
           value={form.body} onChange={v => set("body", v)} disabled={loading} />
         <Input label={tf.carYear} type="number" min="1900" max="2030" placeholder="2020"
-          value={form.year} onChange={e => set("year", e.target.value)} disabled={loading} />
+          value={form.year} onChange={e => set("year", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <PhotoUpload file={photo} onChange={setPhoto} label={tf.partPhoto} />
       <SubmitBtn loading={loading} label={tf.submit} loadingLabel={tf.submitting} />
@@ -558,7 +565,8 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                     <label key={key} className="flex flex-col gap-1">
                       <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{label}</span>
                       <input type={type} value={editing.item[key] ?? ""}
-                        onChange={e => setEditField(key, e.target.value)}
+                        onChange={e => setEditField(key, type === "text" && TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
+                        onKeyDown={type === "number" ? blockSpecialNumeric : undefined}
                         className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
                     </label>
                   ))}
@@ -584,7 +592,8 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                     <label key={key} className={`flex flex-col gap-1 ${key === "part_name" ? "col-span-2" : ""}`}>
                       <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{label}</span>
                       <input type={type} value={editing.item[key] ?? ""}
-                        onChange={e => setEditField(key, e.target.value)}
+                        onChange={e => setEditField(key, type === "text" && TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
+                        onKeyDown={type === "number" ? blockSpecialNumeric : undefined}
                         className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
                     </label>
                   ))}

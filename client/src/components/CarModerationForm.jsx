@@ -82,12 +82,11 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
       });
       setPreviewUrl(initialData.photo_url || "");
     } else {
-      // Сброс формы при добавлении нового автомобиля
       setForm({
         country: "",
         brand: "",
         model: "",
-        year: "",
+        year: new Date().getFullYear(),
         price: "",
         drive: "",
         gearbox: "",
@@ -101,9 +100,21 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
     }
   }, [initialData]);
 
+  const TEXT_FIELDS = ["brand", "model"];
+  const MAX_TEXT = 50;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (TEXT_FIELDS.includes(name)) {
+      const sanitized = value.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT);
+      setForm((prev) => ({ ...prev, [name]: sanitized }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const blockSpecialNumeric = (e) => {
+    if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
   };
 
   const handleFileChange = (e) => {
@@ -193,6 +204,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
             name="brand"
             value={form.brand}
             onChange={handleChange}
+            maxLength={MAX_TEXT}
             className={`border p-2 w-full rounded ${errors.brand ? "border-red-500" : ""}`}
             disabled={loading}
             placeholder="Например, Toyota"
@@ -205,6 +217,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
             name="model"
             value={form.model}
             onChange={handleChange}
+            maxLength={MAX_TEXT}
             className="border p-2 w-full rounded"
             disabled={loading}
             placeholder="Например, Camry"
@@ -216,9 +229,10 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
             name="year"
             value={form.year}
             onChange={handleChange}
+            onKeyDown={blockSpecialNumeric}
             type="number"
             min="1900"
-            max={new Date().getFullYear()}
+            max={new Date().getFullYear() + 1}
             className={`border p-2 w-full rounded ${errors.year ? "border-red-500" : ""}`}
             disabled={loading}
           />
@@ -230,6 +244,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
             name="price"
             value={form.price}
             onChange={handleChange}
+            onKeyDown={blockSpecialNumeric}
             type="number"
             min="0"
             className={`border p-2 w-full rounded ${errors.price ? "border-red-500" : ""}`}
@@ -264,6 +279,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
             name="mileage"
             value={form.mileage}
             onChange={handleChange}
+            onKeyDown={blockSpecialNumeric}
             type="number"
             min="0"
             className={`border p-2 w-full rounded ${errors.mileage ? "border-red-500" : ""}`}
@@ -277,6 +293,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
             name="engine_power"
             value={form.engine_power}
             onChange={handleChange}
+            onKeyDown={blockSpecialNumeric}
             type="number"
             min="0"
             className={`border p-2 w-full rounded ${errors.engine_power ? "border-red-500" : ""}`}

@@ -22,12 +22,22 @@ const Btn = ({ onClick, cls = "", children, disabled }) => (
   </button>
 );
 
-const Field = ({ label, value, onChange, type = "text", required, min, max }) => {
+const TEXT_FIELDS_CATALOG = ["brand", "model", "part_name"];
+const MAX_TEXT_LEN = 50;
+const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT_LEN);
+const blockSpecialNumeric = (e) => {
+  if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
+};
+
+const Field = ({ label, value, onChange, type = "text", required, min, max, fieldKey }) => {
   const handleChange = (e) => {
     let v = e.target.value;
     if (type === "number" && max !== undefined && v !== "") {
       const maxLen = String(Math.floor(+max)).length;
       if (v.replace(/[^0-9]/g, "").length > maxLen) return;
+    }
+    if (type === "text" && fieldKey && TEXT_FIELDS_CATALOG.includes(fieldKey)) {
+      v = sanitizeText(v);
     }
     onChange(v);
   };
@@ -40,8 +50,10 @@ const Field = ({ label, value, onChange, type = "text", required, min, max }) =>
         type={type}
         value={value ?? ""}
         onChange={handleChange}
+        onKeyDown={type === "number" ? blockSpecialNumeric : undefined}
         min={min}
         max={max}
+        maxLength={type === "text" && fieldKey && TEXT_FIELDS_CATALOG.includes(fieldKey) ? MAX_TEXT_LEN : undefined}
         className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-lg px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors"
       />
     </label>
@@ -211,7 +223,7 @@ function CatalogSection() {
   const setAddField = (key, val) => setAddForm(p => ({ ...p, [key]: val }));
 
   const openAdd = () => {
-    setAddForm({ status: "approved" });
+    setAddForm({ status: "approved", year: new Date().getFullYear() });
     setAddMsg("");
     setAddPhoto(null);
     setAdding(true);
@@ -474,15 +486,15 @@ function CatalogSection() {
 
               <div className="grid grid-cols-2 gap-4">
                 {editing.type === "car" ? (<>
-                  <Field label={tc.fields.brand}   value={editing.item.brand}        onChange={v => setField("brand", v)} />
-                  <Field label={tc.fields.model}   value={editing.item.model}        onChange={v => setField("model", v)} />
-                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}  type="number" min="1900" max={new Date().getFullYear() + 1} />
-                  <Field label={tc.fields.price}   value={editing.item.price}        onChange={v => setField("price", v)} type="number" min="1" max={100_000_000} />
+                  <Field label={tc.fields.brand}   value={editing.item.brand}        onChange={v => setField("brand", v)}         fieldKey="brand" />
+                  <Field label={tc.fields.model}   value={editing.item.model}        onChange={v => setField("model", v)}         fieldKey="model" />
+                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}          type="number" min="1900" max={new Date().getFullYear() + 1} />
+                  <Field label={tc.fields.price}   value={editing.item.price}        onChange={v => setField("price", v)}         type="number" min="1" max={100_000_000} />
                   <div className="flex flex-col gap-1">
                     <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.country}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.country ?? ""} onChange={v => setField("country", v)} options={COUNTRIES.map(c => ({ value: c, label: countryMap[c] ?? c }))} />
                   </div>
-                  <Field label={tc.fields.mileage} value={editing.item.mileage}      onChange={v => setField("mileage", v)} type="number" min="0" max={2_000_000} />
+                  <Field label={tc.fields.mileage} value={editing.item.mileage}      onChange={v => setField("mileage", v)}       type="number" min="0" max={2_000_000} />
                   <div className="flex flex-col gap-1">
                     <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.body}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.body ?? ""} onChange={v => setField("body", v)} options={BODIES.map(b => ({ value: b, label: bodyMap[b] ?? b }))} />
@@ -495,7 +507,7 @@ function CatalogSection() {
                     <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.drive}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.drive ?? ""} onChange={v => setField("drive", v)} options={DRIVES.map(d => ({ value: d, label: driveMap[d] ?? d }))} />
                   </div>
-                  <Field label={tc.fields.power}   value={editing.item.engine_power} onChange={v => setField("engine_power", v)} type="number" min="1" max={1500} />
+                  <Field label={tc.fields.power}   value={editing.item.engine_power} onChange={v => setField("engine_power", v)}  type="number" min="1" max={1500} />
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.status}</span>
                     <AdminSelect value={editing.item.status ?? "approved"} onChange={v => setField("status", v)}
@@ -512,12 +524,12 @@ function CatalogSection() {
                   </div>
                 </>) : (<>
                   <div className="col-span-2">
-                    <Field label={tc.fields.name}  value={editing.item.part_name}    onChange={v => setField("part_name", v)} />
+                    <Field label={tc.fields.name}  value={editing.item.part_name}    onChange={v => setField("part_name", v)} fieldKey="part_name" />
                   </div>
-                  <Field label={tc.fields.price}   value={editing.item.price}        onChange={v => setField("price", v)} type="number" min="1" max={100_000_000} />
-                  <Field label={tc.fields.brand}   value={editing.item.brand}        onChange={v => setField("brand", v)} />
-                  <Field label={tc.fields.model}   value={editing.item.model}        onChange={v => setField("model", v)} />
-                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}  type="number" min="1900" max={new Date().getFullYear() + 1} />
+                  <Field label={tc.fields.price}   value={editing.item.price}        onChange={v => setField("price", v)}    type="number" min="1" max={100_000_000} />
+                  <Field label={tc.fields.brand}   value={editing.item.brand}        onChange={v => setField("brand", v)}    fieldKey="brand" />
+                  <Field label={tc.fields.model}   value={editing.item.model}        onChange={v => setField("model", v)}    fieldKey="model" />
+                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}     type="number" min="1900" max={new Date().getFullYear() + 1} />
                   <div className="flex flex-col gap-1">
                     <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.country}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.country ?? ""} onChange={v => setField("country", v)} options={COUNTRIES.map(c => ({ value: c, label: countryMap[c] ?? c }))} />
@@ -595,8 +607,8 @@ function CatalogSection() {
 
             <div className="grid grid-cols-2 gap-4">
               {tab === "cars" ? (<>
-                <Field required label={tc.fields.brand}   value={addForm.brand ?? ""} onChange={v => setAddField("brand", v)} />
-                <Field required label={tc.fields.model}   value={addForm.model ?? ""} onChange={v => setAddField("model", v)} />
+                <Field required label={tc.fields.brand}   value={addForm.brand ?? ""} onChange={v => setAddField("brand", v)} fieldKey="brand" />
+                <Field required label={tc.fields.model}   value={addForm.model ?? ""} onChange={v => setAddField("model", v)} fieldKey="model" />
                 <Field required label={tc.fields.year}    value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1900" max={new Date().getFullYear() + 1} />
                 <Field required label={tc.fields.price}   value={addForm.price ?? ""} onChange={v => setAddField("price", v)} type="number" min="1" max={100_000_000} />
 <div className="flex flex-col gap-1">
@@ -659,11 +671,11 @@ function CatalogSection() {
                 </div>
               </>) : (<>
                 <div className="col-span-2">
-                  <Field required label={tc.fields.name} value={addForm.part_name ?? ""} onChange={v => setAddField("part_name", v)} />
+                  <Field required label={tc.fields.name} value={addForm.part_name ?? ""} onChange={v => setAddField("part_name", v)} fieldKey="part_name" />
                 </div>
                 <Field required label={tc.fields.price} value={addForm.price ?? ""} onChange={v => setAddField("price", v)} type="number" min="1" max={100_000_000} />
-                <Field required label={tc.fields.brand} value={addForm.brand ?? ""} onChange={v => setAddField("brand", v)} />
-                <Field required label={tc.fields.model} value={addForm.model ?? ""} onChange={v => setAddField("model", v)} />
+                <Field required label={tc.fields.brand} value={addForm.brand ?? ""} onChange={v => setAddField("brand", v)} fieldKey="brand" />
+                <Field required label={tc.fields.model} value={addForm.model ?? ""} onChange={v => setAddField("model", v)} fieldKey="model" />
                 <Field required label={tc.fields.year}  value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1900" max={new Date().getFullYear() + 1} />
 <div className="flex flex-col gap-1">
                   <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
