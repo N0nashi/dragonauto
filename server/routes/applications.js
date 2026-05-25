@@ -383,7 +383,7 @@ router.get("/:id/comments", authMiddleware, async (req, res) => {
   if (isNaN(applicationId)) return res.status(400).json({ error: "Неверный ID" });
 
   try {
-    if (userRole !== "moderator") {
+    if (userRole !== "moderator" && userRole !== "admin") {
       const own = await db.query("SELECT id FROM applications WHERE id = $1 AND user_id = $2", [applicationId, userId]);
       if (own.rowCount === 0) return res.status(403).json({ error: "Нет доступа" });
     }
@@ -411,7 +411,7 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
   if (!message?.trim()) return res.status(400).json({ error: "Сообщение не может быть пустым" });
 
   try {
-    if (userRole !== "moderator") {
+    if (userRole !== "moderator" && userRole !== "admin") {
       const own = await db.query("SELECT id FROM applications WHERE id = $1 AND user_id = $2", [applicationId, userId]);
       if (own.rowCount === 0) return res.status(403).json({ error: "Нет доступа" });
     }
@@ -420,7 +420,7 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
     const authorName = nameR.rows[0]
       ? `${nameR.rows[0].first_name} ${nameR.rows[0].last_name}`.trim()
       : "Пользователь";
-    const authorRole = userRole === "moderator" ? "admin" : "user";
+    const authorRole = userRole === "moderator" || userRole === "admin" ? "admin" : "user";
 
     const result = await db.query(
       "INSERT INTO application_comments (application_id, author_role, author_name, message) VALUES ($1,$2,$3,$4) RETURNING *",
