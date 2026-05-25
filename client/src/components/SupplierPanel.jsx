@@ -78,7 +78,7 @@ function AddCarForm({ onSuccess }) {
           onChange={v => set("country", v)} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Input label={tf.year} required type="number" min="1900" max="2030" placeholder="2023"
+        <Input label={tf.year} required type="number" min="1950" max="2030" placeholder="2023"
           value={form.year} onChange={e => set("year", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
         <Input label={tf.price} required type="number" min="0" placeholder="3 500 000"
           value={form.price} onChange={e => set("price", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
@@ -167,7 +167,7 @@ function AddPartForm({ onSuccess }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <SingleSelect label={tf.body} placeholder="—" options={BODIES}
           value={form.body} onChange={v => set("body", v)} disabled={loading} />
-        <Input label={tf.carYear} type="number" min="1900" max="2030" placeholder="2020"
+        <Input label={tf.carYear} type="number" min="1950" max="2030" placeholder="2020"
           value={form.year} onChange={e => set("year", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <PhotoUpload file={photo} onChange={setPhoto} label={tf.partPhoto} />
@@ -567,6 +567,8 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                       <input type={type} value={editing.item[key] ?? ""}
                         onChange={e => setEditField(key, type === "text" && TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
                         onKeyDown={type === "number" ? blockSpecialNumeric : undefined}
+                        min={key === "year" ? 1950 : undefined}
+                        max={key === "year" ? new Date().getFullYear() + 1 : undefined}
                         className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
                     </label>
                   ))}
@@ -594,6 +596,8 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                       <input type={type} value={editing.item[key] ?? ""}
                         onChange={e => setEditField(key, type === "text" && TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
                         onKeyDown={type === "number" ? blockSpecialNumeric : undefined}
+                        min={key === "year" ? 1950 : undefined}
+                        max={key === "year" ? new Date().getFullYear() + 1 : undefined}
                         className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
                     </label>
                   ))}

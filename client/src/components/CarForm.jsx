@@ -5,6 +5,11 @@ import { COUNTRIES, DRIVES, GEARBOXES, BODIES } from "../constants/catalog";
 import { useLang } from "../context/LangContext";
 import { translateDesc } from "../utils/translateDesc";
 
+const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, 50);
+const blockSpecialNumeric = (e) => {
+  if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
+};
+
 export default function CarForm({ onSubmit, loading, initialData = null, readOnly = false }) {
   const { t, lang } = useLang();
   const tr = t.carForm;
@@ -57,8 +62,8 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
     if (!form.brand_car.trim())        e.brand_car   = tr.errors.brand;
 
     const num = v => v !== "" && !isNaN(Number(v)) && Number(v) >= 0;
-    if (!num(form.year_from_car) || Number(form.year_from_car) < 1900) e.year_from_car = tr.errors.yearFrom;
-    if (!num(form.year_to_car)   || Number(form.year_to_car)   < 1900) e.year_to_car   = tr.errors.yearTo;
+    if (!num(form.year_from_car) || Number(form.year_from_car) < 1950) e.year_from_car = tr.errors.yearFrom;
+    if (!num(form.year_to_car)   || Number(form.year_to_car)   < 1950) e.year_to_car   = tr.errors.yearTo;
     else if (+form.year_to_car < +form.year_from_car) e.year_to_car = tr.errors.yearToLess;
 
     if (!num(form.price_from_car)) e.price_from_car = tr.errors.priceFrom;
@@ -101,37 +106,37 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
           disabled={readOnly || loading}
         />
         <Input label={tr.brand} required placeholder="Toyota"
-          value={form.brand_car} onChange={e => set("brand_car", e.target.value)}
+          value={form.brand_car} onChange={e => set("brand_car", sanitizeText(e.target.value))}
           error={errors.brand_car} disabled={readOnly || loading}
         />
         <Input label={tr.model} placeholder="Camry"
-          value={form.model_car} onChange={e => set("model_car", e.target.value)}
+          value={form.model_car} onChange={e => set("model_car", sanitizeText(e.target.value))}
           disabled={readOnly || loading}
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <RangeField label={tr.year} required
-          fromProps={{ type: "number", min: 1900, max: 2030, value: form.year_from_car, onChange: e => set("year_from_car", e.target.value), disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 1900, max: 2030, value: form.year_to_car,   onChange: e => set("year_to_car",   e.target.value), disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 1950, max: new Date().getFullYear() + 1, value: form.year_from_car, onChange: e => set("year_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 1950, max: new Date().getFullYear() + 1, value: form.year_to_car,   onChange: e => set("year_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.year_from_car} toError={errors.year_to_car}
         />
         <RangeField label={tr.price} required
-          fromProps={{ type: "number", min: 0, value: form.price_from_car, onChange: e => set("price_from_car", e.target.value), disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.price_to_car,   onChange: e => set("price_to_car",   e.target.value), disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, value: form.price_from_car, onChange: e => set("price_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, value: form.price_to_car,   onChange: e => set("price_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.price_from_car} toError={errors.price_to_car}
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <RangeField label={tr.mileage} required
-          fromProps={{ type: "number", min: 0, value: form.mileage_from_car, onChange: e => set("mileage_from_car", e.target.value), disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.mileage_to_car,   onChange: e => set("mileage_to_car",   e.target.value), disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, value: form.mileage_from_car, onChange: e => set("mileage_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, value: form.mileage_to_car,   onChange: e => set("mileage_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.mileage_from_car} toError={errors.mileage_to_car}
         />
         <RangeField label={tr.power} required
-          fromProps={{ type: "number", min: 0, value: form.power_from_car, onChange: e => set("power_from_car", e.target.value), disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.power_to_car,   onChange: e => set("power_to_car",   e.target.value), disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, value: form.power_from_car, onChange: e => set("power_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, value: form.power_to_car,   onChange: e => set("power_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.power_from_car} toError={errors.power_to_car}
         />
       </div>

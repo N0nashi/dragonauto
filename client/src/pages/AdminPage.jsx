@@ -176,7 +176,7 @@ function CatalogSection() {
       if (type === "car") {
         const yr = +payload.year;
         const CY = new Date().getFullYear();
-        if (yr < 1900 || yr > CY + 1) { toast.error(lang === "en" ? `Year: 1900 — ${CY + 1}` : `Год: 1900 — ${CY + 1}`); setSaving(false); return; }
+        if (yr < 1950 || yr > CY + 1) { toast.error(lang === "en" ? `Year: 1900 — ${CY + 1}` : `Год: 1950 — ${CY + 1}`); setSaving(false); return; }
         if (+payload.price <= 0 || +payload.price > 100_000_000) { toast.error(lang === "en" ? "Price: 1 — 100,000,000 ₽" : "Цена: 1 — 100 000 000 ₽"); setSaving(false); return; }
         if (+payload.mileage < 0 || +payload.mileage > 2_000_000) { toast.error(lang === "en" ? "Mileage: 0 — 2,000,000 km" : "Пробег: 0 — 2 000 000 км"); setSaving(false); return; }
         if (payload.engine_power && (+payload.engine_power <= 0 || +payload.engine_power > 1500)) { toast.error(lang === "en" ? "Power: 1 — 1500 hp" : "Мощность: 1 — 1500 л.с."); setSaving(false); return; }
@@ -249,8 +249,8 @@ function CatalogSection() {
 
     const rangeErrors = [];
     const yr = +addForm.year;
-    if (!Number.isInteger(yr) || yr < 1900 || yr > CY + 1)
-      rangeErrors.push(`Год: 1900 — ${CY + 1}`);
+    if (!Number.isInteger(yr) || yr < 1950 || yr > CY + 1)
+      rangeErrors.push(`Год: 1950 — ${CY + 1}`);
     const pr = +addForm.price;
     if (isNaN(pr) || pr <= 0 || pr > 100_000_000)
       rangeErrors.push("Цена: 1 — 100 000 000 ₽");
@@ -488,7 +488,7 @@ function CatalogSection() {
                 {editing.type === "car" ? (<>
                   <Field label={tc.fields.brand}   value={editing.item.brand}        onChange={v => setField("brand", v)}         fieldKey="brand" />
                   <Field label={tc.fields.model}   value={editing.item.model}        onChange={v => setField("model", v)}         fieldKey="model" />
-                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}          type="number" min="1900" max={new Date().getFullYear() + 1} />
+                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}          type="number" min="1950" max={new Date().getFullYear() + 1} />
                   <Field label={tc.fields.price}   value={editing.item.price}        onChange={v => setField("price", v)}         type="number" min="1" max={100_000_000} />
                   <div className="flex flex-col gap-1">
                     <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.country}</span>
@@ -529,7 +529,7 @@ function CatalogSection() {
                   <Field label={tc.fields.price}   value={editing.item.price}        onChange={v => setField("price", v)}    type="number" min="1" max={100_000_000} />
                   <Field label={tc.fields.brand}   value={editing.item.brand}        onChange={v => setField("brand", v)}    fieldKey="brand" />
                   <Field label={tc.fields.model}   value={editing.item.model}        onChange={v => setField("model", v)}    fieldKey="model" />
-                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}     type="number" min="1900" max={new Date().getFullYear() + 1} />
+                  <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}     type="number" min="1950" max={new Date().getFullYear() + 1} />
                   <div className="flex flex-col gap-1">
                     <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.country}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.country ?? ""} onChange={v => setField("country", v)} options={COUNTRIES.map(c => ({ value: c, label: countryMap[c] ?? c }))} />
@@ -609,7 +609,7 @@ function CatalogSection() {
               {tab === "cars" ? (<>
                 <Field required label={tc.fields.brand}   value={addForm.brand ?? ""} onChange={v => setAddField("brand", v)} fieldKey="brand" />
                 <Field required label={tc.fields.model}   value={addForm.model ?? ""} onChange={v => setAddField("model", v)} fieldKey="model" />
-                <Field required label={tc.fields.year}    value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1900" max={new Date().getFullYear() + 1} />
+                <Field required label={tc.fields.year}    value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1950" max={new Date().getFullYear() + 1} />
                 <Field required label={tc.fields.price}   value={addForm.price ?? ""} onChange={v => setAddField("price", v)} type="number" min="1" max={100_000_000} />
 <div className="flex flex-col gap-1">
                   <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
@@ -676,7 +676,7 @@ function CatalogSection() {
                 <Field required label={tc.fields.price} value={addForm.price ?? ""} onChange={v => setAddField("price", v)} type="number" min="1" max={100_000_000} />
                 <Field required label={tc.fields.brand} value={addForm.brand ?? ""} onChange={v => setAddField("brand", v)} fieldKey="brand" />
                 <Field required label={tc.fields.model} value={addForm.model ?? ""} onChange={v => setAddField("model", v)} fieldKey="model" />
-                <Field required label={tc.fields.year}  value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1900" max={new Date().getFullYear() + 1} />
+                <Field required label={tc.fields.year}  value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1950" max={new Date().getFullYear() + 1} />
 <div className="flex flex-col gap-1">
                   <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
                     {tc.fields.country}<span className="text-red-accent ml-0.5">*</span>

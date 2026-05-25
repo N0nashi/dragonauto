@@ -84,7 +84,7 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
     if (!form.brand.trim()) newErrors.brand = "Введите марку автомобиля";
     if (!form.model.trim()) newErrors.model = "Введите модель автомобиля";
     if (!form.year) newErrors.year = "Введите год выпуска";
-    if (form.year && (isNaN(form.year) || form.year < 1900 || form.year > new Date().getFullYear())) {
+    if (form.year && (isNaN(form.year) || form.year < 1950 || form.year > new Date().getFullYear())) {
       newErrors.year = "Введите корректный год";
     }
     if (!form.body.trim()) newErrors.body = "Введите тип кузова";
@@ -197,7 +197,7 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
             onChange={handleChange}
             onKeyDown={blockSpecialNumeric}
             type="number"
-            min="1900"
+            min="1950"
             max={new Date().getFullYear() + 1}
             className={`border p-2 w-full rounded ${errors.year ? "border-red-500" : ""}`}
             disabled={loading}

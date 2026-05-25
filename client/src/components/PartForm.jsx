@@ -5,6 +5,11 @@ import { COUNTRIES, BODIES } from "../constants/catalog";
 import { useLang } from "../context/LangContext";
 import { translateDesc } from "../utils/translateDesc";
 
+const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, 50);
+const blockSpecialNumeric = (e) => {
+  if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
+};
+
 export default function PartForm({ onSubmit, loading, initialData = null, readOnly = false }) {
   const { t, lang } = useLang();
   const tr = t.partForm;
@@ -67,7 +72,7 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
       <Input label={tr.partName} required placeholder={tr.partNamePlaceholder}
-        value={form.part_name} onChange={e => set("part_name", e.target.value)}
+        value={form.part_name} onChange={e => set("part_name", sanitizeText(e.target.value))}
         error={errors.part_name} disabled={readOnly || loading}
       />
 
@@ -78,11 +83,11 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
           error={errors.country_part} disabled={readOnly || loading}
         />
         <Input label={tr.carBrand} required placeholder="Toyota"
-          value={form.brand_part} onChange={e => set("brand_part", e.target.value)}
+          value={form.brand_part} onChange={e => set("brand_part", sanitizeText(e.target.value))}
           error={errors.brand_part} disabled={readOnly || loading}
         />
         <Input label={tr.carModel} placeholder="Land Cruiser"
-          value={form.model_part} onChange={e => set("model_part", e.target.value)}
+          value={form.model_part} onChange={e => set("model_part", sanitizeText(e.target.value))}
           disabled={readOnly || loading}
         />
       </div>
@@ -94,8 +99,8 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
           error={errors.body_part} disabled={readOnly || loading}
         />
         <RangeField label={tr.price} required
-          fromProps={{ type: "number", min: 0, value: form.price_from_part, onChange: e => set("price_from_part", e.target.value), disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.price_to_part,   onChange: e => set("price_to_part",   e.target.value), disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, value: form.price_from_part, onChange: e => set("price_from_part", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, value: form.price_to_part,   onChange: e => set("price_to_part",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.price_from_part} toError={errors.price_to_part}
         />
       </div>

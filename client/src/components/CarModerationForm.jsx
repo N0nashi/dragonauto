@@ -134,7 +134,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
     if (!form.country) newErrors.country = "Выберите страну";
     if (!form.brand.trim()) newErrors.brand = "Введите марку автомобиля";
     if (!form.year) newErrors.year = "Введите год выпуска";
-    if (form.year && (isNaN(form.year) || form.year < 1900 || form.year > new Date().getFullYear())) {
+    if (form.year && (isNaN(form.year) || form.year < 1950 || form.year > new Date().getFullYear())) {
       newErrors.year = "Введите корректный год";
     }
     if (!form.price) newErrors.price = "Введите цену";
@@ -231,7 +231,7 @@ export default function CarForm({ initialData = null, onSubmit, onCancel, loadin
             onChange={handleChange}
             onKeyDown={blockSpecialNumeric}
             type="number"
-            min="1900"
+            min="1950"
             max={new Date().getFullYear() + 1}
             className={`border p-2 w-full rounded ${errors.year ? "border-red-500" : ""}`}
             disabled={loading}
