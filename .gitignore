@@ -24,3 +24,7 @@ backend/uploads/
 .claire/
 *.orig.jsx
 *.orig.js
+
+# Test coverage
+server/coverage/
+client/coverage/
