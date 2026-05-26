@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
 import CreateRequestPage from "./pages/CreateRequestPage";
 import AdminPage from "./pages/AdminPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 const BARE_ROUTES = ["/auth"];
 
@@ -35,6 +36,7 @@ function Layout() {
           <Route path="/auth"           element={<AuthPage />} />
           <Route path="/create-request" element={<CreateRequestPage />} />
           <Route path="/admin"          element={<AdminPage />} />
+          <Route path="*"               element={<NotFoundPage />} />
         </Routes>
       </main>
 

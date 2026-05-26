@@ -11,6 +11,12 @@ const translations = {
       login: "Войти",
       register: "Регистрация",
     },
+    notFound: {
+      title: "Страница не найдена",
+      subtitle: "Возможно, она была удалена или адрес введён неверно.",
+      home: "На главную",
+      catalog: "Каталог",
+    },
     auth: {
       loginTitle: "Вход",
       registerTitle: "Регистрация",
@@ -577,6 +583,12 @@ const translations = {
       logout: "Logout",
       login: "Login",
       register: "Register",
+    },
+    notFound: {
+      title: "Page not found",
+      subtitle: "The page may have been removed or the address was entered incorrectly.",
+      home: "Go home",
+      catalog: "Catalog",
     },
     auth: {
       loginTitle: "Sign In",
