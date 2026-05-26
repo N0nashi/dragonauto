@@ -5,7 +5,9 @@
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && node index.js",
-    "client": "cd client && npx vite"
+    "client": "cd client && npx vite",
+    "build": "cd client && npm install && npm run build",
+    "render-start": "cd server && node index.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -22,6 +22,10 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:3000", crede
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// ── Статика фронтенда (React build) ──
+const clientDist = path.join(__dirname, "../client/dist");
+app.use(express.static(clientDist));
+
 app.use("/api",                authRoutes);
 app.use("/api/profile",        profileRoutes);
 app.use("/api/upload",         uploadRouter);
@@ -34,7 +38,13 @@ app.use("/api/supplier",       supplierRoutes);
 app.use("/api/chat",           chatRoutes);
 app.use("/api/notifications",  notificationsRoutes);
 
-app.use((req, res) => res.status(404).json({ error: "Маршрут не найден" }));
+// SPA fallback — для всех не-API маршрутов отдаём index.html
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(clientDist, "index.html"));
+});
+
+// API 404
+app.use("/api", (req, res) => res.status(404).json({ error: "Маршрут не найден" }));
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Внутренняя ошибка сервера" });
