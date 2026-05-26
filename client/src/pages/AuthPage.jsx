@@ -22,7 +22,7 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen bg-cream dark:bg-charcoal flex transition-colors duration-300">
 
-<div className="hidden lg:flex flex-col justify-between w-[45%] bg-charcoal dark:bg-cream/5 px-16 py-14 shrink-0">
+<div className="hidden lg:flex flex-col justify-between w-[45%] bg-charcoal dark:bg-cream/5 pl-16 pr-10 py-14 shrink-0">
 <Link to="/" className="flex items-baseline gap-1.5">
           <span className="font-kalissa text-4xl text-cream leading-none">Dragon</span>
           <span className="font-mont font-black text-2xl text-cream tracking-widest leading-none">AUTO</span>
@@ -44,7 +44,7 @@ const AuthPage = () => {
         </p>
       </div>
 
-<div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+<div className="flex-1 flex flex-col items-start justify-center pl-10 pr-6 py-12">
 
 <Link to="/" className="flex items-baseline gap-1.5 mb-10 lg:hidden">
           <span className="font-kalissa text-3xl text-charcoal dark:text-cream leading-none">Dragon</span>
