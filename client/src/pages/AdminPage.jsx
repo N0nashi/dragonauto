@@ -931,7 +931,7 @@ function CatalogSection() {
         <div className="flex items-center justify-center gap-2 mt-5">
           <Btn onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
             cls="bg-charcoal/8 dark:bg-cream/8 text-charcoal/60 dark:text-cream/60 hover:bg-charcoal/15 dark:hover:bg-cream/15">
-            в†ђ
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </Btn>
           {Array.from({ length: totalPages }, (_, i) => i + 1)
             .filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
@@ -955,7 +955,7 @@ function CatalogSection() {
           }
           <Btn onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
             cls="bg-charcoal/8 dark:bg-cream/8 text-charcoal/60 dark:text-cream/60 hover:bg-charcoal/15 dark:hover:bg-cream/15">
-            в†’
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </Btn>
         </div>
       )}
