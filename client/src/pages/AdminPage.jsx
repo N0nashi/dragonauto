@@ -148,8 +148,14 @@ function CatalogSection() {
 
   const [search, setSearch]     = useState("");
   const [countryF, setCountryF] = useState("all");
+  const [statusF, setStatusF]   = useState([]); // [] = все; иначе массив выбранных статусов
   const [sortDir, setSortDir]   = useState("desc");
   const [page, setPage]         = useState(1);
+
+  const toggleStatus = (s) =>
+    setStatusF(prev =>
+      prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
+    );
 
   const load = useCallback(async () => {
     const res = await fetch(`${API}/api/supplier/all`, { headers: authHeaders() });
@@ -161,7 +167,7 @@ function CatalogSection() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [tab, search, countryF, sortDir]);
+  useEffect(() => { setPage(1); }, [tab, search, countryF, statusF, sortDir]);
 
   const startEdit = (type, item) => { setMsg(""); setEditPhoto(null); setEditing({ type, item: { ...item } }); };
   const cancelEdit = () => { setEditing(null); setEditPhoto(null); setMsg(""); };
@@ -343,6 +349,7 @@ function CatalogSection() {
         : `${item.part_name} ${item.brand || ""} ${item.model || ""}`;
       if (search && !name.toLowerCase().includes(search.toLowerCase())) return false;
       if (countryF !== "all" && item.country !== countryF) return false;
+      if (statusF.length > 0 && !statusF.includes(item.status)) return false;
       return true;
     })
     .sort((a, b) => {
@@ -821,6 +828,42 @@ function CatalogSection() {
         />
       </div>
 
+      {/* Фильтр по статусу */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/35 dark:text-cream/35 mr-1">
+          {tc.statusFilter ?? "Статус"}:
+        </span>
+        {[
+          { key: "pending",  color: "bg-amber-400/15 text-amber-600 dark:text-amber-400 border-amber-400/30"  },
+          { key: "approved", color: "bg-emerald-400/15 text-emerald-600 dark:text-emerald-400 border-emerald-400/30" },
+          { key: "rejected", color: "bg-red-accent/10 text-red-accent border-red-accent/25" },
+        ].map(({ key, color }) => {
+          const active = statusF.includes(key);
+          const count  = source.filter(i => i.status === key).length;
+          return (
+            <button
+              key={key}
+              onClick={() => toggleStatus(key)}
+              className={`font-mont font-bold text-[11px] px-3 py-1 rounded-lg border transition-all duration-150 ${
+                active
+                  ? color
+                  : "bg-transparent border-charcoal/12 dark:border-cream/12 text-charcoal/40 dark:text-cream/40 hover:border-charcoal/25 dark:hover:border-cream/25"
+              }`}
+            >
+              {tc.statuses[key]} <span className="opacity-60">({count})</span>
+            </button>
+          );
+        })}
+        {statusF.length > 0 && (
+          <button
+            onClick={() => setStatusF([])}
+            className="font-mont text-[11px] text-charcoal/35 dark:text-cream/35 hover:text-red-accent transition-colors px-1"
+          >
+            × сбросить
+          </button>
+        )}
+      </div>
+
       <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 mb-3">
         {tc.found} {filtered.length} — {tc.page} {page} {tc.of} {totalPages}
       </p>
@@ -853,6 +896,15 @@ function CatalogSection() {
                     {fmtPrice(item.price)} — {fmt(countryMap[item.country] || item.country)}
                     {item.created_at && ` — ${new Date(item.created_at).toLocaleDateString("ru-RU")}`}
                   </span>
+                  {item.status && (
+                    <span className={`font-mont font-bold text-[10px] px-2 py-0.5 rounded-md ${
+                      item.status === "approved" ? "bg-emerald-400/12 text-emerald-600 dark:text-emerald-400"
+                      : item.status === "pending" ? "bg-amber-400/12 text-amber-600 dark:text-amber-400"
+                      : "bg-red-accent/10 text-red-accent"
+                    }`}>
+                      {tc.statuses[item.status] ?? item.status}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
