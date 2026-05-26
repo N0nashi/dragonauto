@@ -51,7 +51,10 @@ export default function ProfilePage() {
     fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => {
+        if (r.status === 401) { localStorage.removeItem("token"); navigate("/auth"); return null; }
+        return r.ok ? r.json() : null;
+      })
       .then(data => data && setProfile(data))
       .catch(() => {});
   }, []);

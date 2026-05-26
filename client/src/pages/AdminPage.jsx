@@ -1595,10 +1595,28 @@ function ApplicationsSection() {
    MAIN PAGE
 в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 export default function AdminPage() {
+  const [allowed, setAllowed] = useState(false);
   const [section, setSection] = useState("catalog");
   const navigate = useNavigate();
   const { t } = useLang();
   const ta = t.admin;
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) { navigate("/auth"); return; }
+    try {
+      const role = JSON.parse(atob(token.split(".")[1])).role;
+      if (role === "admin" || role === "moderator") {
+        setAllowed(true);
+      } else {
+        navigate("/");
+      }
+    } catch {
+      navigate("/auth");
+    }
+  }, []);
+
+  if (!allowed) return null;
 
   const SECTIONS = [
     {
