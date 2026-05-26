@@ -34,7 +34,7 @@ const AuthPage = () => {
               <span key={i}>{line}{i < arr.length - 1 && <br/>}</span>
             ))}
           </p>
-          <p className="font-mont text-sm text-cream/40 leading-relaxed">
+          <p className="font-mont text-sm text-cream/40 leading-relaxed max-w-xs ml-auto">
             {t.auth.leftSubtitle}
           </p>
         </div>
