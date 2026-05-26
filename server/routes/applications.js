@@ -10,7 +10,6 @@ function parseToArray(value) {
   return value.split(",").map(s => s.trim()).filter(Boolean);
 }
 
-/* ── State machine ── */
 const TRANSITIONS = {
   "в обработке": { admin: ["в работе", "отменена"] },
   "в работе":    { admin: ["предложение", "отменена"] },
@@ -18,7 +17,6 @@ const TRANSITIONS = {
   "согласована": { admin: ["выполнена", "отменена"] },
 };
 
-/* ── Helper: create notification for application owner ── */
 async function notifyUser(applicationId, type) {
   try {
     const r = await db.query("SELECT user_id FROM applications WHERE id = $1", [applicationId]);
@@ -177,7 +175,6 @@ router.get("/", authMiddleware, async (req, res) => {
 
 /* ────────────────────────────────────────────────
    GET /api/applications/all — все активные заявки (модератор)
-   MUST be before /:id to avoid route conflict
 ─────────────────────────────────────────────────*/
 router.get("/all", authMiddleware, isModerator, async (req, res) => {
   try {
@@ -282,7 +279,6 @@ router.patch("/:id/status", authMiddleware, isModerator, async (req, res) => {
       return res.status(400).json({ error: `Переход из "${currentStatus}" в "${status}" недопустим` });
     }
 
-    // Update status (and offered_price when moving to 'предложение')
     if (status === "предложение" && offered_price != null) {
       const price = parseFloat(offered_price);
       if (isNaN(price) || price <= 0)
@@ -295,7 +291,6 @@ router.patch("/:id/status", authMiddleware, isModerator, async (req, res) => {
       await db.query("UPDATE applications SET status = $1 WHERE id = $2", [status, applicationId]);
     }
 
-    // Optional comment
     if (comment?.trim()) {
       const nameR = await db.query(
         "SELECT first_name, last_name FROM users WHERE id = $1", [req.userId]
@@ -435,7 +430,6 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
       [applicationId, authorRole, authorName, message.trim()]
     );
 
-    // Notify the application owner when admin comments
     if (authorRole === "admin") {
       await notifyUser(applicationId, "new_comment");
     }
@@ -476,12 +470,11 @@ router.patch("/:id/close", authMiddleware, async (req, res) => {
 ─────────────────────────────────────────────────*/
 router.patch("/:id/match", authMiddleware, isModerator, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
-  const { item_id, item_type } = req.body; // item_type: 'car' | 'part'
+  const { item_id, item_type } = req.body;
   if (isNaN(applicationId) || !item_id || !["car", "part"].includes(item_type))
     return res.status(400).json({ error: "Неверные параметры" });
 
   try {
-    // Resolve supplier_id from matched item
     const table = item_type === "car" ? "cars" : "parts";
     const item = await db.query(`SELECT id, supplier_id FROM ${table} WHERE id = $1 AND status = 'approved'`, [item_id]);
     if (!item.rows.length) return res.status(404).json({ error: "Товар не найден или не одобрен" });
@@ -494,7 +487,6 @@ router.patch("/:id/match", authMiddleware, isModerator, async (req, res) => {
       [item_id, item_type, supplierId, applicationId]
     );
 
-    // Notify supplier
     await db.query(
       "INSERT INTO application_notifications (user_id, application_id, type) VALUES ($1,$2,'supplier_match')",
       [supplierId, applicationId]
@@ -543,7 +535,6 @@ router.get("/:id/supplier-messages", authMiddleware, async (req, res) => {
       "SELECT * FROM supplier_messages WHERE application_id=$1 ORDER BY created_at ASC",
       [applicationId]
     );
-    // Mark as read for current reader
     if (isMod) {
       await db.query(
         "UPDATE supplier_messages SET is_read=TRUE WHERE application_id=$1 AND sender_role='supplier'",
@@ -589,8 +580,6 @@ router.post("/:id/supplier-messages", authMiddleware, async (req, res) => {
       [applicationId, senderRole, senderName, message.trim()]
     );
 
-    // Unread state is tracked via supplier_messages.is_read — no separate notification needed
-
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error("supplier-messages post error:", err);
@@ -603,7 +592,7 @@ router.post("/:id/supplier-messages", authMiddleware, async (req, res) => {
 ─────────────────────────────────────────────────*/
 router.patch("/:id/supplier-confirm", authMiddleware, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
-  const { status } = req.body; // 'confirmed' | 'declined'
+  const { status } = req.body;
   if (isNaN(applicationId) || !["confirmed", "declined"].includes(status))
     return res.status(400).json({ error: "Неверные параметры" });
   try {

@@ -4,8 +4,6 @@ const db         = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
 const { sendMail } = require("../utils/mailer");
 
-/* authMiddleware sets req.userId and req.userRole (from DB) */
-
 const isSupplier = async (req, res, next) => {
   const r = req.userRole;
   if (r !== "supplier" && r !== "admin" && r !== "moderator")

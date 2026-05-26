@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware/authMiddleware");
 const isModerator = require("../middleware/isModerator");
 
-/* ── Bot knowledge base ── */
 const BOT_ENTRIES = [
   {
     keywords: ["привет", "здравствуй", "здравствуйте", "добрый день", "добрый вечер", "доброе утро", "hello", "hi"],
@@ -69,7 +68,7 @@ const ESCALATION_KEYWORDS = [
 
 function getBotResponse(message, lang) {
   const lower = message.toLowerCase();
-  if (ESCALATION_KEYWORDS.some((k) => lower.includes(k))) return null; // signal escalation
+  if (ESCALATION_KEYWORDS.some((k) => lower.includes(k))) return null;
   const useEn = lang === "en";
   for (const entry of BOT_ENTRIES) {
     if (entry.keywords.some((k) => lower.includes(k))) {
@@ -81,7 +80,6 @@ function getBotResponse(message, lang) {
     : "Хм, не совсем понял вопрос 🤔 Попробуйте переформулировать или напишите «позвать менеджера» — живой специалист ответит вам лично.";
 }
 
-/* ── helper: extract userId from optional Bearer token ── */
 async function extractUserId(req) {
   try {
     const auth = req.headers.authorization;
@@ -93,10 +91,6 @@ async function extractUserId(req) {
     return null;
   }
 }
-
-/* ══════════════════════════════════════
-   USER ROUTES
-══════════════════════════════════════ */
 
 // POST /api/chat/start
 router.post("/start", async (req, res) => {
@@ -112,10 +106,8 @@ router.post("/start", async (req, res) => {
       if (existing.rows.length > 0) {
         const s = existing.rows[0];
         if (forceNew) {
-          // User explicitly started a new chat — close old session
           await db.query("UPDATE chat_sessions SET status = 'closed' WHERE id = $1", [s.id]);
         } else if (s.status !== "closed") {
-          // Resume existing live session
           if (userId && !s.user_id)
             await db.query("UPDATE chat_sessions SET user_id = $1 WHERE id = $2", [userId, s.id]);
           const msgs = await db.query(
@@ -152,7 +144,6 @@ router.post("/start", async (req, res) => {
   }
 });
 
-// POST /api/chat/message
 router.post("/message", async (req, res) => {
   try {
     const { sessionToken, message, lang } = req.body;
@@ -174,7 +165,6 @@ router.post("/message", async (req, res) => {
 
     let newStatus = session.status;
 
-    // If admin is already active — don't auto-respond, just save message
     if (session.status !== "active") {
       const lower = message.toLowerCase();
       const wantsHuman = ESCALATION_KEYWORDS.some((k) => lower.includes(k));
@@ -221,7 +211,6 @@ router.post("/message", async (req, res) => {
   }
 });
 
-// GET /api/chat/poll?sessionToken=xxx&after=lastId
 router.get("/poll", async (req, res) => {
   try {
     const { sessionToken, after } = req.query;
@@ -250,10 +239,6 @@ router.get("/poll", async (req, res) => {
   }
 });
 
-/* ══════════════════════════════════════
-   ADMIN ROUTES
-══════════════════════════════════════ */
-
 // GET /api/chat/admin/tickets
 router.get("/admin/tickets", authMiddleware, isModerator, async (req, res) => {
   try {
@@ -276,7 +261,6 @@ router.get("/admin/tickets", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
-// GET /api/chat/admin/messages/:sessionId
 router.get("/admin/messages/:sessionId", authMiddleware, isModerator, async (req, res) => {
   try {
     const msgs = await db.query(
@@ -294,7 +278,6 @@ router.get("/admin/messages/:sessionId", authMiddleware, isModerator, async (req
   }
 });
 
-// POST /api/chat/admin/reply
 router.post("/admin/reply", authMiddleware, isModerator, async (req, res) => {
   try {
     const { sessionId, message } = req.body;
@@ -319,7 +302,6 @@ router.post("/admin/reply", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
-// PATCH /api/chat/admin/close/:sessionId
 router.patch("/admin/close/:sessionId", authMiddleware, isModerator, async (req, res) => {
   try {
     await db.query(

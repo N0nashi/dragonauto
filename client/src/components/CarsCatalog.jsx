@@ -638,7 +638,6 @@ const CarsCatalog = () => {
             )}
           </div>
 
-          {/* Skeleton */}
           {loadingItems && (
             <div className={`grid gap-5 ${gridClass}`}>
               {Array.from({ length: PAGE }, (_, i) => (
@@ -647,7 +646,6 @@ const CarsCatalog = () => {
             </div>
           )}
 
-          {/* Empty */}
           {!loadingItems && allItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
               <span className="font-mont text-4xl text-charcoal/10 dark:text-cream/10">∅</span>
@@ -657,7 +655,6 @@ const CarsCatalog = () => {
             </div>
           )}
 
-          {/* Grid */}
           {!loadingItems && visibleItems.length > 0 && (
             <>
               <div className={`grid gap-5 ${gridClass}`}>
@@ -668,7 +665,6 @@ const CarsCatalog = () => {
                 )}
               </div>
 
-              {/* Load more */}
               {(hasMore || loadingMore) && (
                 <div className="flex flex-col items-center gap-3 mt-10">
                   <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 tracking-widest uppercase">
@@ -697,7 +693,6 @@ const CarsCatalog = () => {
                 </div>
               )}
 
-              {/* All loaded */}
               {!hasMore && !loadingMore && allItems.length > PAGE && (
                 <p className="text-center font-mont text-xs text-charcoal/25 dark:text-cream/25 tracking-widest uppercase mt-10">
                   Все {allItems.length} показаны

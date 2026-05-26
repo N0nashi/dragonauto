@@ -4,7 +4,6 @@ const db = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
 const isModerator   = require("../middleware/isModerator");
 
-// Strip PostgreSQL array literals: {"value"} → value
 const stripPg = (v) => {
   if (typeof v !== "string" || !v.startsWith("{")) return v;
   return v.slice(1, -1).replace(/^"|"$/g, "");
@@ -241,7 +240,6 @@ router.post("/", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
-// PUT /api/cars/1
 router.put("/:id", authMiddleware, isModerator, async (req, res) => {
   const { id } = req.params;
 

@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
 
-/* GET /api/notifications — list of recent notifications with app info */
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const r = await db.query(
@@ -23,7 +22,6 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-/* GET /api/notifications/unread-count */
 router.get("/unread-count", authMiddleware, async (req, res) => {
   try {
     const r = await db.query(
@@ -37,7 +35,6 @@ router.get("/unread-count", authMiddleware, async (req, res) => {
   }
 });
 
-/* GET /api/notifications/per-application — unread counts grouped by app */
 router.get("/per-application", authMiddleware, async (req, res) => {
   try {
     const r = await db.query(
@@ -56,7 +53,6 @@ router.get("/per-application", authMiddleware, async (req, res) => {
   }
 });
 
-/* PATCH /api/notifications/mark-read — mark notifications read */
 router.patch("/mark-read", authMiddleware, async (req, res) => {
   const { application_id } = req.body;
   try {

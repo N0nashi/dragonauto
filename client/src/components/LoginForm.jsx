@@ -32,7 +32,6 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
 
-      {/* Email */}
       <div className="relative">
         <input
           type="email"
@@ -46,7 +45,6 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
         />
       </div>
 
-      {/* Password */}
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
@@ -79,7 +77,6 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
         </button>
       </div>
 
-      {/* Forgot */}
       <div className="flex justify-end -mt-1">
         <button
           type="button"
@@ -90,7 +87,6 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
         </button>
       </div>
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={loading}

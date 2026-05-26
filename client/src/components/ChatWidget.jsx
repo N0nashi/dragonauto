@@ -108,7 +108,6 @@ export default function ChatWidget() {
 
   useEffect(() => { scrollToBottom(); }, [messages]);
 
-  /* Start or resume session when widget first opens */
   const startSession = useCallback(async () => {
     if (started) return;
     setStarted(true);
@@ -133,7 +132,6 @@ export default function ChatWidget() {
       setMessages(data.messages);
       lastIdRef.current = data.messages[data.messages.length - 1]?.id ?? 0;
     } catch {
-      /* silently fail */
     } finally {
       setLoading(false);
     }
@@ -147,7 +145,6 @@ export default function ChatWidget() {
     }
   }, [open]);
 
-  /* Polling for new messages every 4 seconds while widget is open */
   useEffect(() => {
     if (!open || !sessionToken) return;
     const poll = async () => {
@@ -169,7 +166,6 @@ export default function ChatWidget() {
     return () => clearInterval(pollRef.current);
   }, [open, sessionToken]);
 
-  /* Send message */
   const send = async (text) => {
     const msg = (text ?? input).trim();
     if (!msg || !sessionToken) return;
@@ -198,7 +194,6 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Floating button */}
       <button
         onClick={() => setOpen(o => !o)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl bg-red-accent shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
@@ -220,12 +215,10 @@ export default function ChatWidget() {
         )}
       </button>
 
-      {/* Chat panel */}
       {open && (
         <div className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-24px)] rounded-2xl shadow-2xl border border-charcoal/10 dark:border-cream/10 bg-cream dark:bg-charcoal flex flex-col overflow-hidden"
           style={{ height: "520px" }}>
 
-          {/* Header */}
           <div className="bg-red-accent px-5 py-4 flex items-center gap-3 shrink-0">
             <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -256,7 +249,6 @@ export default function ChatWidget() {
             )}
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
             {loading && messages.length === 0 && (
               <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 animate-pulse text-center mt-8">
@@ -276,7 +268,6 @@ export default function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Quick replies */}
           {status === "bot" && (
             <div className="px-3 py-2 border-t border-charcoal/10 dark:border-cream/10 flex gap-1.5 flex-wrap shrink-0">
               {quickReplies.map((label) => (
@@ -292,7 +283,6 @@ export default function ChatWidget() {
             </div>
           )}
 
-          {/* Input */}
           <div className="px-3 py-3 border-t border-charcoal/10 dark:border-cream/10 flex gap-2 shrink-0">
             <input
               ref={inputRef}

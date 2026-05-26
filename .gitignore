@@ -28,3 +28,7 @@ backend/uploads/
 # Test coverage
 server/coverage/
 client/coverage/
+
+# Fix scripts and migrations
+fix-*.js
+server/migrations/

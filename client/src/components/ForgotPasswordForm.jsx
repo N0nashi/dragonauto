@@ -7,7 +7,7 @@ const ForgotPasswordForm = ({ onClose }) => {
   const [email, setEmail]           = useState("");
   const [otp, setOtp]               = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [step, setStep]             = useState("email"); // "email" | "reset" | "done"
+  const [step, setStep]             = useState("email");
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState("");
 
@@ -52,7 +52,6 @@ const ForgotPasswordForm = ({ onClose }) => {
     <div className="fixed inset-0 bg-charcoal/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-cream dark:bg-charcoal border border-charcoal/15 dark:border-cream/15 rounded-2xl p-8 max-w-sm w-full relative">
 
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"

@@ -20,9 +20,9 @@ const PARTS_BASE = [
   { id: 5, price: 2000, photo_url: "/свечи.webp" },
 ];
 
-const CARD_W = 288; // w-72 = 288px
-const GAP    = 16;  // gap-4 = 16px
-const TOTAL  = cars.length + 1; // +1 for ghost card
+const CARD_W = 288;
+const GAP    = 16;
+const TOTAL  = cars.length + 1;
 
 export default function MainFrame2() {
   const { t }    = useLang();
@@ -92,14 +92,11 @@ export default function MainFrame2() {
 
 <div className="relative">
 
-        {/* Left fade */}
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 md:w-24 z-10
           bg-gradient-to-r from-cream dark:from-charcoal to-transparent" />
-        {/* Right fade */}
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 md:w-24 z-10
           bg-gradient-to-l from-cream dark:from-charcoal to-transparent" />
 
-        {/* Card strip */}
         <div
           ref={stripRef}
           onScroll={handleScroll}
@@ -113,7 +110,6 @@ export default function MainFrame2() {
               style={{ scrollSnapAlign: "start" }}
               onClick={() => navigate("/catalog")}
             >
-              {/* Image */}
               <div className="relative h-44 overflow-hidden bg-charcoal/5 dark:bg-cream/5">
                 <img
                   src={item.photo_url}
@@ -122,7 +118,6 @@ export default function MainFrame2() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-                {/* Brand / name overlay */}
                 <div className="absolute bottom-3 left-4 right-4">
                   {tab === "cars" ? (
                     <>
@@ -134,7 +129,6 @@ export default function MainFrame2() {
                   )}
                 </div>
 
-                {/* Year pill */}
                 {tab === "cars" && item.year && (
                   <span className="absolute top-3 right-3 font-mont font-black text-[9px] tracking-widest uppercase px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white/90">
                     {item.year}
@@ -142,7 +136,6 @@ export default function MainFrame2() {
                 )}
               </div>
 
-              {/* Info */}
               <div className="p-4 flex items-end justify-between gap-2">
                 <div>
                   <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30">от</p>
@@ -157,7 +150,6 @@ export default function MainFrame2() {
             </div>
           ))}
 
-          {/* Ghost "see all" card */}
           <div
             className="shrink-0 w-52 rounded-2xl border-2 border-dashed border-charcoal/15 dark:border-cream/15 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-red-accent transition-colors duration-300 group"
             style={{ scrollSnapAlign: "start" }}
@@ -176,14 +168,12 @@ export default function MainFrame2() {
 
 <div className="flex items-center justify-center gap-6 mt-8 px-8 select-none">
 
-        {/* Prev */}
         <button
           onClick={() => scroll(-1)}
           disabled={index <= 0}
           aria-label="Назад"
           className="group flex items-center gap-2 disabled:opacity-20 transition-opacity duration-200"
         >
-          {/* Long thin arrow left */}
           <svg width="48" height="12" viewBox="0 0 48 12" fill="none"
             className="text-charcoal dark:text-cream group-hover:text-red-accent transition-colors duration-200 group-disabled:pointer-events-none">
             <line x1="47" y1="6" x2="1" y2="6" stroke="currentColor" strokeWidth="1.5"/>
@@ -191,19 +181,16 @@ export default function MainFrame2() {
           </svg>
         </button>
 
-        {/* Counter */}
         <span className="font-mont text-xs tracking-widest text-charcoal/40 dark:text-cream/40 tabular-nums w-16 text-center">
           {String(index + 1).padStart(2, "0")} / {String(maxIndex + 1).padStart(2, "0")}
         </span>
 
-        {/* Next */}
         <button
           onClick={() => scroll(1)}
           disabled={index >= maxIndex}
           aria-label="Вперёд"
           className="group flex items-center gap-2 disabled:opacity-20 transition-opacity duration-200"
         >
-          {/* Long thin arrow right */}
           <svg width="48" height="12" viewBox="0 0 48 12" fill="none"
             className="text-charcoal dark:text-cream group-hover:text-red-accent transition-colors duration-200">
             <line x1="1" y1="6" x2="47" y2="6" stroke="currentColor" strokeWidth="1.5"/>

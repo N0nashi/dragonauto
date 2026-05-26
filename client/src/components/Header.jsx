@@ -181,9 +181,8 @@ export default function Header() {
 
   const handleLogout = () => { logout(); close(); navigate("/"); };
 
-  /* active nav helper */
   const isActive = (path) => {
-    if (path.startsWith("/#")) return false; // hash-only links never "active"
+    if (path.startsWith("/#")) return false;
     return pathname === path || (path !== "/" && pathname.startsWith(path));
   };
 
@@ -194,7 +193,6 @@ export default function Header() {
         : "text-charcoal/55 dark:text-cream/55 border-transparent hover:text-charcoal dark:hover:text-cream"
     }`;
 
-  /* shared icon-button style */
   const iconBtnCls =
     "flex items-center justify-center w-8 h-8 rounded-full text-charcoal/50 dark:text-cream/50 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/6 dark:hover:bg-cream/6 transition-colors duration-200";
 
@@ -203,7 +201,6 @@ export default function Header() {
 
       <div className="max-w-6xl mx-auto px-8 md:px-20 h-full flex items-center justify-between">
 
-        {/* Logo */}
         <Link to="/" onClick={close} className="shrink-0">
           <img src="/logo.svg" alt="Dragon Auto" className="h-9 dark:invert" />
         </Link>
@@ -216,7 +213,6 @@ export default function Header() {
 
         <div className="hidden md:flex items-center gap-3">
 
-          {/* Lang / Theme */}
           <button onClick={toggleLang} className={`${iconBtnCls} font-mont text-xs tracking-wider`}>
             {lang === "ru" ? "EN" : "RU"}
           </button>
@@ -228,7 +224,6 @@ export default function Header() {
 
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
-              {/* Bell */}
               <div className="relative">
                 <button
                   onClick={() => setBellOpen(o => !o)}
@@ -301,7 +296,6 @@ export default function Header() {
             </div>
           )}
 
-          {/* Burger */}
           <button onClick={() => setIsOpen(o => !o)} className={iconBtnCls} aria-label="Menu">
             <svg className="w-5 h-5 text-charcoal dark:text-cream" fill="none" stroke="currentColor"
               strokeWidth="1.8" viewBox="0 0 24 24" strokeLinecap="round">
