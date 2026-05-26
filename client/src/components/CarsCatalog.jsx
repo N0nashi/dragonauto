@@ -25,27 +25,21 @@ const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }
   }, [value]);
 
   const handleChange = (k, raw) => {
-    if (raw === "") {
-      const next = { ...local, [k]: "" };
-      setLocal(next);
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        const minNum = next.min !== "" ? Number(next.min) : undefined;
-        const maxNum = next.max !== "" ? Number(next.max) : undefined;
-        onChange(filterKey, (minNum !== undefined || maxNum !== undefined) ? { min: minNum, max: maxNum } : undefined);
-      }, 500);
-      return;
-    }
-    const num = Math.min(Math.max(Number(raw), limits.min), limits.max);
-    const clamped = String(num);
-    const next = { ...local, [k]: clamped };
+    // Храним сырой ввод — не зажимаем во время печати
+    const next = { ...local, [k]: raw };
     setLocal(next);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      const minNum = next.min !== "" ? Number(next.min) : undefined;
-      const maxNum = next.max !== "" ? Number(next.max) : undefined;
+      const toNum = (v) => {
+        if (v === "" || v === undefined) return undefined;
+        const n = Number(v);
+        if (isNaN(n)) return undefined;
+        return Math.min(Math.max(n, limits.min), limits.max);
+      };
+      const minNum = toNum(next.min);
+      const maxNum = toNum(next.max);
       onChange(filterKey, (minNum !== undefined || maxNum !== undefined) ? { min: minNum, max: maxNum } : undefined);
-    }, 500);
+    }, 600);
   };
 
   const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-3 py-2.5 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
