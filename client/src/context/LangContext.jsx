@@ -584,7 +584,7 @@ const translations = {
       loginSubtitle: "Sign in to manage your requests",
       registerSubtitle: "Create an account to browse the catalog",
       leftHeadline: "Turnkey cars\nfrom China",
-      leftSubtitle: "We source and deliver vehicles and parts from China, Japan and Korea — fully documented.",
+      leftSubtitle: "We source and deliver vehicles and parts from China, Japan and Korea, fully documented.",
       passwordPlaceholder: "Password",
       forgotPassword: "Forgot password?",
       loggingIn: "Signing in...",

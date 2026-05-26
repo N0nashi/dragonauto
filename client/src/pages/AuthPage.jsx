@@ -22,7 +22,7 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen bg-cream dark:bg-charcoal flex transition-colors duration-300">
 
-<div className="hidden lg:flex flex-col justify-between w-[45%] bg-charcoal dark:bg-cream/5 pl-16 pr-10 py-14 shrink-0">
+<div className="hidden lg:flex flex-col justify-between w-[45%] bg-charcoal dark:bg-cream/5 pl-20 pr-4 py-14 shrink-0">
 <Link to="/" className="flex items-baseline gap-1.5">
           <span className="font-kalissa text-4xl text-cream leading-none">Dragon</span>
           <span className="font-mont font-black text-2xl text-cream tracking-widest leading-none">AUTO</span>
@@ -44,7 +44,7 @@ const AuthPage = () => {
         </p>
       </div>
 
-<div className="flex-1 flex flex-col items-start justify-center pl-10 pr-6 py-12">
+<div className="flex-1 flex flex-col items-start justify-center pl-4 pr-6 py-12">
 
 <Link to="/" className="flex items-baseline gap-1.5 mb-10 lg:hidden">
           <span className="font-kalissa text-3xl text-charcoal dark:text-cream leading-none">Dragon</span>
@@ -60,7 +60,7 @@ const AuthPage = () => {
             {mode === "login" ? t.auth.loginSubtitle : t.auth.registerSubtitle}
           </p>
 
-<div className="flex justify-center gap-2 mb-8">
+<div className="flex gap-2 mb-8">
             {[
               { key: "login",    label: t.nav.login },
               { key: "register", label: t.nav.register },
@@ -68,7 +68,7 @@ const AuthPage = () => {
               <button
                 key={key}
                 onClick={() => { setMode(key); setMessage(""); }}
-                className={`min-w-32 font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 rounded-xl border-2 transition-all duration-200 ${
+                className={`flex-1 font-mont font-black text-xs tracking-widest uppercase py-2.5 rounded-xl border-2 transition-all duration-200 ${
                   mode === key
                     ? "bg-red-accent border-red-accent text-cream"
                     : "bg-transparent border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream hover:border-charcoal dark:hover:border-cream"
