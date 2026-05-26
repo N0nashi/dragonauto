@@ -28,13 +28,13 @@ const AuthPage = () => {
           <span className="font-mont font-black text-2xl text-cream tracking-widest leading-none">AUTO</span>
         </Link>
 
-<div>
+<div className="text-right">
           <p className="font-mont font-black text-5xl text-cream leading-tight tracking-tight mb-6">
             {t.auth.leftHeadline.split("\n").map((line, i, arr) => (
               <span key={i}>{line}{i < arr.length - 1 && <br/>}</span>
             ))}
           </p>
-          <p className="font-mont text-sm text-cream/40 leading-relaxed max-w-xs">
+          <p className="font-mont text-sm text-cream/40 leading-relaxed">
             {t.auth.leftSubtitle}
           </p>
         </div>
