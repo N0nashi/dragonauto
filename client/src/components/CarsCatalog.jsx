@@ -15,31 +15,43 @@ const RANGE_LIMITS = {
 const BLOCKED_KEYS = ["-", "+", "e", "E", ".", ","];
 
 const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }) => {
-  const limits = RANGE_LIMITS[filterKey] || { min: 0, max: 999_999_999 };
+  const limits   = RANGE_LIMITS[filterKey] || { min: 0, max: 999_999_999 };
+  const maxLen   = String(Math.floor(limits.max)).length; // максимальное кол-во цифр
   const [local, setLocal] = useState({ min: "", max: "" });
   const timerRef = useRef(null);
 
-  // Reset local state when parent clears the value (tab switch)
   useEffect(() => {
     if (!value) setLocal({ min: "", max: "" });
   }, [value]);
 
+  const clampVal = (v) => {
+    if (v === "" || v === undefined) return undefined;
+    const n = Number(v);
+    if (isNaN(n)) return undefined;
+    return Math.min(Math.max(n, limits.min), limits.max);
+  };
+
+  const commit = (next) => {
+    const minNum = clampVal(next.min);
+    const maxNum = clampVal(next.max);
+    onChange(filterKey, (minNum !== undefined || maxNum !== undefined) ? { min: minNum, max: maxNum } : undefined);
+  };
+
   const handleChange = (k, raw) => {
-    // Храним сырой ввод — не зажимаем во время печати
-    const next = { ...local, [k]: raw };
+    // Разрешаем только цифры, не больше maxLen символов
+    const digits = raw.replace(/\D/g, "").slice(0, maxLen);
+    const next = { ...local, [k]: digits };
     setLocal(next);
     clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      const toNum = (v) => {
-        if (v === "" || v === undefined) return undefined;
-        const n = Number(v);
-        if (isNaN(n)) return undefined;
-        return Math.min(Math.max(n, limits.min), limits.max);
-      };
-      const minNum = toNum(next.min);
-      const maxNum = toNum(next.max);
-      onChange(filterKey, (minNum !== undefined || maxNum !== undefined) ? { min: minNum, max: maxNum } : undefined);
-    }, 600);
+    timerRef.current = setTimeout(() => commit(next), 600);
+  };
+
+  const handleBlur = (k) => {
+    clearTimeout(timerRef.current);
+    const clamped = local[k] !== "" ? String(clampVal(local[k]) ?? "") : "";
+    const next = { ...local, [k]: clamped };
+    setLocal(next);
+    commit(next);
   };
 
   const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-3 py-2.5 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
@@ -53,13 +65,13 @@ const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }
         {(["min", "max"]).map(k => (
           <input
             key={k}
-            type="number"
+            type="text"
+            inputMode="numeric"
             placeholder={k === "min" ? fromLabel : toLabel}
             value={local[k]}
-            min={limits.min}
-            max={limits.max}
             onKeyDown={e => { if (BLOCKED_KEYS.includes(e.key)) e.preventDefault(); }}
             onChange={e => handleChange(k, e.target.value)}
+            onBlur={() => handleBlur(k)}
             className={inputCls}
           />
         ))}
