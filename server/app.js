@@ -20,20 +20,15 @@ const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
-const ALLOWED_ORIGINS = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "https://dragonauto.onrender.com",
-  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map(s => s.trim()) : []),
-];
-app.use(cors({
-  origin: (origin, cb) => {
-    // разрешаем запросы без origin (мобилки, Postman, curl) и из списка
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS: origin ${origin} not allowed`));
-  },
+// CORS — разрешаем preflight и все запросы с нужных origin
+const corsOptions = {
+  origin: true,       // зеркалит Origin заголовок — разрешает любой origin
   credentials: true,
-}));
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // явный preflight для всех маршрутов
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
