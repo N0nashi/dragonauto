@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { useLang } from "../context/LangContext";
 
 const ForgotPasswordForm = ({ onClose }) => {
+  const { t } = useLang();
+  const ta = t.auth;
   const [email, setEmail]           = useState("");
   const [otp, setOtp]               = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -21,7 +24,7 @@ const ForgotPasswordForm = ({ onClose }) => {
       });
       setStep("reset");
     } catch {
-      setError("Ошибка при отправке запроса");
+      setError(ta.forgotSendError);
     } finally {
       setLoading(false);
     }
@@ -39,7 +42,7 @@ const ForgotPasswordForm = ({ onClose }) => {
       setStep("done");
       setTimeout(onClose, 2000);
     } catch {
-      setError("Ошибка при сбросе пароля");
+      setError(ta.forgotResetError);
     } finally {
       setLoading(false);
     }
@@ -60,13 +63,13 @@ const ForgotPasswordForm = ({ onClose }) => {
         </button>
 
         <h3 className="font-mont font-black text-xl text-charcoal dark:text-cream mb-2">
-          Восстановление пароля
+          {ta.forgotTitle}
         </h3>
 
         {step === "email" && (
           <>
             <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">
-              Введите email — вышлем код для сброса пароля
+              {ta.forgotDesc}
             </p>
             <form onSubmit={sendOtp} className="flex flex-col gap-3">
               <input
@@ -85,7 +88,7 @@ const ForgotPasswordForm = ({ onClose }) => {
                 disabled={loading}
                 className="mt-1 w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Отправка..." : "Отправить код"}
+                {loading ? ta.sending : ta.sendCode}
               </button>
             </form>
           </>
@@ -94,12 +97,12 @@ const ForgotPasswordForm = ({ onClose }) => {
         {step === "reset" && (
           <>
             <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">
-              Код отправлен на <span className="text-charcoal dark:text-cream font-bold">{email}</span>
+              {ta.codeSentTo} <span className="text-charcoal dark:text-cream font-bold">{email}</span>
             </p>
             <form onSubmit={resetPassword} className="flex flex-col gap-3" autoComplete="off">
               <input
                 type="text"
-                placeholder="Код из письма"
+                placeholder={ta.codeFromEmail}
                 value={otp}
                 onChange={e => setOtp(e.target.value)}
                 required
@@ -109,7 +112,7 @@ const ForgotPasswordForm = ({ onClose }) => {
               />
               <input
                 type="password"
-                placeholder="Новый пароль"
+                placeholder={ta.newPasswordPlaceholder}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 required
@@ -123,7 +126,7 @@ const ForgotPasswordForm = ({ onClose }) => {
                 disabled={loading}
                 className="mt-1 w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Смена..." : "Сменить пароль"}
+                {loading ? ta.changing : ta.changePassword}
               </button>
             </form>
           </>
@@ -137,10 +140,10 @@ const ForgotPasswordForm = ({ onClose }) => {
               </svg>
             </div>
             <p className="font-mont font-bold text-charcoal dark:text-cream text-center">
-              Пароль успешно изменён
+              {ta.passwordChanged}
             </p>
             <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 text-center">
-              Закрываем окно...
+              {ta.closingWindow}
             </p>
           </div>
         )}

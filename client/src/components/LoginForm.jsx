@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useLang } from "../context/LangContext";
 
 const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
+  const { t } = useLang();
+  const ta = t.auth;
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -48,7 +51,7 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
         <input
           type={showPassword ? "text" : "password"}
           name="password"
-          placeholder="Пароль"
+          placeholder={ta.passwordPlaceholder}
           value={form.password}
           onChange={handleChange}
           required
@@ -83,7 +86,7 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
           onClick={onForgot}
           className="font-mont text-xs text-charcoal/35 dark:text-cream/35 hover:text-charcoal dark:hover:text-cream transition-colors duration-200"
         >
-          Забыли пароль?
+          {ta.forgotPassword}
         </button>
       </div>
 
@@ -93,7 +96,7 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
         disabled={loading}
         className="mt-2 w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? "Входим..." : "Войти"}
+        {loading ? ta.loggingIn : ta.loginBtn}
       </button>
     </form>
   );

@@ -46,6 +46,7 @@ const Field = ({ type = "text", name, placeholder, value, onChange, disabled, ex
 const RegisterForm = ({ onRegisterSuccess }) => {
   const { t } = useLang();
   const tt = t.toasts;
+  const ta = t.auth;
   const [role, setRole] = useState("client"); // "client" | "supplier"
   const [form, setForm] = useState({
     first_name: "", last_name: "", email: "", password: "", confirmPassword: "",
@@ -132,11 +133,11 @@ const RegisterForm = ({ onRegisterSuccess }) => {
     return (
       <div className="flex flex-col gap-4">
         <p className="font-mont text-sm text-charcoal/50 dark:text-cream/50 text-center leading-relaxed">
-          Код отправлен на <span className="text-charcoal dark:text-cream font-bold">{form.email}</span>
+          {ta.codeSentTo} <span className="text-charcoal dark:text-cream font-bold">{form.email}</span>
         </p>
         <input
           type="text"
-          placeholder="Код из письма"
+          placeholder={ta.codeFromEmail}
           value={verificationCode}
           onChange={e => setVerificationCode(e.target.value)}
           disabled={loading}
@@ -148,7 +149,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
           disabled={loading}
           className="w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Проверка..." : "Подтвердить email"}
+          {loading ? ta.verifying : ta.verifyEmail}
         </button>
       </div>
     );
@@ -160,8 +161,8 @@ const RegisterForm = ({ onRegisterSuccess }) => {
 
 <div className="flex gap-2 mb-1">
           {[
-            { key: "client",   label: "Клиент",    desc: "Подбираю авто и запчасти" },
-            { key: "supplier", label: "Поставщик",  desc: "Добавляю товары в каталог" },
+            { key: "client",   label: ta.roleClient,   desc: ta.roleClientDesc },
+            { key: "supplier", label: ta.roleSupplier, desc: ta.roleSupplierDesc },
           ].map(({ key, label, desc }) => (
             <button
               key={key}
@@ -184,12 +185,12 @@ const RegisterForm = ({ onRegisterSuccess }) => {
         </div>
 
         <div className="flex gap-3">
-          <Field name="first_name" placeholder="Имя"     value={form.first_name} onChange={handleChange} disabled={loading} />
-          <Field name="last_name"  placeholder="Фамилия" value={form.last_name}  onChange={handleChange} disabled={loading} />
+          <Field name="first_name" placeholder={ta.firstNamePlaceholder} value={form.first_name} onChange={handleChange} disabled={loading} />
+          <Field name="last_name"  placeholder={ta.lastNamePlaceholder} value={form.last_name}  onChange={handleChange} disabled={loading} />
         </div>
-        <Field type="email"    name="email"           placeholder="Email"            value={form.email}           onChange={handleChange} disabled={loading} />
-        <Field type="password" name="password"        placeholder="Пароль"           value={form.password}        onChange={handleChange} disabled={loading} />
-        <Field type="password" name="confirmPassword" placeholder="Повторите пароль" value={form.confirmPassword} onChange={handleChange} disabled={loading} />
+        <Field type="email"    name="email"           placeholder="Email"                      value={form.email}           onChange={handleChange} disabled={loading} />
+        <Field type="password" name="password"        placeholder={ta.passwordPlaceholder}     value={form.password}        onChange={handleChange} disabled={loading} />
+        <Field type="password" name="confirmPassword" placeholder={ta.passwordRepeatPlaceholder} value={form.confirmPassword} onChange={handleChange} disabled={loading} />
 
         {/* Avatar upload */}
         <label className="flex items-center gap-3 border border-dashed border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 cursor-pointer hover:border-charcoal/40 dark:hover:border-cream/40 transition-colors duration-200 group">
@@ -200,7 +201,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
           <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 group-hover:text-charcoal dark:group-hover:text-cream transition-colors flex-1 truncate">
-            {avatar ? avatar.name : "Аватар (до 5MB, не обязательно)"}
+            {avatar ? avatar.name : ta.avatarLabel}
           </span>
           <input type="file" accept="image/*" onChange={handleFile} disabled={loading} className="hidden" />
         </label>
@@ -222,13 +223,13 @@ const RegisterForm = ({ onRegisterSuccess }) => {
             )}
           </div>
           <span className="font-mont text-xs text-charcoal/50 dark:text-cream/50 leading-relaxed pt-0.5">
-            Я принимаю{" "}
+            {ta.acceptPolicy}{" "}
             <button
               type="button"
               onClick={() => setShowPolicy(true)}
               className="text-charcoal dark:text-cream underline underline-offset-2 hover:text-red-accent transition-colors duration-200"
             >
-              политику конфиденциальности
+              {ta.policyLink}
             </button>
           </span>
         </label>
@@ -238,7 +239,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
           disabled={loading}
           className="mt-2 w-full bg-red-accent border-2 border-red-accent text-cream font-mont font-black text-sm tracking-widest uppercase py-3.5 rounded-xl hover:opacity-90 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Создаём аккаунт..." : "Зарегистрироваться"}
+          {loading ? ta.creatingAccount : ta.registerBtn}
         </button>
       </form>
 
@@ -255,19 +256,19 @@ const RegisterForm = ({ onRegisterSuccess }) => {
               </svg>
             </button>
             <h2 className="font-mont font-black text-xl text-charcoal dark:text-cream mb-4">
-              Политика конфиденциальности
+              {ta.policyTitle}
             </h2>
             <div className="font-mont text-sm text-charcoal/60 dark:text-cream/60 leading-relaxed space-y-3 overflow-y-auto">
-              <p>Мы уважаем вашу конфиденциальность. Ваши данные используются исключительно для регистрации и работы сервиса DragonAuto.</p>
-              <p>Мы не передаём вашу информацию третьим лицам без вашего согласия, за исключением случаев, предусмотренных законодательством.</p>
-              <p>Email используется только для отправки кода подтверждения и уведомлений о ваших заявках.</p>
-              <p>Если у вас есть вопросы — свяжитесь с нами через форму обратной связи.</p>
+              <p>{ta.policyP1}</p>
+              <p>{ta.policyP2}</p>
+              <p>{ta.policyP3}</p>
+              <p>{ta.policyP4}</p>
             </div>
             <button
               onClick={() => { setAcceptedPolicy(true); setShowPolicy(false); }}
               className="mt-6 w-full bg-red-accent text-cream font-mont font-black text-xs tracking-widest uppercase py-3 rounded-xl hover:opacity-90 transition-opacity duration-200"
             >
-              Принять
+              {ta.policyAccept}
             </button>
           </div>
         </div>

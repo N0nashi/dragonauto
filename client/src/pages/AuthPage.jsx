@@ -30,10 +30,12 @@ const AuthPage = () => {
 
 <div>
           <p className="font-mont font-black text-5xl text-cream leading-tight tracking-tight mb-6">
-            Авто из<br/>Китая<br/>под ключ
+            {t.auth.leftHeadline.split("\n").map((line, i, arr) => (
+              <span key={i}>{line}{i < arr.length - 1 && <br/>}</span>
+            ))}
           </p>
           <p className="font-mont text-sm text-cream/40 leading-relaxed max-w-xs">
-            Подбираем и доставляем автомобили и запчасти из Китая, Японии и Кореи с полным пакетом документов.
+            {t.auth.leftSubtitle}
           </p>
         </div>
 
@@ -52,12 +54,10 @@ const AuthPage = () => {
         <div className="w-full max-w-sm">
 
 <h1 className="font-mont font-black text-3xl text-charcoal dark:text-cream tracking-tight mb-2">
-            {mode === "login" ? "Вход" : "Регистрация"}
+            {mode === "login" ? t.auth.loginTitle : t.auth.registerTitle}
           </h1>
           <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-8">
-            {mode === "login"
-              ? "Войдите, чтобы управлять заявками"
-              : "Создайте аккаунт для работы с каталогом"}
+            {mode === "login" ? t.auth.loginSubtitle : t.auth.registerSubtitle}
           </p>
 
 <div className="flex gap-2 mb-8">
