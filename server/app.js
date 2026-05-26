@@ -1,7 +1,6 @@
 const express = require("express");
 const cors    = require("cors");
 const path    = require("path");
-const fs      = require("fs");
 const helmet  = require("helmet");
 
 const authRoutes          = require("./routes/auth");
@@ -28,16 +27,8 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // явный preflight для всех маршрутов
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// ── Статика фронтенда (React build) ──
-const clientDist = path.join(__dirname, "../client/dist");
-const distExists = fs.existsSync(path.join(clientDist, "index.html"));
-if (distExists) {
-  app.use(express.static(clientDist, { index: false }));
-}
 
 app.use("/api",                authRoutes);
 app.use("/api/profile",        profileRoutes);
@@ -51,17 +42,8 @@ app.use("/api/supplier",       supplierRoutes);
 app.use("/api/chat",           chatRoutes);
 app.use("/api/notifications",  notificationsRoutes);
 
-// API 404
-app.use("/api", (req, res) => res.status(404).json({ error: "Маршрут не найден" }));
-
-// SPA fallback — для всех не-API маршрутов отдаём index.html
-app.get("*", (req, res) => {
-  if (distExists) {
-    res.sendFile(path.join(clientDist, "index.html"));
-  } else {
-    res.status(503).send("Frontend not built. Run: cd client && npm run build");
-  }
-});
+// 404 для неизвестных маршрутов
+app.use((req, res) => res.status(404).json({ error: "Маршрут не найден" }));
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Внутренняя ошибка сервера" });
