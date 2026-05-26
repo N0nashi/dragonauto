@@ -33,7 +33,7 @@ function uploadMiddleware(req, res, next) {
 
   const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       const allowed = /jpeg|jpg|png|webp/;
       const ext = allowed.test(path.extname(file.originalname).toLowerCase());
@@ -74,7 +74,7 @@ function avatarUploadMiddleware(req, res, next) {
   const storage = createMulterStorage("avatars");
   const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       const allowed = /jpeg|jpg|png|webp/;
       const ext = allowed.test(path.extname(file.originalname).toLowerCase());

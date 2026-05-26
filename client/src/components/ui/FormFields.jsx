@@ -236,7 +236,11 @@ export function PhotoUpload({ file, onChange, label = "Фото (необяза�
       <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 group-hover:text-charcoal dark:group-hover:text-cream transition-colors truncate flex-1">
         {file ? file.name : label}
       </span>
-      <input type="file" accept="image/*" className="hidden" onChange={e => onChange(e.target.files[0])} />
+      <input type="file" accept="image/*" className="hidden" onChange={e => {
+        const f = e.target.files[0];
+        if (f && f.size > 10 * 1024 * 1024) { alert("Файл слишком большой (макс. 10 МБ)"); e.target.value = ""; return; }
+        onChange(f);
+      }} />
     </label>
   );
 }

@@ -480,7 +480,11 @@ function CatalogSection() {
                     {editPhoto ? editPhoto.name : tc.fields.changePhoto}
                   </span>
                   <input type="file" accept="image/*" className="hidden"
-                    onChange={e => setEditPhoto(e.target.files[0] || null)} />
+                    onChange={e => {
+                      const f = e.target.files[0];
+                      if (f && f.size > 10 * 1024 * 1024) { toast.error("Файл слишком большой (макс. 10 МБ)"); e.target.value = ""; return; }
+                      setEditPhoto(f || null);
+                    }} />
                 </label>
                 {editPhoto ? (
                   <img src={URL.createObjectURL(editPhoto)} alt="preview"
@@ -604,7 +608,11 @@ function CatalogSection() {
                   {addPhoto ? addPhoto.name : tc.fields.choose}
                 </span>
                 <input type="file" accept="image/*" className="hidden"
-                  onChange={e => setAddPhoto(e.target.files[0] || null)} />
+                  onChange={e => {
+                    const f = e.target.files[0];
+                    if (f && f.size > 10 * 1024 * 1024) { toast.error("Файл слишком большой (макс. 10 МБ)"); e.target.value = ""; return; }
+                    setAddPhoto(f || null);
+                  }} />
               </label>
               {addPhoto && (
                 <img src={URL.createObjectURL(addPhoto)} alt="preview"
