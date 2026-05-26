@@ -60,7 +60,7 @@ const AuthPage = () => {
             {mode === "login" ? t.auth.loginSubtitle : t.auth.registerSubtitle}
           </p>
 
-<div className="flex gap-2 mb-8">
+<div className="flex justify-center gap-2 mb-8">
             {[
               { key: "login",    label: t.nav.login },
               { key: "register", label: t.nav.register },
@@ -68,7 +68,7 @@ const AuthPage = () => {
               <button
                 key={key}
                 onClick={() => { setMode(key); setMessage(""); }}
-                className={`flex-1 font-mont font-black text-xs tracking-widest uppercase py-2.5 rounded-xl border-2 transition-all duration-200 ${
+                className={`min-w-32 font-mont font-black text-xs tracking-widest uppercase px-6 py-2.5 rounded-xl border-2 transition-all duration-200 ${
                   mode === key
                     ? "bg-red-accent border-red-accent text-cream"
                     : "bg-transparent border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream hover:border-charcoal dark:hover:border-cream"
