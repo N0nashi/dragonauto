@@ -57,53 +57,47 @@ router.get("/filters", async (req, res) => {
   }
 });
 
+const clamp = (v, lo, hi) => Math.min(Math.max(Number(v), lo), hi);
+
 // POST /search — поиск запчастей по фильтрам
 router.post("/search", async (req, res) => {
-  const {
-    brand,
-    model,
-    country,
-    year_from,
-    year_to,
-    body_type,
-    price_from,
-    price_to
-  } = req.body;
-  
+  const { brand, model, country, year, price, body, body_type } = req.body;
+
   const filters = [];
   const values = [];
 
-  if (brand) {
+  if (brand && typeof brand === "string") {
     filters.push(`brand = $${values.length + 1}`);
-    values.push(brand);
+    values.push(brand.slice(0, 100));
   }
-  if (model) {
+  if (model && typeof model === "string") {
     filters.push(`model = $${values.length + 1}`);
-    values.push(model);
+    values.push(model.slice(0, 100));
   }
-  if (country) {
+  if (country && typeof country === "string") {
     filters.push(`country = $${values.length + 1}`);
-    values.push(country);
+    values.push(country.slice(0, 100));
   }
-  if (year_from) {
+  if (year?.min != null) {
     filters.push(`year >= $${values.length + 1}`);
-    values.push(year_from);
+    values.push(clamp(year.min, 1900, 2100));
   }
-  if (year_to) {
+  if (year?.max != null) {
     filters.push(`year <= $${values.length + 1}`);
-    values.push(year_to);
+    values.push(clamp(year.max, 1900, 2100));
   }
-  if (body_type) {
+  const bodyVal = body || body_type;
+  if (bodyVal && typeof bodyVal === "string") {
     filters.push(`body = $${values.length + 1}`);
-    values.push(body_type);
+    values.push(bodyVal.slice(0, 100));
   }
-  if (price_from) {
+  if (price?.min != null) {
     filters.push(`price >= $${values.length + 1}`);
-    values.push(price_from);
+    values.push(clamp(price.min, 0, 100_000_000));
   }
-  if (price_to) {
+  if (price?.max != null) {
     filters.push(`price <= $${values.length + 1}`);
-    values.push(price_to);
+    values.push(clamp(price.max, 0, 100_000_000));
   }
 
   // Только одобренные запчасти видны публично

@@ -6,15 +6,16 @@ const PAGE = 12;
 const API  = import.meta.env.VITE_API_URL;
 const CURRENT_YEAR = new Date().getFullYear();
 
-const getRangeConstraints = (filterKey) => {
-  if (filterKey === "year")    return { min: 1950, max: CURRENT_YEAR };
-  if (filterKey === "price")   return { min: 0 };
-  if (filterKey === "mileage") return { min: 0 };
-  return {};
+const RANGE_LIMITS = {
+  year:    { min: 1950,  max: CURRENT_YEAR },
+  price:   { min: 0,     max: 100_000_000 },
+  mileage: { min: 0,     max: 2_000_000 },
 };
 
+const BLOCKED_KEYS = ["-", "+", "e", "E", ".", ","];
+
 const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }) => {
-  const constraints = getRangeConstraints(filterKey);
+  const limits = RANGE_LIMITS[filterKey] || { min: 0, max: 999_999_999 };
   const [local, setLocal] = useState({ min: "", max: "" });
   const timerRef = useRef(null);
 
@@ -24,14 +25,26 @@ const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }
   }, [value]);
 
   const handleChange = (k, raw) => {
-    const next = { ...local, [k]: raw };
+    if (raw === "") {
+      const next = { ...local, [k]: "" };
+      setLocal(next);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        const minNum = next.min !== "" ? Number(next.min) : undefined;
+        const maxNum = next.max !== "" ? Number(next.max) : undefined;
+        onChange(filterKey, (minNum !== undefined || maxNum !== undefined) ? { min: minNum, max: maxNum } : undefined);
+      }, 500);
+      return;
+    }
+    const num = Math.min(Math.max(Number(raw), limits.min), limits.max);
+    const clamped = String(num);
+    const next = { ...local, [k]: clamped };
     setLocal(next);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       const minNum = next.min !== "" ? Number(next.min) : undefined;
       const maxNum = next.max !== "" ? Number(next.max) : undefined;
-      const hasValue = minNum !== undefined || maxNum !== undefined;
-      onChange(filterKey, hasValue ? { min: minNum, max: maxNum } : undefined);
+      onChange(filterKey, (minNum !== undefined || maxNum !== undefined) ? { min: minNum, max: maxNum } : undefined);
     }, 500);
   };
 
@@ -49,8 +62,10 @@ const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }
             type="number"
             placeholder={k === "min" ? fromLabel : toLabel}
             value={local[k]}
+            min={limits.min}
+            max={limits.max}
+            onKeyDown={e => { if (BLOCKED_KEYS.includes(e.key)) e.preventDefault(); }}
             onChange={e => handleChange(k, e.target.value)}
-            {...constraints}
             className={inputCls}
           />
         ))}
