@@ -249,9 +249,105 @@ router.get("/suppliers", authMiddleware, isAdmin, async (req, res) => {
 // PATCH /api/supplier/block/:id — блокировать/разблокировать поставщика
 router.patch("/block/:id", authMiddleware, isAdmin, async (req, res) => {
   const { blocked } = req.body;
+  const supplierId = req.params.id;
   try {
-    await db.query(`UPDATE users SET is_blocked = $1 WHERE id = $2 AND role = 'supplier'`, [!!blocked, req.params.id]);
-    res.json({ message: blocked ? "Поставщик заблокирован" : "Поставщик разблокирован" });
+    await db.query(`UPDATE users SET is_blocked = $1 WHERE id = $2 AND role = 'supplier'`, [!!blocked, supplierId]);
+
+    if (blocked) {
+      // Переводим все активные/ожидающие объявления в rejected
+      const cars = await db.query(
+        `UPDATE cars SET status = 'rejected' WHERE supplier_id = $1 AND status IN ('approved','pending') RETURNING id, brand, model, year`,
+        [supplierId]
+      );
+      const parts = await db.query(
+        `UPDATE parts SET status = 'rejected' WHERE supplier_id = $1 AND status IN ('approved','pending') RETURNING id, part_name`,
+        [supplierId]
+      );
+
+      // Получаем данные поставщика для письма
+      const supRow = await db.query(`SELECT email, first_name FROM users WHERE id = $1`, [supplierId]);
+      const supplier = supRow.rows[0];
+
+      let cancelledCount = 0;
+      const carIds  = cars.rows.map(r => r.id);
+      const partIds = parts.rows.map(r => r.id);
+
+      // Отменяем заявки, привязанные к авто этого поставщика
+      if (carIds.length > 0) {
+        const affected = await db.query(
+          `SELECT a.id, u.email, u.first_name, c.brand, c.model, c.year
+             FROM applications a
+             JOIN users u ON u.id = a.user_id
+             JOIN cars c ON c.id = a.matched_item_id
+            WHERE a.matched_item_id = ANY($1::int[]) AND a.matched_item_type = 'car'
+              AND a.status NOT IN ('выполнена','отменена')`,
+          [carIds]
+        );
+        if (affected.rows.length > 0) {
+          await db.query(
+            `UPDATE applications SET status = 'отменена'
+              WHERE matched_item_id = ANY($1::int[]) AND matched_item_type = 'car'
+                AND status NOT IN ('выполнена','отменена')`,
+            [carIds]
+          );
+          cancelledCount += affected.rows.length;
+          for (const row of affected.rows) {
+            sendMail({
+              to: row.email,
+              subject: "Ваша заявка отменена — DragonAuto",
+              text: `Здравствуйте, ${row.first_name}!\n\nОбъявление «${row.brand} ${row.model} ${row.year}» было заблокировано администратором, поэтому ваша заявка №${row.id} автоматически переведена в статус «Отменено».\n\nВы можете создать новую заявку на нашем сайте.\n\nС уважением,\nДрагонАвто`,
+            }).catch(e => console.error("Mail error:", e.message));
+          }
+        }
+      }
+
+      // Отменяем заявки, привязанные к запчастям этого поставщика
+      if (partIds.length > 0) {
+        const affected = await db.query(
+          `SELECT a.id, u.email, u.first_name, p.part_name
+             FROM applications a
+             JOIN users u ON u.id = a.user_id
+             JOIN parts p ON p.id = a.matched_item_id
+            WHERE a.matched_item_id = ANY($1::int[]) AND a.matched_item_type = 'part'
+              AND a.status NOT IN ('выполнена','отменена')`,
+          [partIds]
+        );
+        if (affected.rows.length > 0) {
+          await db.query(
+            `UPDATE applications SET status = 'отменена'
+              WHERE matched_item_id = ANY($1::int[]) AND matched_item_type = 'part'
+                AND status NOT IN ('выполнена','отменена')`,
+            [partIds]
+          );
+          cancelledCount += affected.rows.length;
+          for (const row of affected.rows) {
+            sendMail({
+              to: row.email,
+              subject: "Ваша заявка отменена — DragonAuto",
+              text: `Здравствуйте, ${row.first_name}!\n\nОбъявление «${row.part_name}» было заблокировано администратором, поэтому ваша заявка №${row.id} автоматически переведена в статус «Отменено».\n\nВы можете создать новую заявку на нашем сайте.\n\nС уважением,\nДрагонАвто`,
+            }).catch(e => console.error("Mail error:", e.message));
+          }
+        }
+      }
+
+      // Уведомляем самого поставщика
+      if (supplier) {
+        sendMail({
+          to: supplier.email,
+          subject: "Ваш аккаунт заблокирован — DragonAuto",
+          text: `Здравствуйте, ${supplier.first_name}!\n\nВаш аккаунт поставщика был заблокирован администратором.\nВсе ваши объявления переведены в статус «Отклонено».\n\nЕсли вы считаете это ошибкой, свяжитесь с нами по телефону +7 (982) 290-00-86.\n\nС уважением,\nДрагонАвто`,
+        }).catch(e => console.error("Mail error:", e.message));
+      }
+
+      res.json({
+        message: "Поставщик заблокирован",
+        rejectedCars: carIds.length,
+        rejectedParts: partIds.length,
+        cancelledApplications: cancelledCount,
+      });
+    } else {
+      res.json({ message: "Поставщик разблокирован" });
+    }
   } catch (err) { console.error(err); res.status(500).json({ error: "Ошибка сервера" }); }
 });
 

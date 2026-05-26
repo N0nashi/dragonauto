@@ -1,9 +1,63 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, memo } from "react";
 import { toast } from "../utils/toast";
 import { useLang } from "../context/LangContext";
 
 const PAGE = 12;
 const API  = import.meta.env.VITE_API_URL;
+const CURRENT_YEAR = new Date().getFullYear();
+
+const getRangeConstraints = (filterKey) => {
+  if (filterKey === "year")    return { min: 1950, max: CURRENT_YEAR };
+  if (filterKey === "price")   return { min: 0 };
+  if (filterKey === "mileage") return { min: 0 };
+  return {};
+};
+
+const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }) => {
+  const constraints = getRangeConstraints(filterKey);
+  const [local, setLocal] = useState({ min: "", max: "" });
+  const timerRef = useRef(null);
+
+  // Reset local state when parent clears the value (tab switch)
+  useEffect(() => {
+    if (!value) setLocal({ min: "", max: "" });
+  }, [value]);
+
+  const handleChange = (k, raw) => {
+    const next = { ...local, [k]: raw };
+    setLocal(next);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const minNum = next.min !== "" ? Number(next.min) : undefined;
+      const maxNum = next.max !== "" ? Number(next.max) : undefined;
+      const hasValue = minNum !== undefined || maxNum !== undefined;
+      onChange(filterKey, hasValue ? { min: minNum, max: maxNum } : undefined);
+    }, 500);
+  };
+
+  const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-3 py-2.5 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="font-mont text-[10px] tracking-widest text-charcoal/40 dark:text-cream/40 uppercase pr-0.5">
+        {label}
+      </span>
+      <div className="flex gap-2">
+        {(["min", "max"]).map(k => (
+          <input
+            key={k}
+            type="number"
+            placeholder={k === "min" ? fromLabel : toLabel}
+            value={local[k]}
+            onChange={e => handleChange(k, e.target.value)}
+            {...constraints}
+            className={inputCls}
+          />
+        ))}
+      </div>
+    </div>
+  );
+});
 
 const CatalogFilterSelect = ({ placeholder, options, currentValue, onSelect, getLabel }) => {
   const [open, setOpen] = useState(false);
@@ -262,22 +316,6 @@ const CarsCatalog = () => {
     />
   );
 
-  const RangeRow = ({ label, filterKey }) => (
-    <div className="flex flex-col gap-1.5">
-      <span className="font-mont text-[10px] tracking-widest text-charcoal/40 dark:text-cream/40 uppercase pr-0.5">
-        {label}
-      </span>
-      <div className="flex gap-2">
-        {["min","max"].map(k => (
-          <input key={k} type="number" placeholder={k === "min" ? tc.f.from : tc.f.to}
-            value={selectedFilters[filterKey]?.[k] || ""}
-            onChange={e => handleFilter(filterKey, { ...selectedFilters[filterKey], [k]: e.target.value ? Number(e.target.value) : undefined })}
-            className="w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-3 py-2.5 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-        ))}
-      </div>
-    </div>
-  );
 
   const Chip = ({ children }) => (
     <span className="font-mont text-[10px] tracking-wide px-2.5 py-1 rounded-lg bg-charcoal/8 dark:bg-cream/6 text-charcoal/55 dark:text-cream/60 whitespace-nowrap">
@@ -511,8 +549,8 @@ const CarsCatalog = () => {
 
                   <div className="h-px bg-charcoal/8 dark:bg-cream/8 my-0.5" />
 
-                  <RangeRow label={tc.f.price} filterKey="price" />
-                  <RangeRow label={tc.f.year}  filterKey="year"  />
+                  <RangeRow label={tc.f.price} filterKey="price" value={selectedFilters.price} onChange={handleFilter} fromLabel={tc.f.from} toLabel={tc.f.to} />
+                  <RangeRow label={tc.f.year}  filterKey="year"  value={selectedFilters.year}  onChange={handleFilter} fromLabel={tc.f.from} toLabel={tc.f.to} />
 
                   <button
                     onClick={() => setShowAdvanced(p => !p)}
@@ -528,7 +566,7 @@ const CarsCatalog = () => {
                   {showAdvanced && (
                     <div className="flex flex-col gap-3 pt-1 anim-fade-up">
                       <div className="h-px bg-charcoal/8 dark:bg-cream/8" />
-                      <RangeRow label={tc.f.mileage} filterKey="mileage" />
+                      <RangeRow label={tc.f.mileage} filterKey="mileage" value={selectedFilters.mileage} onChange={handleFilter} fromLabel={tc.f.from} toLabel={tc.f.to} />
                       {activeTab === "cars" && (
                         <>
                           <FilterSelect placeholder={tc.f.gearbox} filterKey="gearbox" options={filters.gearboxes} />
