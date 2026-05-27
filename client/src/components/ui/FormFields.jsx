@@ -224,24 +224,31 @@ export function SingleSelect({ label, required, error, options, value, onChange,
 }
 
 /* ── Photo upload ── */
-export function PhotoUpload({ file, onChange, label = "Фото (необязательно)" }) {
+export function PhotoUpload({ file, onChange, label = "Фото (необязательно)", required }) {
   return (
-    <label className="flex items-center gap-3 border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-xl px-4 py-3 cursor-pointer hover:border-red-accent/40 transition-colors group">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-        className="text-charcoal/30 dark:text-cream/30 group-hover:text-red-accent shrink-0 transition-colors">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
-      <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 group-hover:text-charcoal dark:group-hover:text-cream transition-colors truncate flex-1">
-        {file ? file.name : label}
-      </span>
-      <input type="file" accept="image/*" className="hidden" onChange={e => {
-        const f = e.target.files[0];
-        if (f && f.size > 10 * 1024 * 1024) { alert("Файл слишком большой (макс. 10 МБ)"); e.target.value = ""; return; }
-        onChange(f);
-      }} />
-    </label>
+    <div className="flex flex-col gap-1.5">
+      {required && (
+        <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+          Фото<span className="text-red-accent ml-0.5">*</span>
+        </span>
+      )}
+      <label className="flex items-center gap-3 border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-xl px-4 py-3 cursor-pointer hover:border-red-accent/40 transition-colors group">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+          className="text-charcoal/30 dark:text-cream/30 group-hover:text-red-accent shrink-0 transition-colors">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 group-hover:text-charcoal dark:group-hover:text-cream transition-colors truncate flex-1">
+          {file ? file.name : label}
+        </span>
+        <input type="file" accept="image/*" className="hidden" onChange={e => {
+          const f = e.target.files[0];
+          if (f && f.size > 10 * 1024 * 1024) { alert("Файл слишком большой (макс. 10 МБ)"); e.target.value = ""; return; }
+          onChange(f);
+        }} />
+      </label>
+    </div>
   );
 }
 
