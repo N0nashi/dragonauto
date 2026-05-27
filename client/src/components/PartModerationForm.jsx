@@ -54,7 +54,10 @@ export default function PartModerationForm({ initialData = null, onSubmit, onCan
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (TEXT_FIELDS.includes(name)) {
-      const sanitized = value.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT);
+      const pattern = name === "part_name"
+        ? /[^a-zA-Z0-9Ѐ-ӿ\s\-\.]/g
+        : /[^a-zA-Z0-9\s\-\.]/g;
+      const sanitized = value.replace(pattern, "").slice(0, MAX_TEXT);
       setForm((prev) => ({ ...prev, [name]: sanitized }));
       return;
     }

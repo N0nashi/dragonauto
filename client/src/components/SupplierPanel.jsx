@@ -14,6 +14,7 @@ const authH = (json = true) => ({
 const TEXT_FIELDS_SP = ["brand", "model", "part_name"];
 const MAX_TEXT_SP = 50;
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT_SP);
+const sanitizePartName = (v) => v.replace(/[^a-zA-Z0-9Ѐ-ӿ\s\-\.]/g, "").slice(0, MAX_TEXT_SP);
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
@@ -154,7 +155,7 @@ function AddPartForm({ onSuccess }) {
     <form onSubmit={submit} className="flex flex-col gap-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label={tf.partName} required placeholder="Передний бампер"
-          value={form.part_name} onChange={e => set("part_name", sanitizeText(e.target.value))} disabled={loading} />
+          value={form.part_name} onChange={e => set("part_name", sanitizePartName(e.target.value))} disabled={loading} />
         <Input label={tf.price} required type="number" min="0" placeholder="12 000"
           value={form.price} onChange={e => set("price", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
@@ -577,7 +578,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                   <label key={key} className={`flex flex-col gap-1${span2 ? " col-span-2" : ""}`}>
                     {lbl(label)}
                     <input type="text" value={editing.item[key] ?? ""}
-                      onChange={e => setEditField(key, TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
+                      onChange={e => setEditField(key, key === "part_name" ? sanitizePartName(e.target.value) : TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
                       className={fldCls} />
                   </label>
                 );
