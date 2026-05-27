@@ -25,6 +25,7 @@ const Btn = ({ onClick, cls = "", children, disabled }) => (
 const TEXT_FIELDS_CATALOG = ["brand", "model", "part_name"];
 const MAX_TEXT_LEN = 50;
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT_LEN);
+const sanitizePartName = (v) => v.replace(/[^a-zA-Z0-9Ѐ-ӿ\s\-\.]/g, "").slice(0, MAX_TEXT_LEN);
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
@@ -37,7 +38,7 @@ const Field = ({ label, value, onChange, type = "text", required, min, max, fiel
       if (v.replace(/[^0-9]/g, "").length > maxLen) return;
     }
     if (type === "text" && fieldKey && TEXT_FIELDS_CATALOG.includes(fieldKey)) {
-      v = sanitizeText(v);
+      v = fieldKey === "part_name" ? sanitizePartName(v) : sanitizeText(v);
     }
     onChange(v);
   };
