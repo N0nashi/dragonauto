@@ -34,7 +34,7 @@ function AddCarForm({ onSuccess }) {
   const submit = async (e) => {
     e.preventDefault();
     const carFields = ["brand","model","year","price","country","mileage","body","gearbox","drive","engine_power"];
-    if (carFields.some(k => form[k] === "" || form[k] == null)) {
+    if (carFields.some(k => form[k] === "" || form[k] == null) || !photo) {
       toast.error(tf.required); return;
     }
     setLoading(true);
@@ -96,7 +96,7 @@ function AddCarForm({ onSuccess }) {
         <Input label={tf.power} required type="number" min="0" placeholder="249"
           value={form.engine_power} onChange={e => set("engine_power", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
-      <PhotoUpload file={photo} onChange={setPhoto} label={tf.carPhoto} />
+      <PhotoUpload file={photo} onChange={setPhoto} label={tf.carPhoto} required />
       <SubmitBtn loading={loading} label={tf.submit} loadingLabel={tf.submitting} />
     </form>
   );
@@ -118,7 +118,7 @@ function AddPartForm({ onSuccess }) {
   const submit = async (e) => {
     e.preventDefault();
     const partFields = ["part_name", "price", "country", "brand", "model", "year", "body"];
-    if (partFields.some(k => form[k] === "" || form[k] == null)) {
+    if (partFields.some(k => form[k] === "" || form[k] == null) || !photo) {
       toast.error(tf.required); return;
     }
     setLoading(true);
@@ -172,7 +172,7 @@ function AddPartForm({ onSuccess }) {
         <Input label={tf.carYear} required type="number" min="1950" max="2030" placeholder="2020"
           value={form.year} onChange={e => set("year", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
-      <PhotoUpload file={photo} onChange={setPhoto} label={tf.partPhoto} />
+      <PhotoUpload file={photo} onChange={setPhoto} label={tf.partPhoto} required />
       <SubmitBtn loading={loading} label={tf.submit} loadingLabel={tf.submitting} />
     </form>
   );
