@@ -33,7 +33,8 @@ function AddCarForm({ onSuccess }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.brand || !form.model || !form.year || !form.price || !form.country) {
+    const carFields = ["brand","model","year","price","country","mileage","body","gearbox","drive","engine_power"];
+    if (carFields.some(k => form[k] === "" || form[k] == null)) {
       toast.error(tf.required); return;
     }
     setLoading(true);
@@ -82,17 +83,17 @@ function AddCarForm({ onSuccess }) {
           value={form.year} onChange={e => set("year", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
         <Input label={tf.price} required type="number" min="0" placeholder="3 500 000"
           value={form.price} onChange={e => set("price", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
-        <Input label={tf.mileage} type="number" min="0" placeholder="15 000"
+        <Input label={tf.mileage} required type="number" min="0" placeholder="15 000"
           value={form.mileage} onChange={e => set("mileage", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <SingleSelect label={tf.body} placeholder="—" options={BODIES}
+        <SingleSelect label={tf.body} required placeholder="—" options={BODIES}
           value={form.body} onChange={v => set("body", v)} disabled={loading} />
-        <SingleSelect label={tf.gearbox} placeholder="—" options={GEARBOXES}
+        <SingleSelect label={tf.gearbox} required placeholder="—" options={GEARBOXES}
           value={form.gearbox} onChange={v => set("gearbox", v)} disabled={loading} />
-        <SingleSelect label={tf.drive} placeholder="—" options={DRIVES}
+        <SingleSelect label={tf.drive} required placeholder="—" options={DRIVES}
           value={form.drive} onChange={v => set("drive", v)} disabled={loading} />
-        <Input label={tf.power} type="number" min="0" placeholder="249"
+        <Input label={tf.power} required type="number" min="0" placeholder="249"
           value={form.engine_power} onChange={e => set("engine_power", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <PhotoUpload file={photo} onChange={setPhoto} label={tf.carPhoto} />
@@ -116,7 +117,8 @@ function AddPartForm({ onSuccess }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.part_name || !form.price) {
+    const partFields = ["part_name", "price", "country", "brand", "model", "year", "body"];
+    if (partFields.some(k => form[k] === "" || form[k] == null)) {
       toast.error(tf.required); return;
     }
     setLoading(true);
@@ -151,23 +153,23 @@ function AddPartForm({ onSuccess }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label={tf.partName} required placeholder="Front bumper"
+        <Input label={tf.partName} required placeholder="Передний бампер"
           value={form.part_name} onChange={e => set("part_name", sanitizeText(e.target.value))} disabled={loading} />
         <Input label={tf.price} required type="number" min="0" placeholder="12 000"
           value={form.price} onChange={e => set("price", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <SingleSelect label={tf.country} placeholder="—" options={COUNTRIES}
+        <SingleSelect label={tf.country} required placeholder="—" options={COUNTRIES}
           value={form.country} onChange={v => set("country", v)} disabled={loading} />
-        <Input label={tf.carBrand} placeholder="Toyota"
+        <Input label={tf.carBrand} required placeholder="Toyota"
           value={form.brand} onChange={e => set("brand", sanitizeText(e.target.value))} disabled={loading} />
-        <Input label={tf.carModel} placeholder="Land Cruiser"
+        <Input label={tf.carModel} required placeholder="Land Cruiser"
           value={form.model} onChange={e => set("model", sanitizeText(e.target.value))} disabled={loading} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <SingleSelect label={tf.body} placeholder="—" options={BODIES}
+        <SingleSelect label={tf.body} required placeholder="—" options={BODIES}
           value={form.body} onChange={v => set("body", v)} disabled={loading} />
-        <Input label={tf.carYear} type="number" min="1950" max="2030" placeholder="2020"
+        <Input label={tf.carYear} required type="number" min="1950" max="2030" placeholder="2020"
           value={form.year} onChange={e => set("year", e.target.value)} onKeyDown={blockSpecialNumeric} disabled={loading} />
       </div>
       <PhotoUpload file={photo} onChange={setPhoto} label={tf.partPhoto} />
@@ -385,8 +387,9 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
   const [tab, setTab]           = useState(initialTab || "listings");
   const [listings, setListings] = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [editing, setEditing]   = useState(null); // { item, type }
+  const [editing, setEditing]   = useState(null);
   const [editSaving, setEditSaving] = useState(false);
+  const [editPhoto, setEditPhoto] = useState(null);
 
   const statusMap = {
     pending:  { label: ts.statuses.pending,  cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
@@ -423,17 +426,28 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
     const { item, type } = editing;
     setEditSaving(true);
     try {
+      let updatedItem = { ...item };
+      if (editPhoto) {
+        const fd = new FormData();
+        fd.append("file", editPhoto);
+        const up = await fetch(`${API}/api/upload?folder=${type === "car" ? "cars" : "parts"}`, {
+          method: "POST", headers: { Authorization: `Bearer ${tok()}` }, body: fd,
+        });
+        if (!up.ok) throw new Error("Ошибка загрузки фото");
+        updatedItem.photo_url = (await up.json()).url;
+      }
       const url = type === "car"
         ? `${API}/api/supplier/my-car/${item.id}`
         : `${API}/api/supplier/my-part/${item.id}`;
       const r = await fetch(url, {
         method: "PATCH",
         headers: authH(),
-        body: JSON.stringify(item),
+        body: JSON.stringify(updatedItem),
       });
       if (r.ok) {
         toast.success(tt.productUpdated);
         setEditing(null);
+        setEditPhoto(null);
         loadListings();
       } else {
         const d = await r.json().catch(() => ({}));
@@ -527,7 +541,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
       {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-charcoal/40 dark:bg-charcoal/60 backdrop-blur-sm" onClick={() => setEditing(null)} />
+          <div className="absolute inset-0 bg-charcoal/40 dark:bg-charcoal/60 backdrop-blur-sm" onClick={() => { setEditing(null); setEditPhoto(null); }} />
           <div className="relative bg-cream dark:bg-charcoal rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-charcoal/10 dark:border-cream/10 shrink-0">
@@ -539,7 +553,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                   После сохранения товар будет отправлен на повторную модерацию
                 </p>
               </div>
-              <button onClick={() => setEditing(null)}
+              <button onClick={() => { setEditing(null); setEditPhoto(null); }}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/8 transition-colors">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/>
@@ -548,68 +562,74 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
             </div>
             {/* Modal body */}
             <div className="flex-1 overflow-y-auto px-6 py-5">
-              {editing.type === "car" ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    ["Марка *",   "brand",        "text"],
-                    ["Модель *",  "model",        "text"],
-                    ["Год *",     "year",         "number"],
-                    ["Цена, ₽ *", "price",        "number"],
-                    ["Страна *",  "country",      "text"],
-                    ["Пробег, км","mileage",      "number"],
-                    ["Кузов",     "body",         "text"],
-                    ["КПП",       "gearbox",      "text"],
-                    ["Привод",    "drive",        "text"],
-                    ["Мощность",  "engine_power", "number"],
-                  ].map(([label, key, type]) => (
-                    <label key={key} className="flex flex-col gap-1">
-                      <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{label}</span>
-                      <input type={type} value={editing.item[key] ?? ""}
-                        onChange={e => setEditField(key, type === "text" && TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
-                        onKeyDown={type === "number" ? blockSpecialNumeric : undefined}
-                        min={key === "year" ? 1950 : undefined}
-                        max={key === "year" ? new Date().getFullYear() + 1 : undefined}
-                        className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
-                    </label>
-                  ))}
-                  <label className="col-span-2 flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">Ссылка на фото</span>
-                    <input type="text" value={editing.item.photo_url ?? ""}
-                      onChange={e => setEditField("photo_url", e.target.value)}
-                      placeholder="https://…"
-                      className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
+              {(() => {
+                const fldCls = "font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors";
+                const lbl = (text) => <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{text}</span>;
+                const numInput = (key, label, min, max) => (
+                  <label key={key} className="flex flex-col gap-1">
+                    {lbl(label)}
+                    <input type="number" value={editing.item[key] ?? ""} min={min} max={max}
+                      onChange={e => setEditField(key, e.target.value)}
+                      onKeyDown={blockSpecialNumeric} className={fldCls} />
                   </label>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    ["Название *", "part_name", "text"],
-                    ["Цена, ₽ *",  "price",     "number"],
-                    ["Марка",      "brand",     "text"],
-                    ["Модель",     "model",     "text"],
-                    ["Год",        "year",      "number"],
-                    ["Страна",     "country",   "text"],
-                    ["Кузов",      "body",      "text"],
-                  ].map(([label, key, type]) => (
-                    <label key={key} className={`flex flex-col gap-1 ${key === "part_name" ? "col-span-2" : ""}`}>
-                      <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{label}</span>
-                      <input type={type} value={editing.item[key] ?? ""}
-                        onChange={e => setEditField(key, type === "text" && TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
-                        onKeyDown={type === "number" ? blockSpecialNumeric : undefined}
-                        min={key === "year" ? 1950 : undefined}
-                        max={key === "year" ? new Date().getFullYear() + 1 : undefined}
-                        className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
-                    </label>
-                  ))}
-                  <label className="col-span-2 flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">Ссылка на фото</span>
-                    <input type="text" value={editing.item.photo_url ?? ""}
-                      onChange={e => setEditField("photo_url", e.target.value)}
-                      placeholder="https://…"
-                      className="font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors" />
+                );
+                const txtInput = (key, label, span2 = false) => (
+                  <label key={key} className={`flex flex-col gap-1${span2 ? " col-span-2" : ""}`}>
+                    {lbl(label)}
+                    <input type="text" value={editing.item[key] ?? ""}
+                      onChange={e => setEditField(key, TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
+                      className={fldCls} />
                   </label>
-                </div>
-              )}
+                );
+                const selectInput = (key, label, opts) => (
+                  <label key={key} className="flex flex-col gap-1">
+                    {lbl(label)}
+                    <select value={editing.item[key] ?? ""} onChange={e => setEditField(key, e.target.value)} className={fldCls}>
+                      <option value="">— не выбрано</option>
+                      {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </label>
+                );
+                const photoBlock = (
+                  <div key="photo" className="col-span-2 flex flex-col gap-2">
+                    {lbl("Фото")}
+                    {editing.item.photo_url && !editPhoto && (
+                      <img src={editing.item.photo_url.startsWith("http") ? editing.item.photo_url : `${API}${editing.item.photo_url}`}
+                        alt="" className="w-full h-32 object-cover rounded-xl" />
+                    )}
+                    <PhotoUpload file={editPhoto} onChange={f => {
+                      if (f && f.size > 10 * 1024 * 1024) { toast.error("Файл слишком большой (макс. 10 МБ)"); return; }
+                      setEditPhoto(f || null);
+                    }} label={editing.item.photo_url ? "Заменить фото" : "Загрузить фото"} />
+                  </div>
+                );
+                return editing.type === "car" ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {txtInput("brand", "Марка *")}
+                    {txtInput("model", "Модель *")}
+                    {numInput("year",         "Год *",           1950, new Date().getFullYear() + 1)}
+                    {numInput("price",        "Цена, ₽ *",       0)}
+                    {selectInput("country",   "Страна *",        COUNTRIES)}
+                    {numInput("mileage",      "Пробег, км",      0)}
+                    {selectInput("body",      "Кузов",           BODIES)}
+                    {selectInput("gearbox",   "КПП",             GEARBOXES)}
+                    {selectInput("drive",     "Привод",          DRIVES)}
+                    {numInput("engine_power", "Мощность, л.с.",  0)}
+                    {photoBlock}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {txtInput("part_name", "Название *", true)}
+                    {numInput("price",   "Цена, ₽ *",      0)}
+                    {txtInput("brand",   "Марка авто")}
+                    {txtInput("model",   "Модель авто")}
+                    {numInput("year",    "Год авто",        1950, new Date().getFullYear() + 1)}
+                    {selectInput("country", "Страна",      COUNTRIES)}
+                    {selectInput("body",    "Кузов",       BODIES)}
+                    {photoBlock}
+                  </div>
+                );
+              })()}
             </div>
             {/* Modal footer */}
             <div className="flex items-center gap-3 px-6 py-4 border-t border-charcoal/10 dark:border-cream/10 shrink-0">
@@ -617,7 +637,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                 className="font-mont font-black text-xs tracking-widest uppercase px-5 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-90 transition disabled:opacity-50">
                 {editSaving ? "Сохранение…" : "Сохранить и отправить"}
               </button>
-              <button onClick={() => setEditing(null)}
+              <button onClick={() => { setEditing(null); setEditPhoto(null); }}
                 className="font-mont text-xs text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream transition px-3 py-2">
                 Отмена
               </button>
