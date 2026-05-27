@@ -6,6 +6,7 @@ import { useLang } from "../context/LangContext";
 import { translateDesc } from "../utils/translateDesc";
 
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, 50);
+const sanitizePartName = (v) => v.replace(/[^a-zA-Z0-9Ѐ-ӿ\s\-\.]/g, "").slice(0, 50);
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
@@ -72,7 +73,7 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
       <Input label={tr.partName} required placeholder={tr.partNamePlaceholder}
-        value={form.part_name} onChange={e => set("part_name", sanitizeText(e.target.value))}
+        value={form.part_name} onChange={e => set("part_name", sanitizePartName(e.target.value))}
         error={errors.part_name} disabled={readOnly || loading}
       />
 
