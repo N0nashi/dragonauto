@@ -1183,6 +1183,15 @@ function ChatbotSection() {
 /* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    SECTION 3 — Supplier Moderation
 в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+function declItems(n, tm) {
+  const abs = Math.abs(n) % 100;
+  const last = abs % 10;
+  if (abs >= 11 && abs <= 14) return tm.items;
+  if (last === 1) return tm.items1;
+  if (last >= 2 && last <= 4) return tm.items24;
+  return tm.items;
+}
+
 function SupplierModerationSection() {
   const { t } = useLang();
   const tm = t.admin.moderation;
@@ -1244,8 +1253,8 @@ function SupplierModerationSection() {
           ]}
         />
         {items.length > 0 && (
-          <span className="font-mont text-xs text-charcoal/90 dark:text-cream/90 self-center ml-1">
-            {sorted.length} {tm.items}
+          <span className="font-mont font-bold text-xs px-3 py-1 rounded-full bg-charcoal/8 dark:bg-cream/8 text-charcoal dark:text-cream self-center">
+            {sorted.length} {declItems(sorted.length, tm)}
           </span>
         )}
       </div>
@@ -1301,11 +1310,11 @@ function SupplierModerationSection() {
                     <span className="font-mont font-bold text-sm text-charcoal dark:text-cream">
                       {item.type === "car" ? `${item.brand} ${item.model}, ${item.year}` : item.part_name}
                     </span>
-                    <span className="font-mont text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-charcoal/8 dark:bg-cream/8 text-charcoal/50 dark:text-cream/50">
+                    <span className="font-mont text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full bg-charcoal/10 dark:bg-cream/10 text-charcoal/90 dark:text-cream/90">
                       {item.type === "car" ? tm.carBadge : tm.partBadge}
                     </span>
                   </div>
-                  <p className="font-mont text-xs text-charcoal/50 dark:text-cream/50">
+                  <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90">
                     {fmtPrice(item.price)}{item.type === "car" && item.country ? ` — ${countryMap[item.country] || item.country}` : ""}
                   </p>
                   <p className="font-mont text-[11px] text-charcoal/90 dark:text-cream/90 mt-0.5">
