@@ -339,7 +339,7 @@ const CarsCatalog = () => {
 
 
   const Chip = ({ children }) => (
-    <span className="font-mont text-[10px] tracking-wide px-2.5 py-1 rounded-lg bg-charcoal/8 dark:bg-cream/6 text-charcoal/55 dark:text-cream/60 whitespace-nowrap">
+    <span className="font-mont text-[10px] tracking-wide px-2.5 py-1 rounded-lg bg-charcoal/8 dark:bg-cream/6 text-charcoal/90 dark:text-cream/90 whitespace-nowrap">
       {children}
     </span>
   );
@@ -400,7 +400,7 @@ const CarsCatalog = () => {
           {!compact && (
             <div className="absolute bottom-3 left-4 right-4">
               <p className="font-mont font-black text-white text-lg leading-tight drop-shadow">{car.brand}</p>
-              <p className="font-mont text-white/65 text-sm leading-tight">{car.model}</p>
+              <p className="font-mont text-white/90 text-sm leading-tight">{car.model}</p>
             </div>
           )}
         </div>
