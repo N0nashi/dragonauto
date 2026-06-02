@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
+﻿import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -151,13 +151,13 @@ function BellDropdown({ onClose, refreshUnreadCount }) {
                 <p className="font-mont text-[11px] text-charcoal/60 dark:text-cream/60 leading-snug truncate">
                   {appLabel(n)}{n.app_status ? ` · ${statusLabel(n.app_status)}` : ""}
                 </p>
-                <p className="font-mont text-[10px] text-charcoal/35 dark:text-cream/35 mt-0.5">
+                <p className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90 mt-0.5">
                   {fmtDate(n.created_at)}
                 </p>
               </div>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 strokeWidth="2.5" strokeLinecap="round"
-                className="text-charcoal/20 dark:text-cream/20 shrink-0 mt-1">
+                className="text-charcoal/60 dark:text-cream/60 shrink-0 mt-1">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             </button>

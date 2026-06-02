@@ -90,7 +90,7 @@ function AdminSelect({ value, onChange, options, placeholder = "Выберите
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
         className="w-full font-mont text-sm bg-cream dark:bg-charcoal border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-3 text-left flex items-center justify-between gap-2 focus:outline-none transition-colors hover:border-charcoal/25 dark:hover:border-cream/25">
-        <span className={`truncate ${!value ? "text-charcoal/35 dark:text-cream/35" : "text-charcoal dark:text-cream"}`}>
+        <span className={`truncate ${!value ? "text-charcoal/90 dark:text-cream/90" : "text-charcoal dark:text-cream"}`}>
           {current?.label ?? (value || placeholder)}
         </span>
         <svg width="11" height="6" viewBox="0 0 11 6" fill="none" className="shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform duration-200"
@@ -414,8 +414,8 @@ function CatalogSection() {
                       [tc.fields.power,   editing.item.engine_power ? `${editing.item.engine_power} ${tc.fields.powerUnit}` : null],
                     ].map(([label, value]) => (
                       <div key={label} className="flex flex-col gap-0.5">
-                        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/35 dark:text-cream/35">{label}</span>
-                        <span className={`font-mont text-sm ${value ? "text-charcoal dark:text-cream" : "text-charcoal/20 dark:text-cream/20"}`}>{value || "—"}</span>
+                        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{label}</span>
+                        <span className={`font-mont text-sm ${value ? "text-charcoal dark:text-cream" : "text-charcoal/60 dark:text-cream/60"}`}>{value || "—"}</span>
                       </div>
                     ))}
                   </div>
@@ -431,8 +431,8 @@ function CatalogSection() {
                       [tc.fields.body,    bodyMap[editing.item.body]       ?? editing.item.body],
                     ].map(([label, value]) => (
                       <div key={label} className="flex flex-col gap-0.5">
-                        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/35 dark:text-cream/35">{label}</span>
-                        <span className={`font-mont text-sm ${value ? "text-charcoal dark:text-cream" : "text-charcoal/20 dark:text-cream/20"}`}>{value || "—"}</span>
+                        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{label}</span>
+                        <span className={`font-mont text-sm ${value ? "text-charcoal dark:text-cream" : "text-charcoal/60 dark:text-cream/60"}`}>{value || "—"}</span>
                       </div>
                     ))}
                   </div>
@@ -839,7 +839,7 @@ function CatalogSection() {
 
       {/* Фильтр по статусу */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/35 dark:text-cream/35 mr-1">
+        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mr-1">
           {tc.statusFilter ?? "Статус"}:
         </span>
         {[
@@ -866,7 +866,7 @@ function CatalogSection() {
         {statusF.length > 0 && (
           <button
             onClick={() => setStatusF([])}
-            className="font-mont text-[11px] text-charcoal/35 dark:text-cream/35 hover:text-red-accent transition-colors px-1"
+            className="font-mont text-[11px] text-charcoal/90 dark:text-cream/90 hover:text-red-accent transition-colors px-1"
           >
             × сбросить
           </button>
@@ -1245,7 +1245,7 @@ function SupplierModerationSection() {
         />
         {items.length > 0 && (
           <span className="font-mont text-xs text-charcoal/90 dark:text-cream/90 self-center ml-1">
-            {sorted.length}
+            {sorted.length} {tm.items}
           </span>
         )}
       </div>
@@ -1266,8 +1266,8 @@ function SupplierModerationSection() {
 
           const Field = ({ label, value }) => (
             <div className="flex flex-col gap-0.5">
-              <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/35 dark:text-cream/35">{label}</span>
-              <span className={`font-mont text-sm ${value ? "text-charcoal dark:text-cream" : "text-charcoal/20 dark:text-cream/20"}`}>
+              <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{label}</span>
+              <span className={`font-mont text-sm ${value ? "text-charcoal dark:text-cream" : "text-charcoal/60 dark:text-cream/60"}`}>
                 {value || "—"}
               </span>
             </div>
@@ -1289,7 +1289,7 @@ function SupplierModerationSection() {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-                        className="text-charcoal/20 dark:text-cream/20">
+                        className="text-charcoal/60 dark:text-cream/60">
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
                         <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
                       </svg>
@@ -1308,7 +1308,7 @@ function SupplierModerationSection() {
                   <p className="font-mont text-xs text-charcoal/50 dark:text-cream/50">
                     {fmtPrice(item.price)}{item.type === "car" && item.country ? ` — ${countryMap[item.country] || item.country}` : ""}
                   </p>
-                  <p className="font-mont text-[11px] text-charcoal/35 dark:text-cream/35 mt-0.5">
+                  <p className="font-mont text-[11px] text-charcoal/90 dark:text-cream/90 mt-0.5">
                     {tm.supplierLabel} {item.first_name} {item.last_name}
                     {item.email && <span className="text-charcoal/90 dark:text-cream/90"> · {item.email}</span>}
                   </p>

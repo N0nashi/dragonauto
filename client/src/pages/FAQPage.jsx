@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useLang } from "../context/LangContext";
 
 const extraFaqs = {
@@ -99,7 +99,7 @@ export default function FAQPage() {
                   className="w-full flex items-center gap-4 px-6 py-5 text-left group"
                 >
                   {/* Index */}
-                  <span className="font-mont font-bold text-charcoal/20 dark:text-cream/20 text-xs tabular-nums shrink-0 w-5">
+                  <span className="font-mont font-bold text-charcoal/60 dark:text-cream/60 text-xs tabular-nums shrink-0 w-5">
                     {String(i + 1).padStart(2, "0")}
                   </span>
 

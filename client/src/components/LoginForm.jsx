@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import axios from "axios";
 import { useLang } from "../context/LangContext";
 
@@ -81,7 +81,7 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
         <button
           type="button"
           onClick={onForgot}
-          className="font-mont text-xs text-charcoal/35 dark:text-cream/35 hover:text-charcoal dark:hover:text-cream transition-colors duration-200"
+          className="font-mont text-xs text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream transition-colors duration-200"
         >
           {ta.forgotPassword}
         </button>

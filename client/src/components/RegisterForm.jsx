@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { toast } from "../utils/toast";
 import { useLang } from "../context/LangContext";
 
@@ -177,7 +177,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
               <span className={`font-mont font-black text-xs tracking-widest uppercase ${role === key ? "text-red-accent" : "text-charcoal/60 dark:text-cream/60"}`}>
                 {label}
               </span>
-              <span className="font-mont text-[10px] text-charcoal/35 dark:text-cream/35 leading-tight">
+              <span className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90 leading-tight">
                 {desc}
               </span>
             </button>

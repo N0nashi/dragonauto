@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, memo } from "react";
+﻿import React, { useEffect, useState, useRef, useCallback, memo } from "react";
 import { toast } from "../utils/toast";
 import { useLang } from "../context/LangContext";
 
@@ -102,7 +102,7 @@ const CatalogFilterSelect = ({ placeholder, options, currentValue, onSelect, get
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen(v => !v)}
         className="w-full font-mont text-sm text-left flex items-center justify-between gap-2 bg-cream dark:bg-charcoal border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 focus:outline-none transition-colors duration-200 hover:border-charcoal/40 dark:hover:border-cream/40">
-        <span className={`truncate ${!currentValue ? "text-charcoal/35 dark:text-cream/35" : "text-charcoal dark:text-cream"}`}>
+        <span className={`truncate ${!currentValue ? "text-charcoal/90 dark:text-cream/90" : "text-charcoal dark:text-cream"}`}>
           {currentValue ? getLabel(currentValue) : placeholder}
         </span>
         <svg width="11" height="6" viewBox="0 0 11 6" fill="none"
@@ -575,7 +575,7 @@ const CarsCatalog = () => {
 
                   <button
                     onClick={() => setShowAdvanced(p => !p)}
-                    className="font-mont text-[10px] tracking-widest uppercase text-charcoal/35 dark:text-cream/35 hover:text-red-accent transition-colors duration-200 text-left mt-1 flex items-center gap-1.5"
+                    className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 hover:text-red-accent transition-colors duration-200 text-left mt-1 flex items-center gap-1.5"
                   >
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
                       style={{ transform: showAdvanced ? "rotate(90deg)" : "", transition: "transform .2s" }}>
@@ -607,7 +607,7 @@ const CarsCatalog = () => {
 
 {lang === "en" && (
             <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-xl bg-charcoal/5 dark:bg-cream/5">
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" className="shrink-0 text-charcoal/35 dark:text-cream/35">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" className="shrink-0 text-charcoal/90 dark:text-cream/90">
                 <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
                 <path d="M8 7v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 <circle cx="8" cy="5" r="0.7" fill="currentColor"/>
