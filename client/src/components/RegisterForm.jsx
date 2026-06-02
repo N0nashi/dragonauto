@@ -16,14 +16,14 @@ const Field = ({ type = "text", name, placeholder, value, onChange, disabled, ex
         onChange={onChange}
         required
         disabled={disabled}
-        className={`w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50 ${isPassword ? "pr-12" : ""} ${extra}`}
+        className={`w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50 ${isPassword ? "pr-12" : ""} ${extra}`}
       />
       {isPassword && (
         <button
           type="button"
           tabIndex={-1}
           onClick={() => setShow(p => !p)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream transition-colors"
         >
           {show ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -127,7 +127,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
     }
   };
 
-  const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50";
+  const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50";
 
   if (showVerification) {
     return (
@@ -195,12 +195,12 @@ const RegisterForm = ({ onRegisterSuccess }) => {
         {/* Avatar upload */}
         <label className="flex items-center gap-3 border border-dashed border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 cursor-pointer hover:border-charcoal/40 dark:hover:border-cream/40 transition-colors duration-200 group">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-            className="text-charcoal/30 dark:text-cream/30 group-hover:text-charcoal dark:group-hover:text-cream shrink-0 transition-colors">
+            className="text-charcoal/90 dark:text-cream/90 group-hover:text-charcoal dark:group-hover:text-cream shrink-0 transition-colors">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 group-hover:text-charcoal dark:group-hover:text-cream transition-colors flex-1 truncate">
+          <span className="font-mont text-sm text-charcoal/90 dark:text-cream/90 group-hover:text-charcoal dark:group-hover:text-cream transition-colors flex-1 truncate">
             {avatar ? avatar.name : ta.avatarLabel}
           </span>
           <input type="file" accept="image/*" onChange={handleFile} disabled={loading} className="hidden" />
@@ -249,7 +249,7 @@ const RegisterForm = ({ onRegisterSuccess }) => {
           <div className="bg-cream dark:bg-charcoal border border-charcoal/15 dark:border-cream/15 rounded-2xl p-8 max-w-md w-full relative max-h-[80vh] flex flex-col">
             <button
               onClick={() => setShowPolicy(false)}
-              className="absolute top-5 right-5 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"
+              className="absolute top-5 right-5 text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>

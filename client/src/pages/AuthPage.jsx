@@ -56,7 +56,7 @@ const AuthPage = () => {
 <h1 className="font-mont font-black text-3xl text-charcoal dark:text-cream tracking-tight mb-2">
             {mode === "login" ? t.auth.loginTitle : t.auth.registerTitle}
           </h1>
-          <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-8">
+          <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-8">
             {mode === "login" ? t.auth.loginSubtitle : t.auth.registerSubtitle}
           </p>
 

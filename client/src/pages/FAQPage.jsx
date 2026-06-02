@@ -70,7 +70,7 @@ export default function FAQPage() {
       {/* ── Header ── */}
       <div className="px-6 md:px-16 pt-16 pb-12">
         <div className="max-w-3xl mx-auto">
-          <p className="font-mont text-[10px] tracking-[0.3em] text-charcoal/30 dark:text-cream/30 uppercase mb-3">
+          <p className="font-mont text-[10px] tracking-[0.3em] text-charcoal/90 dark:text-cream/90 uppercase mb-3">
             DragonAuto
           </p>
           <h1 className="font-mont font-black text-4xl md:text-6xl text-charcoal dark:text-cream leading-none tracking-tight">
@@ -111,7 +111,7 @@ export default function FAQPage() {
                   {/* Toggle icon */}
                   <span className={`shrink-0 ml-4 transition-transform duration-300 ${isOpen ? "rotate-45" : "rotate-0"}`}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                      className="text-charcoal/30 dark:text-cream/30 group-hover:text-charcoal dark:group-hover:text-cream transition-colors duration-200">
+                      className="text-charcoal/90 dark:text-cream/90 group-hover:text-charcoal dark:group-hover:text-cream transition-colors duration-200">
                       <line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                       <line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
@@ -137,7 +137,7 @@ export default function FAQPage() {
             <p className="font-mont font-bold text-charcoal dark:text-cream text-lg">
               Остались вопросы?
             </p>
-            <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mt-1">
+            <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mt-1">
               Напишите нам — ответим в течение часа
             </p>
           </div>

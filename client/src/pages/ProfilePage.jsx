@@ -108,7 +108,7 @@ export default function ProfilePage() {
       <div className="max-w-6xl mx-auto px-6 md:px-12 py-10">
 
         <div className="mb-8 animate-slide-up">
-          <p className="font-mont text-[10px] tracking-[0.3em] text-charcoal/30 dark:text-cream/30 uppercase mb-1">
+          <p className="font-mont text-[10px] tracking-[0.3em] text-charcoal/90 dark:text-cream/90 uppercase mb-1">
             DragonAuto
           </p>
           <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default function ProfilePage() {
             </span>
           </div>
           {profile && (
-            <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mt-0.5">{profile.email}</p>
+            <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mt-0.5">{profile.email}</p>
           )}
         </div>
 
@@ -164,7 +164,7 @@ export default function ProfilePage() {
               <div className="animate-slide-left" style={{ animationDelay: `${(navItems.length + 2) * 55}ms` }}>
                 <button
                   onClick={() => { localStorage.removeItem("token"); navigate("/"); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-charcoal/40 dark:text-cream/40 hover:text-red-accent transition-colors duration-200"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-charcoal/90 dark:text-cream/90 hover:text-red-accent transition-colors duration-200"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>

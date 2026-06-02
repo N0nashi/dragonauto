@@ -43,14 +43,14 @@ function MessageBubble({ msg, lang }) {
   return (
     <div className={`flex flex-col gap-0.5 max-w-[82%] ${isUser ? "items-end self-end" : "items-start self-start"}`}>
       {isAdmin && (
-        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40 px-1">
+        <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 px-1">
           {lang === "en" ? "Manager" : "Менеджер"}
         </span>
       )}
       <div className={`font-mont text-sm px-4 py-2.5 leading-relaxed whitespace-pre-line ${bubbleCls}`}>
         {msg.message}
       </div>
-      <span className="font-mont text-[10px] text-charcoal/25 dark:text-cream/25 px-1">
+      <span className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90 px-1">
         {formatTime(msg.created_at)}
       </span>
     </div>
@@ -251,7 +251,7 @@ export default function ChatWidget() {
 
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
             {loading && messages.length === 0 && (
-              <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 animate-pulse text-center mt-8">
+              <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 animate-pulse text-center mt-8">
                 {lang === "en" ? "Loading…" : "Загрузка…"}
               </p>
             )}
@@ -291,7 +291,7 @@ export default function ChatWidget() {
               onKeyDown={handleKey}
               placeholder={lang === "en" ? "Type a message…" : "Написать сообщение…"}
               disabled={loading || status === "closed"}
-              className="flex-1 font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-2.5 text-charcoal dark:text-cream placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
+              className="flex-1 font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-2.5 text-charcoal dark:text-cream placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
             />
             <button
               onClick={() => send()}

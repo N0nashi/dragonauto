@@ -44,7 +44,7 @@ const Field = ({ label, value, onChange, type = "text", required, min, max, fiel
   };
   return (
     <label className="flex flex-col gap-1">
-      <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+      <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
         {label}{required && <span className="text-red-accent ml-0.5">*</span>}
       </span>
       <input
@@ -93,7 +93,7 @@ function AdminSelect({ value, onChange, options, placeholder = "Выберите
         <span className={`truncate ${!value ? "text-charcoal/35 dark:text-cream/35" : "text-charcoal dark:text-cream"}`}>
           {current?.label ?? (value || placeholder)}
         </span>
-        <svg width="11" height="6" viewBox="0 0 11 6" fill="none" className="shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform duration-200"
+        <svg width="11" height="6" viewBox="0 0 11 6" fill="none" className="shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform duration-200"
           style={{ transform: open ? "rotate(180deg)" : "" }}>
           <path d="M1 1l4.5 4 4.5-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -374,7 +374,7 @@ function CatalogSection() {
           {tc.addBtn}
         </button>
       </div>
-      <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">{tc.subtitle}</p>
+      <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-6">{tc.subtitle}</p>
 
 {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -384,7 +384,7 @@ function CatalogSection() {
                 {tc.editTitle} {editing.type === "car" ? tc.carWord : tc.partWord}
               </h3>
               <button onClick={cancelEdit}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/8 dark:hover:bg-cream/8 transition-colors">
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/8 dark:hover:bg-cream/8 transition-colors">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/>
                 </svg>
@@ -439,7 +439,7 @@ function CatalogSection() {
                 )}
 <div className="pt-3 border-t border-charcoal/10 dark:border-cream/10 flex flex-col gap-3">
 <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.status}</span>
+                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.status}</span>
                     <span className={`inline-flex self-start font-mont font-bold text-xs px-3 py-1 rounded-full ${
                       editing.item.status === "approved"
                         ? "bg-green-500/10 text-green-600 dark:text-green-400"
@@ -451,7 +451,7 @@ function CatalogSection() {
                     </span>
                   </div>
 <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.changeTo}</span>
+                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.changeTo}</span>
                     <AdminSelect
                       value={editing.item.status !== "approved" ? editing.item.status : ""}
                       onChange={v => setField("status", v)}
@@ -467,17 +467,17 @@ function CatalogSection() {
             ) : (
               <>
 <div className="col-span-2 flex flex-col gap-1.5 mb-4">
-                <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+                <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                   {tc.fields.photo}
                 </span>
                 <label className="flex items-center gap-3 border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-xl px-4 py-3 cursor-pointer hover:border-red-accent/40 transition-colors group">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-                    className="text-charcoal/30 dark:text-cream/30 group-hover:text-red-accent shrink-0 transition-colors">
+                    className="text-charcoal/90 dark:text-cream/90 group-hover:text-red-accent shrink-0 transition-colors">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
-                  <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 truncate flex-1 group-hover:text-charcoal dark:group-hover:text-cream transition-colors">
+                  <span className="font-mont text-sm text-charcoal/90 dark:text-cream/90 truncate flex-1 group-hover:text-charcoal dark:group-hover:text-cream transition-colors">
                     {editPhoto ? editPhoto.name : tc.fields.changePhoto}
                   </span>
                   <input type="file" accept="image/*" className="hidden"
@@ -503,25 +503,25 @@ function CatalogSection() {
                   <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}          type="number" min="1950" max={new Date().getFullYear() + 1} />
                   <Field label={tc.fields.price}   value={editing.item.price}        onChange={v => setField("price", v)}         type="number" min="1" max={100_000_000} />
                   <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.country}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.country}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.country ?? ""} onChange={v => setField("country", v)} options={COUNTRIES.map(c => ({ value: c, label: countryMap[c] ?? c }))} />
                   </div>
                   <Field label={tc.fields.mileage} value={editing.item.mileage}      onChange={v => setField("mileage", v)}       type="number" min="0" max={2_000_000} />
                   <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.body}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.body}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.body ?? ""} onChange={v => setField("body", v)} options={BODIES.map(b => ({ value: b, label: bodyMap[b] ?? b }))} />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.gearbox}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.gearbox}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.gearbox ?? ""} onChange={v => setField("gearbox", v)} options={GEARBOXES.map(g => ({ value: g, label: gearboxMap[g] ?? g }))} />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.drive}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.drive}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.drive ?? ""} onChange={v => setField("drive", v)} options={DRIVES.map(d => ({ value: d, label: driveMap[d] ?? d }))} />
                   </div>
                   <Field label={tc.fields.power}   value={editing.item.engine_power} onChange={v => setField("engine_power", v)}  type="number" min="1" max={1500} />
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.status}</span>
+                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.status}</span>
                     <AdminSelect value={editing.item.status ?? "approved"} onChange={v => setField("status", v)}
                       options={[
                         { value: "approved", label: tc.statuses.approved },
@@ -530,7 +530,7 @@ function CatalogSection() {
                       ]} />
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.description}</span>
+                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.description}</span>
                     <textarea value={editing.item.description ?? ""} onChange={e => setField("description", e.target.value)} rows={2}
                       className="w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-3 text-charcoal dark:text-cream resize-none focus:outline-none focus:border-red-accent/50 transition-colors" />
                   </div>
@@ -543,15 +543,15 @@ function CatalogSection() {
                   <Field label={tc.fields.model}   value={editing.item.model}        onChange={v => setField("model", v)}    fieldKey="model" />
                   <Field label={tc.fields.year}    value={editing.item.year}         onChange={v => setField("year", v)}     type="number" min="1950" max={new Date().getFullYear() + 1} />
                   <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.country}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.country}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.country ?? ""} onChange={v => setField("country", v)} options={COUNTRIES.map(c => ({ value: c, label: countryMap[c] ?? c }))} />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.body}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.body}</span>
                     <AdminSelect placeholder={tc.fields.choose} value={editing.item.body ?? ""} onChange={v => setField("body", v)} options={BODIES.map(b => ({ value: b, label: bodyMap[b] ?? b }))} />
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.status}</span>
+                    <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.status}</span>
                     <AdminSelect value={editing.item.status ?? "approved"} onChange={v => setField("status", v)}
                       options={[
                         { value: "approved", label: tc.statuses.approved },
@@ -587,7 +587,7 @@ function CatalogSection() {
                 {tc.addTitle} — {tab === "cars" ? tc.carWord : tc.partWord}
               </h3>
               <button onClick={() => { setAdding(false); setAddForm({}); setAddPhoto(null); setAddMsg(""); }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/8 dark:hover:bg-cream/8 transition-colors">
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/8 dark:hover:bg-cream/8 transition-colors">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/>
                 </svg>
@@ -595,17 +595,17 @@ function CatalogSection() {
             </div>
 <div className="flex-1 overflow-y-auto px-6 py-5">
 <div className="col-span-2 flex flex-col gap-1.5 mb-1">
-              <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+              <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                 {tc.fields.photo} <span className="text-red-accent">*</span>
               </span>
               <label className="flex items-center gap-3 border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-xl px-4 py-3 cursor-pointer hover:border-red-accent/40 transition-colors group">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-                  className="text-charcoal/30 dark:text-cream/30 group-hover:text-red-accent shrink-0 transition-colors">
+                  className="text-charcoal/90 dark:text-cream/90 group-hover:text-red-accent shrink-0 transition-colors">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
-                <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 truncate flex-1 group-hover:text-charcoal dark:group-hover:text-cream transition-colors">
+                <span className="font-mont text-sm text-charcoal/90 dark:text-cream/90 truncate flex-1 group-hover:text-charcoal dark:group-hover:text-cream transition-colors">
                   {addPhoto ? addPhoto.name : tc.fields.choose}
                 </span>
                 <input type="file" accept="image/*" className="hidden"
@@ -628,7 +628,7 @@ function CatalogSection() {
                 <Field required label={tc.fields.year}    value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1950" max={new Date().getFullYear() + 1} />
                 <Field required label={tc.fields.price}   value={addForm.price ?? ""} onChange={v => setAddField("price", v)} type="number" min="1" max={100_000_000} />
 <div className="flex flex-col gap-1">
-                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                     {tc.fields.country}<span className="text-red-accent ml-0.5">*</span>
                   </span>
                   <AdminSelect placeholder={tc.fields.choose}
@@ -638,7 +638,7 @@ function CatalogSection() {
                 </div>
                 <Field required label={tc.fields.mileage} value={addForm.mileage ?? ""} onChange={v => setAddField("mileage", v)} type="number" min="0" max="2000000" />
 <div className="flex flex-col gap-1">
-                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                     {tc.fields.body}<span className="text-red-accent ml-0.5">*</span>
                   </span>
                   <AdminSelect placeholder={tc.fields.choose}
@@ -647,7 +647,7 @@ function CatalogSection() {
                     options={BODIES.map(b => ({ value: b, label: bodyMap[b] ?? b }))} />
                 </div>
 <div className="flex flex-col gap-1">
-                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                     {tc.fields.gearbox}<span className="text-red-accent ml-0.5">*</span>
                   </span>
                   <AdminSelect placeholder={tc.fields.choose}
@@ -656,7 +656,7 @@ function CatalogSection() {
                     options={GEARBOXES.map(g => ({ value: g, label: gearboxMap[g] ?? g }))} />
                 </div>
 <div className="flex flex-col gap-1">
-                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                     {tc.fields.drive}<span className="text-red-accent ml-0.5">*</span>
                   </span>
                   <AdminSelect placeholder={tc.fields.choose}
@@ -666,7 +666,7 @@ function CatalogSection() {
                 </div>
                 <Field required label={tc.fields.power} value={addForm.engine_power ?? ""} onChange={v => setAddField("engine_power", v)} type="number" min="1" max="1500" />
                 <div className="col-span-2 flex flex-col gap-1.5">
-                  <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.status}</span>
+                  <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.status}</span>
                   <AdminSelect
                     value={addForm.status ?? "approved"}
                     onChange={v => setAddField("status", v)}
@@ -678,7 +678,7 @@ function CatalogSection() {
                   />
                 </div>
                 <div className="col-span-2 flex flex-col gap-1.5">
-                  <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.description}</span>
+                  <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.description}</span>
                   <textarea value={addForm.description ?? ""}
                     onChange={e => setAddField("description", e.target.value)}
                     rows={2}
@@ -694,7 +694,7 @@ function CatalogSection() {
                 <Field required label={tc.fields.model} value={addForm.model ?? ""} onChange={v => setAddField("model", v)} fieldKey="model" />
                 <Field required label={tc.fields.year}  value={addForm.year  ?? ""} onChange={v => setAddField("year", v)}  type="number" min="1950" max={new Date().getFullYear() + 1} />
 <div className="flex flex-col gap-1">
-                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                     {tc.fields.country}<span className="text-red-accent ml-0.5">*</span>
                   </span>
                   <AdminSelect placeholder={tc.fields.choose}
@@ -703,7 +703,7 @@ function CatalogSection() {
                     options={COUNTRIES.map(c => ({ value: c, label: countryMap[c] ?? c }))} />
                 </div>
 <div className="flex flex-col gap-1">
-                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+                  <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                     {tc.fields.body}<span className="text-red-accent ml-0.5">*</span>
                   </span>
                   <AdminSelect placeholder={tc.fields.choose}
@@ -712,7 +712,7 @@ function CatalogSection() {
                     options={BODIES.map(b => ({ value: b, label: bodyMap[b] ?? b }))} />
                 </div>
                 <div className="col-span-2 flex flex-col gap-1.5">
-                  <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{tc.fields.status}</span>
+                  <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.fields.status}</span>
                   <AdminSelect
                     value={addForm.status ?? "approved"}
                     onChange={v => setAddField("status", v)}
@@ -800,7 +800,7 @@ function CatalogSection() {
         {[["cars", tc.tabCars, cars.length], ["parts", tc.tabParts, parts.length]].map(([k, l, c]) => (
           <button key={k} onClick={() => setTab(k)}
             className={`font-mont font-bold text-sm px-4 py-2 rounded-xl transition-colors ${
-              tab === k ? "bg-red-accent/10 text-red-accent" : "text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream"
+              tab === k ? "bg-red-accent/10 text-red-accent" : "text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream"
             }`}>
             {l} <span className="opacity-60">({c})</span>
           </button>
@@ -811,13 +811,13 @@ function CatalogSection() {
         <div className="relative flex-1 min-w-40">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
             strokeLinecap="round" strokeLinejoin="round"
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/30 dark:text-cream/30">
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/90 dark:text-cream/90">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder={tab === "cars" ? tc.searchCars : tc.searchParts}
-            className="w-full font-mont text-xs pl-8 pr-3 py-2 bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-lg text-charcoal dark:text-cream placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-red-accent/40 transition-colors"
+            className="w-full font-mont text-xs pl-8 pr-3 py-2 bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-lg text-charcoal dark:text-cream placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-red-accent/40 transition-colors"
           />
         </div>
 
@@ -856,7 +856,7 @@ function CatalogSection() {
               className={`font-mont font-bold text-[11px] px-3 py-1 rounded-lg border transition-all duration-150 ${
                 active
                   ? color
-                  : "bg-transparent border-charcoal/12 dark:border-cream/12 text-charcoal/40 dark:text-cream/40 hover:border-charcoal/25 dark:hover:border-cream/25"
+                  : "bg-transparent border-charcoal/12 dark:border-cream/12 text-charcoal/90 dark:text-cream/90 hover:border-charcoal/25 dark:hover:border-cream/25"
               }`}
             >
               {tc.statuses[key]} <span className="opacity-60">({count})</span>
@@ -873,7 +873,7 @@ function CatalogSection() {
         )}
       </div>
 
-      <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 mb-3">
+      <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 mb-3">
         {tc.found} {filtered.length} — {tc.page} {page} {tc.of} {totalPages}
       </p>
 
@@ -883,7 +883,7 @@ function CatalogSection() {
 
       <div className="space-y-2">
         {paginated.length === 0 && (
-          <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 py-4 text-center">{tc.noItems}</p>
+          <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 py-4 text-center">{tc.noItems}</p>
         )}
         {paginated.map((item, i) => (
           <div key={item.id}
@@ -901,7 +901,7 @@ function CatalogSection() {
                     : `${item.part_name}${item.brand ? ` — ${item.brand}` : ""}${item.model ? ` ${item.model}` : ""}`}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="font-mont text-xs text-charcoal/40 dark:text-cream/40">
+                  <span className="font-mont text-xs text-charcoal/90 dark:text-cream/90">
                     {fmtPrice(item.price)} — {fmt(countryMap[item.country] || item.country)}
                     {item.created_at && ` — ${new Date(item.created_at).toLocaleDateString("ru-RU")}`}
                   </span>
@@ -951,7 +951,7 @@ function CatalogSection() {
             }, [])
             .map((n, i) =>
               n === "—"
-                ? <span key={`e${i}`} className="font-mont text-xs text-charcoal/30 dark:text-cream/30 px-1">←</span>
+                ? <span key={`e${i}`} className="font-mont text-xs text-charcoal/90 dark:text-cream/90 px-1">←</span>
                 : <button key={n} onClick={() => setPage(n)}
                     className={`w-8 h-8 rounded-lg font-mont font-bold text-xs transition-colors ${
                       page === n
@@ -1064,7 +1064,7 @@ function ChatbotSection() {
           </span>
         )}
       </div>
-      <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">
+      <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-6">
         {tc.subtitle}
       </p>
 
@@ -1072,11 +1072,11 @@ function ChatbotSection() {
 
 <div className="w-64 shrink-0 flex flex-col gap-2">
           {loading && (
-            <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30 animate-pulse">{tc.loading}</p>
+            <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 animate-pulse">{tc.loading}</p>
           )}
           {!loading && tickets.length === 0 && (
             <div className="border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-2xl p-8 text-center">
-              <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40">{tc.empty}</p>
+              <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90">{tc.empty}</p>
             </div>
           )}
           {tickets.map((tk, i) => (
@@ -1098,7 +1098,7 @@ function ChatbotSection() {
                 )}
               </div>
               {tk.email && (
-                <p className="font-mont text-[10px] text-charcoal/40 dark:text-cream/40 truncate">{tk.email}</p>
+                <p className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90 truncate">{tk.email}</p>
               )}
               {tk.last_message && (
                 <p className="font-mont text-[11px] text-charcoal/50 dark:text-cream/50 truncate mt-1">{tk.last_message}</p>
@@ -1122,7 +1122,7 @@ function ChatbotSection() {
                   {selected.first_name ? `${selected.first_name} ${selected.last_name}` : tc.guest}
                 </p>
                 {selected.email && (
-                  <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40">{selected.email}</p>
+                  <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90">{selected.email}</p>
                 )}
               </div>
               <Btn onClick={closeTicket} disabled={closing}
@@ -1137,15 +1137,15 @@ function ChatbotSection() {
                   className={`flex flex-col gap-0.5 max-w-[80%] animate-slide-up ${msg.sender === "admin" ? "items-end self-end" : "items-start self-start"}`}
                   style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}>
                   {msg.sender === "user" && (
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30 px-1">{tc.labelClient}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 px-1">{tc.labelClient}</span>
                   )}
                   {msg.sender === "bot" && (
-                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/25 dark:text-cream/25 px-1">{tc.labelBot}</span>
+                    <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 px-1">{tc.labelBot}</span>
                   )}
                   <div className={`font-mont text-sm px-4 py-2.5 leading-relaxed whitespace-pre-line ${senderCls(msg.sender)}`}>
                     {msg.message}
                   </div>
-                  <span className="font-mont text-[10px] text-charcoal/25 dark:text-cream/25 px-1">
+                  <span className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90 px-1">
                     {new Date(msg.created_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
@@ -1160,7 +1160,7 @@ function ChatbotSection() {
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); }}}
                 placeholder={tc.replyPlaceholder}
                 disabled={sending}
-                className="flex-1 font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-2.5 text-charcoal dark:text-cream placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
+                className="flex-1 font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-2.5 text-charcoal dark:text-cream placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
               />
               <button onClick={sendReply} disabled={sending || !reply.trim()}
                 className="w-10 h-10 rounded-xl bg-red-accent flex items-center justify-center hover:opacity-90 transition disabled:opacity-40 shrink-0">
@@ -1172,7 +1172,7 @@ function ChatbotSection() {
           </div>
         ) : (
           <div className="flex-1 border-2 border-dashed border-charcoal/10 dark:border-cream/10 rounded-2xl flex items-center justify-center" style={{ height: "480px" }}>
-            <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30">{tc.selectHint}</p>
+            <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90">{tc.selectHint}</p>
           </div>
         )}
       </div>
@@ -1223,7 +1223,7 @@ function SupplierModerationSection() {
   return (
     <div>
       <h2 className="font-mont font-black text-xl text-charcoal dark:text-cream mb-1">{tm.title}</h2>
-      <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-5">{tm.subtitle}</p>
+      <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-5">{tm.subtitle}</p>
 
       <div className="flex flex-wrap gap-2 mb-5">
         <AdminSelect
@@ -1244,13 +1244,13 @@ function SupplierModerationSection() {
           ]}
         />
         {items.length > 0 && (
-          <span className="font-mont text-xs text-charcoal/30 dark:text-cream/30 self-center ml-1">
+          <span className="font-mont text-xs text-charcoal/90 dark:text-cream/90 self-center ml-1">
             {sorted.length}
           </span>
         )}
       </div>
 
-      {loading && <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 animate-pulse">{tm.loading}</p>}
+      {loading && <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 animate-pulse">{tm.loading}</p>}
 
       {!loading && sorted.length === 0 && (
         <div className="border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-2xl p-10 text-center">
@@ -1310,12 +1310,12 @@ function SupplierModerationSection() {
                   </p>
                   <p className="font-mont text-[11px] text-charcoal/35 dark:text-cream/35 mt-0.5">
                     {tm.supplierLabel} {item.first_name} {item.last_name}
-                    {item.email && <span className="text-charcoal/25 dark:text-cream/25"> · {item.email}</span>}
+                    {item.email && <span className="text-charcoal/90 dark:text-cream/90"> · {item.email}</span>}
                   </p>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
                   strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-                  className={`shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                  className={`shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform ${isOpen ? "rotate-180" : ""}`}>
                   <path d="M4 6l4 4 4-4"/>
                 </svg>
               </button>
@@ -1412,9 +1412,9 @@ function SuppliersSection() {
   return (
     <div>
       <h2 className="font-mont font-black text-xl text-charcoal dark:text-cream mb-1">{ts.title}</h2>
-      <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">{ts.subtitle}</p>
+      <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-6">{ts.subtitle}</p>
 
-      {loading && <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 animate-pulse">{ts.loading}</p>}
+      {loading && <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 animate-pulse">{ts.loading}</p>}
 
       {!loading && suppliers.length === 0 && (
         <div className="border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-2xl p-10 text-center">
@@ -1442,8 +1442,8 @@ function SuppliersSection() {
                   </span>
                 )}
               </div>
-              <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40">{s.email}</p>
-              <p className="font-mont text-[10px] text-charcoal/30 dark:text-cream/30 mt-0.5">
+              <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90">{s.email}</p>
+              <p className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90 mt-0.5">
                 ID: {s.id} — {ts.regDate} {new Date(s.created_at).toLocaleDateString("ru-RU")}
               </p>
             </div>
@@ -1509,7 +1509,7 @@ function ApplicationsSection() {
   return (
     <div>
       <h2 className="font-mont font-black text-xl text-charcoal dark:text-cream mb-1">{ta.title}</h2>
-      <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">{ta.subtitle}</p>
+      <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-6">{ta.subtitle}</p>
 
       <div className="flex gap-2 flex-wrap mb-5">
         {[["all", ta.all], ["car", ta.cars], ["part", ta.parts]].map(([k, l]) => (
@@ -1524,7 +1524,7 @@ function ApplicationsSection() {
         ))}
       </div>
 
-      {loading && <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 animate-pulse">{ta.loading}</p>}
+      {loading && <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 animate-pulse">{ta.loading}</p>}
 
       {!loading && filtered.length === 0 && (
         <div className="border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-2xl p-10 text-center">
@@ -1569,7 +1569,7 @@ function ApplicationsSection() {
                       </span>
                       <Badge status={app.status} />
                     </div>
-                    <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40">
+                    <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90">
                       {app.first_name} {app.last_name} — {app.email} ·{" "}
                       {new Date(app.date).toLocaleDateString("ru-RU")}
                     </p>
@@ -1577,7 +1577,7 @@ function ApplicationsSection() {
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
                   strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-                  className={`shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                  className={`shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform ${isOpen ? "rotate-180" : ""}`}>
                   <path d="M4 6l4 4 4-4"/>
                 </svg>
               </button>
@@ -1697,7 +1697,7 @@ export default function AdminPage() {
       <div className="max-w-6xl mx-auto px-6 md:px-12 py-10">
 
         <div className="mb-8 animate-slide-up">
-          <p className="font-mont text-[10px] tracking-[0.3em] text-charcoal/30 dark:text-cream/30 uppercase mb-1">
+          <p className="font-mont text-[10px] tracking-[0.3em] text-charcoal/90 dark:text-cream/90 uppercase mb-1">
             DragonAuto
           </p>
           <div className="flex items-center gap-3">
@@ -1708,7 +1708,7 @@ export default function AdminPage() {
               Admin
             </span>
           </div>
-          <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mt-0.5">
+          <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mt-0.5">
             {ta.subtitle}
           </p>
         </div>

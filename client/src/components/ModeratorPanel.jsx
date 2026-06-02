@@ -71,7 +71,7 @@ const ModeratorPanel = () => {
 
   if (loading) return (
     <div className="flex items-center justify-center py-16">
-      <span className="font-mont text-sm text-charcoal/30 dark:text-cream/30 tracking-widest uppercase animate-pulse">
+      <span className="font-mont text-sm text-charcoal/90 dark:text-cream/90 tracking-widest uppercase animate-pulse">
         Загрузка заявок…
       </span>
     </div>
@@ -95,7 +95,7 @@ const ModeratorPanel = () => {
             className={`font-mont font-black text-xs tracking-widest uppercase px-5 py-3 border-b-2 transition-colors ${
               activeSection === key
                 ? "border-red-accent text-charcoal dark:text-cream"
-                : "border-transparent text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream"
+                : "border-transparent text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream"
             }`}
           >
             {label}
@@ -157,7 +157,7 @@ const ModeratorPanel = () => {
           <div className="bg-cream dark:bg-charcoal rounded-2xl w-full max-w-3xl mx-4 p-6 shadow-2xl border border-charcoal/10 dark:border-cream/10">
             {/* Modal header */}
             <div className="flex items-center justify-between mb-5">
-              <span className="font-mont font-black text-xs tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+              <span className="font-mont font-black text-xs tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                 Просмотр заявки
               </span>
               <button

@@ -129,10 +129,10 @@ function BellDropdown({ onClose, refreshUnreadCount }) {
 
         <div className="overflow-y-auto flex-1">
           {loading && (
-            <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 text-center py-8">Загрузка…</p>
+            <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 text-center py-8">Загрузка…</p>
           )}
           {!loading && items.length === 0 && (
-            <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 text-center py-8">Нет уведомлений</p>
+            <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 text-center py-8">Нет уведомлений</p>
           )}
           {!loading && items.map(n => (
             <button

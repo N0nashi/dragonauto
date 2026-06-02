@@ -11,7 +11,7 @@ const ForgotPasswordForm = ({ onClose }) => {
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState("");
 
-  const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50";
+  const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50";
 
   const sendOtp = async (e) => {
     e.preventDefault();
@@ -54,7 +54,7 @@ const ForgotPasswordForm = ({ onClose }) => {
 
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"
+          className="absolute top-5 right-5 text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -67,7 +67,7 @@ const ForgotPasswordForm = ({ onClose }) => {
 
         {step === "email" && (
           <>
-            <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">
+            <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-6">
               {ta.forgotDesc}
             </p>
             <form onSubmit={sendOtp} className="flex flex-col gap-3">
@@ -95,7 +95,7 @@ const ForgotPasswordForm = ({ onClose }) => {
 
         {step === "reset" && (
           <>
-            <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mb-6">
+            <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mb-6">
               {ta.codeSentTo} <span className="text-charcoal dark:text-cream font-bold">{email}</span>
             </p>
             <form onSubmit={resetPassword} className="flex flex-col gap-3" autoComplete="off">
@@ -141,7 +141,7 @@ const ForgotPasswordForm = ({ onClose }) => {
             <p className="font-mont font-bold text-charcoal dark:text-cream text-center">
               {ta.passwordChanged}
             </p>
-            <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 text-center">
+            <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 text-center">
               {ta.closingWindow}
             </p>
           </div>

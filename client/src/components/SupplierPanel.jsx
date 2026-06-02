@@ -263,12 +263,12 @@ function MatchedRequests({ initialOpenId = null, onInitConsumed }) {
     else toast.error(tt.genericError);
   };
 
-  if (loading) return <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30 animate-pulse">{ts.loading}</p>;
+  if (loading) return <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 animate-pulse">{ts.loading}</p>;
 
   if (apps.length === 0) return (
     <div className="border-2 border-dashed border-charcoal/15 dark:border-cream/15 rounded-2xl p-10 text-center">
-      <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40">{tt.noActiveRequests}</p>
-      <p className="font-mont text-xs text-charcoal/25 dark:text-cream/25 mt-1">{tt.noActiveRequestsHint}</p>
+      <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90">{tt.noActiveRequests}</p>
+      <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 mt-1">{tt.noActiveRequestsHint}</p>
     </div>
   );
 
@@ -297,11 +297,11 @@ function MatchedRequests({ initialOpenId = null, onInitConsumed }) {
                     <span className="font-mont font-black text-[9px] px-1.5 py-0.5 rounded-full bg-red-accent text-cream">{app.unread_count} новых</span>
                   )}
                 </div>
-                <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 truncate">{itemName}</p>
+                <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 truncate">{itemName}</p>
               </div>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"
                 strokeLinecap="round" strokeLinejoin="round"
-                className={`shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                className={`shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform ${isOpen ? "rotate-180" : ""}`}>
                 <path d="M4 6l4 4 4-4"/>
               </svg>
             </button>
@@ -331,16 +331,16 @@ function MatchedRequests({ initialOpenId = null, onInitConsumed }) {
 
                 {/* Messages */}
                 <div>
-                  <p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-2">
+                  <p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mb-2">
                     Переписка с менеджером
                   </p>
                   <div className="max-h-48 overflow-y-auto flex flex-col gap-2 mb-2 pr-1">
                     {msgs.length === 0 && (
-                      <p className="font-mont text-xs text-charcoal/25 dark:text-cream/25 text-center py-3">Сообщений нет</p>
+                      <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 text-center py-3">Сообщений нет</p>
                     )}
                     {msgs.map(msg => (
                       <div key={msg.id} className={`flex flex-col gap-0.5 max-w-[85%] ${msg.sender_role === "supplier" ? "self-end items-end" : "self-start items-start"}`}>
-                        <span className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30 px-1">
+                        <span className="font-mont text-[9px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 px-1">
                           {msg.sender_role === "admin" ? "Менеджер" : "Вы"}
                         </span>
                         <div className={`font-mont text-xs px-3 py-2 rounded-xl leading-relaxed whitespace-pre-line ${
@@ -361,7 +361,7 @@ function MatchedRequests({ initialOpenId = null, onInitConsumed }) {
                       onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(app.id); }}}
                       placeholder="Ответить менеджеру…"
                       disabled={sending}
-                      className="flex-1 font-mont text-xs bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream placeholder:text-charcoal/25 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
+                      className="flex-1 font-mont text-xs bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream placeholder:text-charcoal/90 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
                     />
                     <button onClick={() => sendMsg(app.id)} disabled={sending || !(reply[app.id] || "").trim()}
                       className="w-8 h-8 rounded-xl bg-red-accent flex items-center justify-center hover:opacity-90 transition disabled:opacity-40 shrink-0">
@@ -483,14 +483,14 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
 
       {tab === "listings" && (
         <div className="border border-charcoal/10 dark:border-cream/10 rounded-2xl p-5">
-          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-4">
+          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mb-4">
             {ts.myProducts}
           </h3>
           {loading ? (
-            <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30 animate-pulse">{ts.loading}</p>
+            <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 animate-pulse">{ts.loading}</p>
           ) : listings.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-8">
-              <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30">{ts.noProducts}</p>
+              <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90">{ts.noProducts}</p>
               <button onClick={() => setTab("add-car")}
                 className="font-mont font-black text-xs tracking-widest uppercase px-5 py-2 bg-red-accent text-cream rounded-xl hover:opacity-90 transition">
                 {ts.addFirst}
@@ -520,7 +520,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                     <p className="font-mont font-bold text-sm text-charcoal dark:text-cream truncate">
                       {item.type === "car" ? `${item.brand} ${item.model} ${item.year}` : item.part_name}
                     </p>
-                    <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 mt-0.5">
+                    <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 mt-0.5">
                       {item.type === "car" ? ts.carLabel : ts.partLabel} · {item.price?.toLocaleString("ru-RU")} ₽
                     </p>
                   </div>
@@ -555,7 +555,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                 </p>
               </div>
               <button onClick={() => { setEditing(null); setEditPhoto(null); }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/8 transition-colors">
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream hover:bg-charcoal/8 transition-colors">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/>
                 </svg>
@@ -565,7 +565,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
             <div className="flex-1 overflow-y-auto px-6 py-5">
               {(() => {
                 const fldCls = "font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream focus:outline-none focus:border-red-accent/50 transition-colors";
-                const lbl = (text) => <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{text}</span>;
+                const lbl = (text) => <span className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{text}</span>;
                 const numInput = (key, label, min, max) => (
                   <label key={key} className="flex flex-col gap-1">
                     {lbl(label)}
@@ -639,7 +639,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                 {editSaving ? "Сохранение…" : "Сохранить и отправить"}
               </button>
               <button onClick={() => { setEditing(null); setEditPhoto(null); }}
-                className="font-mont text-xs text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream transition px-3 py-2">
+                className="font-mont text-xs text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream transition px-3 py-2">
                 Отмена
               </button>
             </div>
@@ -649,7 +649,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
 
       {tab === "requests" && (
         <div className="border border-charcoal/10 dark:border-cream/10 rounded-2xl p-5">
-          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-4">
+          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mb-4">
             {ts.matchedRequests ?? "Запросы модератора"}
           </h3>
           <MatchedRequests initialOpenId={initialOpenId} onInitConsumed={onInitConsumed} />
@@ -658,7 +658,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
 
       {tab === "add-car" && (
         <div className="border border-charcoal/10 dark:border-cream/10 rounded-2xl p-5">
-          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-5">
+          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mb-5">
             {ts.addCarTitle}
           </h3>
           <AddCarForm onSuccess={() => { loadListings(); setTab("listings"); }} />
@@ -667,7 +667,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
 
       {tab === "add-part" && (
         <div className="border border-charcoal/10 dark:border-cream/10 rounded-2xl p-5">
-          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-5">
+          <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mb-5">
             {ts.addPartTitle}
           </h3>
           <AddPartForm onSuccess={() => { loadListings(); setTab("listings"); }} />

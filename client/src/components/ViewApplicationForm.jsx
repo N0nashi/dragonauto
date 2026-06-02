@@ -32,7 +32,7 @@ function StatusSelect({ value, onChange, options, statusLabels }) {
         className="w-full font-mont text-sm bg-cream dark:bg-charcoal border border-charcoal/15 dark:border-cream/15 rounded-xl px-4 py-3 text-left flex items-center justify-between gap-2 focus:outline-none transition-colors hover:border-charcoal/30 dark:hover:border-cream/30">
         <span className="text-charcoal dark:text-cream truncate">{currentLabel}</span>
         <svg width="11" height="6" viewBox="0 0 11 6" fill="none"
-          className="shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform duration-200"
+          className="shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform duration-200"
           style={{ transform: open ? "rotate(180deg)" : "" }}>
           <path d="M1 1l4.5 4 4.5-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -157,7 +157,7 @@ function SupplierMatchPanel({ applicationId, appType, matchedItemId, matchedItem
             </span>
           )}
           <button onClick={onMatchChanged} title="Обновить"
-            className="w-6 h-6 flex items-center justify-center rounded-lg text-charcoal/30 dark:text-cream/30 hover:text-red-accent hover:bg-red-accent/8 transition">
+            className="w-6 h-6 flex items-center justify-center rounded-lg text-charcoal/90 dark:text-cream/90 hover:text-red-accent hover:bg-red-accent/8 transition">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
             </svg>
@@ -178,9 +178,9 @@ function SupplierMatchPanel({ applicationId, appType, matchedItemId, matchedItem
               <input
                 value={search} onChange={e => setSearch(e.target.value)}
                 placeholder={tm.searchPlaceholder}
-                className="w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-2.5 text-charcoal dark:text-cream placeholder:text-charcoal/30 focus:outline-none focus:border-red-accent/40 transition-colors"
+                className="w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-2.5 text-charcoal dark:text-cream placeholder:text-charcoal/90 focus:outline-none focus:border-red-accent/40 transition-colors"
               />
-              {loading && <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 animate-pulse">{tm.loading}</p>}
+              {loading && <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 animate-pulse">{tm.loading}</p>}
               <div className="max-h-56 overflow-y-auto flex flex-col gap-1.5">
                 {filtered.map(item => {
                   const name = appType === "car" ? `${item.brand} ${item.model} ${item.year}` : item.part_name;
@@ -201,7 +201,7 @@ function SupplierMatchPanel({ applicationId, appType, matchedItemId, matchedItem
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-mont font-bold text-xs text-charcoal dark:text-cream truncate">{name}</p>
-                        <p className="font-mont text-[10px] text-charcoal/40 dark:text-cream/40">
+                        <p className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90">
                           {item.price?.toLocaleString("ru-RU")} ₽
                         </p>
                       </div>
@@ -209,13 +209,13 @@ function SupplierMatchPanel({ applicationId, appType, matchedItemId, matchedItem
                   );
                 })}
                 {!loading && filtered.length === 0 && (
-                  <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 text-center py-4">
+                  <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 text-center py-4">
                     {tm.noItems}
                   </p>
                 )}
               </div>
               <button onClick={() => setShowSearch(false)}
-                className="font-mont text-xs text-charcoal/40 dark:text-cream/40 hover:text-charcoal dark:hover:text-cream transition self-start">
+                className="font-mont text-xs text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream transition self-start">
                 {tm.cancelMatch}
               </button>
             </div>
@@ -248,13 +248,13 @@ function SupplierMatchPanel({ applicationId, appType, matchedItemId, matchedItem
                 <div className="flex-1 min-w-0">
                   <p className="font-mont font-bold text-xs text-charcoal dark:text-cream truncate">{itemName}</p>
                   {itemPrice && (
-                    <p className="font-mont text-[10px] text-charcoal/40 dark:text-cream/40">
+                    <p className="font-mont text-[10px] text-charcoal/90 dark:text-cream/90">
                       {Number(itemPrice).toLocaleString("ru-RU")} ₽
                     </p>
                   )}
                 </div>
                 <button onClick={unmatch}
-                  className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40 hover:text-red-accent transition px-2 py-1 rounded-lg hover:bg-red-accent/8">
+                  className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 hover:text-red-accent transition px-2 py-1 rounded-lg hover:bg-red-accent/8">
                   {tm.unbind}
                 </button>
               </div>
@@ -263,16 +263,16 @@ function SupplierMatchPanel({ applicationId, appType, matchedItemId, matchedItem
 
           {/* Supplier messages */}
           <div>
-            <p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-2">
+            <p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mb-2">
               {tm.conversation}
             </p>
             <div className="max-h-48 overflow-y-auto flex flex-col gap-2 mb-2 pr-1">
               {messages.length === 0 && (
-                <p className="font-mont text-xs text-charcoal/25 dark:text-cream/25 text-center py-3">{tm.noMessages}</p>
+                <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 text-center py-3">{tm.noMessages}</p>
               )}
               {messages.map(msg => (
                 <div key={msg.id} className={`flex flex-col gap-0.5 max-w-[85%] ${msg.sender_role === "admin" ? "self-end items-end" : "self-start items-start"}`}>
-                  <span className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30 px-1">
+                  <span className="font-mont text-[9px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90 px-1">
                     {msg.sender_name}
                   </span>
                   <div className={`font-mont text-xs px-3 py-2 rounded-xl leading-relaxed whitespace-pre-line ${
@@ -292,7 +292,7 @@ function SupplierMatchPanel({ applicationId, appType, matchedItemId, matchedItem
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }}}
                 placeholder={tm.replyPlaceholder}
                 disabled={sending}
-                className="flex-1 font-mont text-xs bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream placeholder:text-charcoal/25 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
+                className="flex-1 font-mont text-xs bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-3 py-2 text-charcoal dark:text-cream placeholder:text-charcoal/90 focus:outline-none focus:border-red-accent/40 transition-colors disabled:opacity-50"
               />
               <button onClick={sendMsg} disabled={sending || !reply.trim()}
                 className="w-8 h-8 rounded-xl bg-red-accent flex items-center justify-center hover:opacity-90 transition disabled:opacity-40 shrink-0">
@@ -373,10 +373,10 @@ export default function ViewApplicationForm({ applicationId, onCancel, onReply, 
   };
 
   if (loading) return (
-    <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 p-4">{tm.loading}</p>
+    <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 p-4">{tm.loading}</p>
   );
   if (!data) return (
-    <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 p-4">{tm.noData}</p>
+    <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 p-4">{tm.noData}</p>
   );
 
   const type     = data.type?.trim().toLowerCase();
@@ -410,7 +410,7 @@ export default function ViewApplicationForm({ applicationId, onCancel, onReply, 
           </p>
 
           <div className="flex flex-col gap-1.5">
-            <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+            <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
               {tm.newStatus}
             </span>
             <StatusSelect
@@ -424,7 +424,7 @@ export default function ViewApplicationForm({ applicationId, onCancel, onReply, 
           {/* Offered price — only shown for 'предложение' */}
           {nextStatus === "предложение" && (
             <div className="flex flex-col gap-1.5">
-              <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+              <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
                 {tm.offerPrice}
               </span>
               <input
@@ -438,7 +438,7 @@ export default function ViewApplicationForm({ applicationId, onCancel, onReply, 
           )}
 
           <div className="flex flex-col gap-1.5">
-            <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+            <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
               {tm.commentOptional}
             </span>
             <textarea

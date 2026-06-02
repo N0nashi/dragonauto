@@ -58,7 +58,7 @@ const RangeRow = memo(({ label, filterKey, value, onChange, fromLabel, toLabel }
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-mont text-[10px] tracking-widest text-charcoal/40 dark:text-cream/40 uppercase pr-0.5">
+      <span className="font-mont text-[10px] tracking-widest text-charcoal/90 dark:text-cream/90 uppercase pr-0.5">
         {label}
       </span>
       <div className="flex gap-2">
@@ -106,7 +106,7 @@ const CatalogFilterSelect = ({ placeholder, options, currentValue, onSelect, get
           {currentValue ? getLabel(currentValue) : placeholder}
         </span>
         <svg width="11" height="6" viewBox="0 0 11 6" fill="none"
-          className="shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform duration-200"
+          className="shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform duration-200"
           style={{ transform: open ? "rotate(180deg)" : "" }}>
           <path d="M1 1l4.5 4 4.5-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -114,7 +114,7 @@ const CatalogFilterSelect = ({ placeholder, options, currentValue, onSelect, get
       {open && (
         <div className="absolute z-30 mt-1 w-full bg-cream dark:bg-charcoal border border-charcoal/10 dark:border-cream/10 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
           {deduped.length === 0 ? (
-            <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 text-center py-4 px-4">
+            <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 text-center py-4 px-4">
               Нет данных
             </p>
           ) : (
@@ -125,7 +125,7 @@ const CatalogFilterSelect = ({ placeholder, options, currentValue, onSelect, get
                 <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${!currentValue ? "bg-red-accent" : "bg-charcoal/10 dark:bg-cream/10"}`}>
                   {!currentValue && <div className="w-2 h-2 rounded-full bg-cream" />}
                 </div>
-                <span className={`font-mont text-sm ${!currentValue ? "text-red-accent font-semibold" : "text-charcoal/40 dark:text-cream/40"}`}>{placeholder}</span>
+                <span className={`font-mont text-sm ${!currentValue ? "text-red-accent font-semibold" : "text-charcoal/90 dark:text-cream/90"}`}>{placeholder}</span>
               </button>
               {deduped.map(o => {
                 const label = getLabel(o);
@@ -409,7 +409,7 @@ const CarsCatalog = () => {
           {compact && (
             <div>
               <p className="font-mont font-bold text-charcoal dark:text-cream text-sm leading-tight">{car.brand} {car.model}</p>
-              <p className="font-mont text-[11px] text-charcoal/40 dark:text-cream/40 mt-0.5">{car.year}</p>
+              <p className="font-mont text-[11px] text-charcoal/90 dark:text-cream/90 mt-0.5">{car.year}</p>
             </div>
           )}
 
@@ -423,7 +423,7 @@ const CarsCatalog = () => {
           )}
 
           {!compact && car.mileage > 0 && (
-            <div className="flex items-center gap-1.5 text-charcoal/40 dark:text-cream/40">
+            <div className="flex items-center gap-1.5 text-charcoal/90 dark:text-cream/90">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2z"/><polyline points="12 6 12 12 16 14"/>
               </svg>
@@ -433,7 +433,7 @@ const CarsCatalog = () => {
 
           <div className="flex items-end justify-between mt-auto pt-3 border-t border-charcoal/10 dark:border-cream/10 gap-2">
             <div>
-              <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30">{tc.ui.priceFrom}</p>
+              <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.ui.priceFrom}</p>
               <p className="font-mont font-black text-red-accent text-[17px] leading-tight">
                 {car.price ? car.price.toLocaleString("ru-RU") + " ₽" : "—"}
               </p>
@@ -498,7 +498,7 @@ const CarsCatalog = () => {
 
           <div className="flex items-end justify-between mt-auto pt-3 border-t border-charcoal/10 dark:border-cream/10 gap-2">
             <div>
-              <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30">{tc.ui.priceFrom}</p>
+              <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{tc.ui.priceFrom}</p>
               <p className="font-mont font-black text-red-accent text-[17px] leading-tight">
                 {part.price ? part.price.toLocaleString("ru-RU") + " ₽" : "—"}
               </p>
@@ -612,14 +612,14 @@ const CarsCatalog = () => {
                 <path d="M8 7v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 <circle cx="8" cy="5" r="0.7" fill="currentColor"/>
               </svg>
-              <span className="font-mont text-[11px] text-charcoal/40 dark:text-cream/40 leading-snug">
+              <span className="font-mont text-[11px] text-charcoal/90 dark:text-cream/90 leading-snug">
                 {tc.ui.langNotice}
               </span>
             </div>
           )}
 
 <div className="flex justify-between items-center mb-5">
-            <span className="font-mont text-xs text-charcoal/40 dark:text-cream/40 tracking-widest uppercase">
+            <span className="font-mont text-xs text-charcoal/90 dark:text-cream/90 tracking-widest uppercase">
               {loadingItems ? "…" : `${allItems.length} ${activeTab === "cars" ? tc.ui.carsCount : tc.ui.partsCount}`}
             </span>
             {availableGrid.length > 0 && (
@@ -629,7 +629,7 @@ const CarsCatalog = () => {
                     className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
                       gridCols === cols
                         ? "border-charcoal dark:border-cream bg-charcoal dark:bg-cream text-cream dark:text-charcoal"
-                        : "border-charcoal/20 dark:border-cream/20 text-charcoal/40 dark:text-cream/40 hover:border-charcoal/50 dark:hover:border-cream/50"
+                        : "border-charcoal/20 dark:border-cream/20 text-charcoal/90 dark:text-cream/90 hover:border-charcoal/50 dark:hover:border-cream/50"
                     }`}>
                     <GridIcon cols={cols} />
                   </button>
@@ -649,7 +649,7 @@ const CarsCatalog = () => {
           {!loadingItems && allItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
               <span className="font-mont text-4xl text-charcoal/10 dark:text-cream/10">∅</span>
-              <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30 tracking-widest uppercase">
+              <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 tracking-widest uppercase">
                 {tc.ui.empty}
               </p>
             </div>
@@ -667,7 +667,7 @@ const CarsCatalog = () => {
 
               {(hasMore || loadingMore) && (
                 <div className="flex flex-col items-center gap-3 mt-10">
-                  <p className="font-mont text-xs text-charcoal/30 dark:text-cream/30 tracking-widest uppercase">
+                  <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 tracking-widest uppercase">
                     {visibleCount} из {allItems.length}
                   </p>
                   <div className="w-full max-w-xs h-0.5 bg-charcoal/8 dark:bg-cream/8 rounded-full overflow-hidden">
@@ -694,7 +694,7 @@ const CarsCatalog = () => {
               )}
 
               {!hasMore && !loadingMore && allItems.length > PAGE && (
-                <p className="text-center font-mont text-xs text-charcoal/25 dark:text-cream/25 tracking-widest uppercase mt-10">
+                <p className="text-center font-mont text-xs text-charcoal/90 dark:text-cream/90 tracking-widest uppercase mt-10">
                   Все {allItems.length} показаны
                 </p>
               )}

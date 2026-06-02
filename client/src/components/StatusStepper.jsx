@@ -46,14 +46,14 @@ export default function StatusStepper({ status }) {
             <div className="flex flex-col items-center">
               <div className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all ${dotCls} ${cancelled ? "relative" : ""}`}>
                 {cancelled && (
-                  <svg className="absolute inset-0 w-full h-full text-charcoal/40 dark:text-cream/40" viewBox="0 0 12 12" fill="none">
+                  <svg className="absolute inset-0 w-full h-full text-charcoal/90 dark:text-cream/90" viewBox="0 0 12 12" fill="none">
                     <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" strokeWidth="2"/>
                     <line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" strokeWidth="2"/>
                   </svg>
                 )}
               </div>
               <span className={`font-mont text-[9px] tracking-wider mt-1 text-center leading-tight w-12 truncate ${
-                active ? "text-red-accent font-bold" : "text-charcoal/40 dark:text-cream/40"
+                active ? "text-red-accent font-bold" : "text-charcoal/90 dark:text-cream/90"
               }`}>
                 {labels[step]}
               </span>

@@ -123,7 +123,7 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
-      <span className="font-mont text-sm text-charcoal/30 dark:text-cream/30 tracking-widest uppercase animate-pulse">
+      <span className="font-mont text-sm text-charcoal/90 dark:text-cream/90 tracking-widest uppercase animate-pulse">
         {tr.loading}
       </span>
     </div>
@@ -132,17 +132,17 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
   if (apps.length === 0) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3 border border-charcoal/10 dark:border-cream/10 rounded-2xl">
       <span className="font-mont text-4xl text-charcoal/10 dark:text-cream/10">∅</span>
-      <p className="font-mont text-sm text-charcoal/30 dark:text-cream/30 tracking-widest uppercase">{tr.empty}</p>
+      <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 tracking-widest uppercase">{tr.empty}</p>
     </div>
   );
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+        <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
           {tr.title}
         </h3>
-        <span className="font-mont text-xs text-charcoal/30 dark:text-cream/30">{apps.length} {lang === "en" ? "items" : "шт."}</span>
+        <span className="font-mont text-xs text-charcoal/90 dark:text-cream/90">{apps.length} {lang === "en" ? "items" : "шт."}</span>
       </div>
 
       {itemModal && (
@@ -163,19 +163,19 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {itemModal._type === "car" ? (<>
-                  {itemModal.country    && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Country" : "Страна"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.country}</p></div>}
-                  {itemModal.mileage != null && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Mileage" : "Пробег"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{Number(itemModal.mileage).toLocaleString("ru-RU")} км</p></div>}
-                  {itemModal.gearbox   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Gearbox" : "КПП"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.gearbox}</p></div>}
-                  {itemModal.drive     && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Drive" : "Привод"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.drive}</p></div>}
-                  {itemModal.body      && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Body" : "Кузов"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.body}</p></div>}
-                  {itemModal.engine_power && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Power" : "Мощность"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.engine_power} л.с.</p></div>}
+                  {itemModal.country    && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Country" : "Страна"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.country}</p></div>}
+                  {itemModal.mileage != null && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Mileage" : "Пробег"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{Number(itemModal.mileage).toLocaleString("ru-RU")} км</p></div>}
+                  {itemModal.gearbox   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Gearbox" : "КПП"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.gearbox}</p></div>}
+                  {itemModal.drive     && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Drive" : "Привод"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.drive}</p></div>}
+                  {itemModal.body      && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Body" : "Кузов"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.body}</p></div>}
+                  {itemModal.engine_power && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Power" : "Мощность"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.engine_power} л.с.</p></div>}
                 </>) : (<>
-                  {itemModal.brand  && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Brand" : "Марка"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.brand}</p></div>}
-                  {itemModal.model  && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Model" : "Модель"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.model}</p></div>}
-                  {itemModal.year   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Year" : "Год"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.year}</p></div>}
-                  {itemModal.body   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Body" : "Кузов"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.body}</p></div>}
+                  {itemModal.brand  && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Brand" : "Марка"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.brand}</p></div>}
+                  {itemModal.model  && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Model" : "Модель"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.model}</p></div>}
+                  {itemModal.year   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Year" : "Год"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.year}</p></div>}
+                  {itemModal.body   && <div><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Body" : "Кузов"}</p><p className="font-mont font-bold text-sm text-charcoal dark:text-cream">{itemModal.body}</p></div>}
                 </>)}
-                <div className="col-span-2"><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">{lang === "en" ? "Price" : "Цена"}</p><p className="font-mont font-black text-lg text-red-accent">{Number(itemModal.price).toLocaleString("ru-RU")} ₽</p></div>
+                <div className="col-span-2"><p className="font-mont text-[10px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">{lang === "en" ? "Price" : "Цена"}</p><p className="font-mont font-black text-lg text-red-accent">{Number(itemModal.price).toLocaleString("ru-RU")} ₽</p></div>
               </div>
               {itemModal.description && (
                 <p className="font-mont text-sm text-charcoal/60 dark:text-cream/60 mt-3">{itemModal.description}</p>
@@ -208,14 +208,14 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
               }}
               className="w-full flex items-center gap-4 px-5 py-4 text-left"
             >
-              <span className="font-mont text-xs text-charcoal/25 dark:text-cream/25 tabular-nums w-6 shrink-0">
+              <span className="font-mont text-xs text-charcoal/90 dark:text-cream/90 tabular-nums w-6 shrink-0">
                 #{id}
               </span>
               <div className="flex-1 min-w-0">
                 <p className="font-mont font-bold text-sm text-charcoal dark:text-cream">
                   {type === "car" ? tr.typeCar : type === "part" ? tr.typePart : type}
                 </p>
-                <p className="font-mont text-xs text-charcoal/40 dark:text-cream/40 mt-0.5">
+                <p className="font-mont text-xs text-charcoal/90 dark:text-cream/90 mt-0.5">
                   {new Date(date).toLocaleDateString(lang === "en" ? "en-US" : "ru-RU", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
               </div>
@@ -226,7 +226,7 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
                 <Badge status={status} />
               </div>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                className={`text-charcoal/25 dark:text-cream/25 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                className={`text-charcoal/90 dark:text-cream/90 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
                 <path d="M3 6l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>

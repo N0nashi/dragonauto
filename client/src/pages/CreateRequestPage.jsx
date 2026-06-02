@@ -47,7 +47,7 @@ export default function CreateRequestPage() {
           <h1 className="font-mont font-black text-3xl text-charcoal dark:text-cream tracking-tight">
             {tr.title}
           </h1>
-          <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mt-1">
+          <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mt-1">
             {tr.subtitle}
           </p>
         </div>

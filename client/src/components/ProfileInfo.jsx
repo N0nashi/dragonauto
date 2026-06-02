@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { toast } from "../utils/toast";
 import { useLang } from "../context/LangContext";
 
-const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200";
+const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200";
 
 const Section = ({ title, children }) => (
   <div className="border border-charcoal/10 dark:border-cream/10 rounded-2xl p-6">
-    <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/40 dark:text-cream/40 mb-5">
+    <h3 className="font-mont font-black text-sm tracking-widest uppercase text-charcoal/90 dark:text-cream/90 mb-5">
       {title}
     </h3>
     {children}
@@ -140,7 +140,7 @@ export default function ProfileInfo({ onProfileLoad }) {
               {avatarSrc ? (
                 <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <span className="font-mont font-black text-2xl text-charcoal/30 dark:text-cream/30">{initials}</span>
+                <span className="font-mont font-black text-2xl text-charcoal/90 dark:text-cream/90">{initials}</span>
               )}
             </div>
             {editMode && (
@@ -177,7 +177,7 @@ export default function ProfileInfo({ onProfileLoad }) {
               <p className="font-mont font-black text-xl text-charcoal dark:text-cream">
                 {profile.firstName} {profile.lastName}
               </p>
-              <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 mt-0.5">{profile.email}</p>
+              <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 mt-0.5">{profile.email}</p>
               <button onClick={() => setEditMode(true)}
                 className="mt-4 font-mont font-black text-xs tracking-widest uppercase px-5 py-2 border-2 border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream rounded-xl hover:border-charcoal dark:hover:border-cream transition">
                 {tp.edit}

@@ -81,7 +81,7 @@ export default function MainFrame2() {
               className={`font-mont text-xs tracking-widest uppercase pb-2 border-b-2 transition-all duration-200 ${
                 tab === key
                   ? "border-red-accent text-charcoal dark:text-cream"
-                  : "border-transparent text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream"
+                  : "border-transparent text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream"
               }`}
             >
               {key === "cars" ? t.catalog.cars : t.catalog.parts}
@@ -138,7 +138,7 @@ export default function MainFrame2() {
 
               <div className="p-4 flex items-end justify-between gap-2">
                 <div>
-                  <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/30 dark:text-cream/30">от</p>
+                  <p className="font-mont text-[9px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">от</p>
                   <p className="font-mont font-black text-red-accent text-[17px] leading-tight">
                     {item.price.toLocaleString("ru-RU")} ₽
                   </p>
@@ -155,10 +155,10 @@ export default function MainFrame2() {
             style={{ scrollSnapAlign: "start" }}
             onClick={() => navigate("/catalog")}
           >
-            <span className="font-mont text-3xl font-thin text-charcoal/30 dark:text-cream/30 group-hover:text-red-accent group-hover:scale-110 transition-all duration-300">
+            <span className="font-mont text-3xl font-thin text-charcoal/90 dark:text-cream/90 group-hover:text-red-accent group-hover:scale-110 transition-all duration-300">
               →
             </span>
-            <span className="font-mont text-[10px] tracking-widest uppercase text-center px-4 text-charcoal/30 dark:text-cream/30 group-hover:text-red-accent transition-colors duration-300">
+            <span className="font-mont text-[10px] tracking-widest uppercase text-center px-4 text-charcoal/90 dark:text-cream/90 group-hover:text-red-accent transition-colors duration-300">
               {t.catalog.toCatalog}
             </span>
           </div>
@@ -181,7 +181,7 @@ export default function MainFrame2() {
           </svg>
         </button>
 
-        <span className="font-mont text-xs tracking-widest text-charcoal/40 dark:text-cream/40 tabular-nums w-16 text-center">
+        <span className="font-mont text-xs tracking-widest text-charcoal/90 dark:text-cream/90 tabular-nums w-16 text-center">
           {String(index + 1).padStart(2, "0")} / {String(maxIndex + 1).padStart(2, "0")}
         </span>
 

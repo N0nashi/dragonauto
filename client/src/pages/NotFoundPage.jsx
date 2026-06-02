@@ -28,7 +28,7 @@ export default function NotFoundPage() {
         <h1 className="font-mont font-black text-2xl text-charcoal dark:text-cream tracking-tight mb-3">
           {t.notFound?.title ?? "Страница не найдена"}
         </h1>
-        <p className="font-mont text-sm text-charcoal/40 dark:text-cream/40 leading-relaxed mb-8">
+        <p className="font-mont text-sm text-charcoal/90 dark:text-cream/90 leading-relaxed mb-8">
           {t.notFound?.subtitle ?? "Возможно, она была удалена или адрес введён неверно."}
         </p>
 

@@ -41,7 +41,7 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
           onChange={handleChange}
           required
           disabled={loading}
-          className="w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50"
+          className="w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50"
         />
       </div>
 
@@ -54,13 +54,13 @@ const LoginForm = ({ setMessage, onLoginSuccess, onForgot }) => {
           onChange={handleChange}
           required
           disabled={loading}
-          className="w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 pr-12 placeholder:text-charcoal/30 dark:placeholder:text-cream/30 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50"
+          className="w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3.5 pr-12 placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200 disabled:opacity-50"
         />
         <button
           type="button"
           tabIndex={-1}
           onClick={() => setShowPassword(p => !p)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal/30 dark:text-cream/30 hover:text-charcoal dark:hover:text-cream transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal/90 dark:text-cream/90 hover:text-charcoal dark:hover:text-cream transition-colors"
         >
           {showPassword ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

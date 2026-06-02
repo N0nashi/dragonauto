@@ -35,7 +35,7 @@ export default function FAQBlock() {
               >
                 <svg
                   width="16" height="16" viewBox="0 0 16 16" fill="none"
-                  className={`shrink-0 text-charcoal/30 dark:text-cream/30 transition-transform duration-300 ${open === i ? "rotate-90 text-red-accent" : ""}`}
+                  className={`shrink-0 text-charcoal/90 dark:text-cream/90 transition-transform duration-300 ${open === i ? "rotate-90 text-red-accent" : ""}`}
                 >
                   <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>

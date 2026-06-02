@@ -125,7 +125,7 @@ function ToastItem({ data, onRemove }) {
         onClick={(e) => { e.stopPropagation(); dismiss(); }}
         aria-label="Закрыть"
         className="absolute top-2.5 right-3 leading-none text-[16px] font-thin
-          text-charcoal/25 dark:text-cream/25
+          text-charcoal/90 dark:text-cream/90
           hover:text-charcoal dark:hover:text-cream transition-colors duration-150"
       >
         ×
