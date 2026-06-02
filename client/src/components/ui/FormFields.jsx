@@ -9,7 +9,7 @@ export const inputCls =
 export function FormField({ label, required, error, children }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/70 dark:text-cream/70">
         {label}{required && <span className="text-red-accent ml-0.5">*</span>}
       </span>
       {children}
@@ -60,7 +60,7 @@ export function RangeField({ label, required, fromProps, toProps, fromError, toE
   const toPh   = lang === "en" ? "To"   : "до";
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/70 dark:text-cream/70">
         {label}{required && <span className="text-red-accent ml-0.5">*</span>}
       </span>
       <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export function PhotoUpload({ file, onChange, label = "Фото (необяза�
   return (
     <div className="flex flex-col gap-1.5">
       {required && (
-        <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/40 dark:text-cream/40">
+        <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/70 dark:text-cream/70">
           Фото<span className="text-red-accent ml-0.5">*</span>
         </span>
       )}
@@ -239,7 +239,7 @@ export function PhotoUpload({ file, onChange, label = "Фото (необяза�
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <span className="font-mont text-sm text-charcoal/40 dark:text-cream/40 group-hover:text-charcoal dark:group-hover:text-cream transition-colors truncate flex-1">
+        <span className="font-mont text-sm text-charcoal/70 dark:text-cream/70 group-hover:text-charcoal dark:group-hover:text-cream transition-colors truncate flex-1">
           {file ? file.name : label}
         </span>
         <input type="file" accept="image/*" className="hidden" onChange={e => {
