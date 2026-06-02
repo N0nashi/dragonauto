@@ -3,13 +3,13 @@ import { useLang } from "../../context/LangContext";
 
 /* ── base classes ── */
 export const inputCls =
-  "w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-3 text-charcoal dark:text-cream placeholder:text-charcoal/80 dark:placeholder:text-cream/80 focus:outline-none focus:border-red-accent/50 transition-colors";
+  "w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-3 text-charcoal dark:text-cream placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-red-accent/50 transition-colors";
 
 /* ── Label + Input wrapper ── */
 export function FormField({ label, required, error, children }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/80 dark:text-cream/80">
+      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
         {label}{required && <span className="text-red-accent ml-0.5">*</span>}
       </span>
       {children}
@@ -60,7 +60,7 @@ export function RangeField({ label, required, fromProps, toProps, fromError, toE
   const toPh   = lang === "en" ? "To"   : "до";
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/80 dark:text-cream/80">
+      <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
         {label}{required && <span className="text-red-accent ml-0.5">*</span>}
       </span>
       <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ export function MultiSelect({ label, required, error, options, selected, onChang
           onClick={() => !disabled && setOpen(v => !v)}
           className={`${inputCls} text-left flex items-center justify-between gap-2 ${
             error ? "border-red-accent/50" : ""
-          } ${selected.length === 0 ? "text-charcoal/80 dark:text-cream/80" : ""}`}
+          } ${selected.length === 0 ? "text-charcoal/90 dark:text-cream/90" : ""}`}
         >
           <span className="truncate">{displayText}</span>
           <Chevron open={open} />
@@ -191,7 +191,7 @@ export function SingleSelect({ label, required, error, options, value, onChange,
           onClick={() => !disabled && setOpen(v => !v)}
           className={`${inputCls} text-left flex items-center justify-between gap-2 ${
             error ? "border-red-accent/50" : ""
-          } ${!value ? "text-charcoal/80 dark:text-cream/80" : ""}`}
+          } ${!value ? "text-charcoal/90 dark:text-cream/90" : ""}`}
         >
           <span className="truncate">{value ? getLabel(value) : placeholder}</span>
           <Chevron open={open} />
@@ -228,7 +228,7 @@ export function PhotoUpload({ file, onChange, label = "Фото (необяза�
   return (
     <div className="flex flex-col gap-1.5">
       {required && (
-        <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/80 dark:text-cream/80">
+        <span className="font-mont text-[11px] tracking-widest uppercase text-charcoal/90 dark:text-cream/90">
           Фото<span className="text-red-accent ml-0.5">*</span>
         </span>
       )}
@@ -239,7 +239,7 @@ export function PhotoUpload({ file, onChange, label = "Фото (необяза�
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <span className="font-mont text-sm text-charcoal/80 dark:text-cream/80 group-hover:text-charcoal dark:group-hover:text-cream transition-colors truncate flex-1">
+        <span className="font-mont text-sm text-charcoal/90 dark:text-cream/90 group-hover:text-charcoal dark:group-hover:text-cream transition-colors truncate flex-1">
           {file ? file.name : label}
         </span>
         <input type="file" accept="image/*" className="hidden" onChange={e => {
