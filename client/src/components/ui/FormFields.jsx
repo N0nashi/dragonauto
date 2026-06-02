@@ -3,7 +3,7 @@ import { useLang } from "../../context/LangContext";
 
 /* ── base classes ── */
 export const inputCls =
-  "w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-3 text-charcoal dark:text-cream placeholder:text-charcoal/60 dark:placeholder:text-cream/60 focus:outline-none focus:border-red-accent/50 transition-colors";
+  "w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-3 text-charcoal dark:text-cream placeholder:text-charcoal/70 dark:placeholder:text-cream/70 focus:outline-none focus:border-red-accent/50 transition-colors";
 
 /* ── Label + Input wrapper ── */
 export function FormField({ label, required, error, children }) {
@@ -133,7 +133,7 @@ export function MultiSelect({ label, required, error, options, selected, onChang
           onClick={() => !disabled && setOpen(v => !v)}
           className={`${inputCls} text-left flex items-center justify-between gap-2 ${
             error ? "border-red-accent/50" : ""
-          } ${selected.length === 0 ? "text-charcoal/60 dark:text-cream/60" : ""}`}
+          } ${selected.length === 0 ? "text-charcoal/70 dark:text-cream/70" : ""}`}
         >
           <span className="truncate">{displayText}</span>
           <Chevron open={open} />
@@ -191,7 +191,7 @@ export function SingleSelect({ label, required, error, options, value, onChange,
           onClick={() => !disabled && setOpen(v => !v)}
           className={`${inputCls} text-left flex items-center justify-between gap-2 ${
             error ? "border-red-accent/50" : ""
-          } ${!value ? "text-charcoal/60 dark:text-cream/60" : ""}`}
+          } ${!value ? "text-charcoal/70 dark:text-cream/70" : ""}`}
         >
           <span className="truncate">{value ? getLabel(value) : placeholder}</span>
           <Chevron open={open} />
