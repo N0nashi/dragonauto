@@ -6,6 +6,8 @@ import { useLang } from "../context/LangContext";
 import { translateDesc } from "../utils/translateDesc";
 
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, 50);
+// марка — только буквы, пробел и дефис, без цифр
+const sanitizeBrand = (v) => v.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-]/g, "").slice(0, 50);
 const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(v);
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
@@ -47,6 +49,7 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
     description:      "",
   });
   const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -96,9 +99,15 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
     return e;
   };
 
+  // После первой попытки отправки подсвечиваем ошибки прямо при вводе
+  useEffect(() => {
+    if (submitted) setErrors(validate());
+  }, [form, submitted]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (readOnly) return;
+    setSubmitted(true);
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
@@ -121,7 +130,7 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
           disabled={readOnly || loading}
         />
         <Input label={tr.brand} required placeholder="Toyota"
-          value={form.brand_car} onChange={e => set("brand_car", sanitizeText(e.target.value))}
+          value={form.brand_car} onChange={e => set("brand_car", sanitizeBrand(e.target.value))}
           error={errors.brand_car} disabled={readOnly || loading}
         />
         <Input label={tr.model} placeholder="Camry"
