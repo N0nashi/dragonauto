@@ -29,6 +29,9 @@ function numInRange(v, { min, max }) {
   return Number.isFinite(n) && n >= min && n <= max;
 }
 
+// Строка содержит хотя бы одну букву (марка/название не из одних цифр)
+const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(String(v ?? ""));
+
 // Возвращает текст ошибки или null
 function validateApplication(type, b) {
   if (type === "car") {
@@ -45,6 +48,8 @@ function validateApplication(type, b) {
       if (a.length > MAX_ARRAY_LEN) return "Слишком много значений в поле";
       if (a.some(s => String(s).length > MAX_TEXT_LEN)) return "Слишком длинное значение в поле";
     }
+    if (parseToArray(b.brand_car).some(s => !hasLetter(s)))
+      return "Марка должна содержать буквы";
   } else {
     if (!numInRange(b.price_from_part, BOUNDS.price) || !numInRange(b.price_to_part, BOUNDS.price))
       return "Цена вне допустимого диапазона";
@@ -53,6 +58,8 @@ function validateApplication(type, b) {
     for (const s of [b.part_name, b.brand_part, b.model_part, b.country_part, b.body_part]) {
       if (s != null && String(s).length > MAX_TEXT_LEN) return "Слишком длинное значение в поле";
     }
+    if (!hasLetter(b.part_name)) return "Название должно содержать буквы";
+    if (!hasLetter(b.brand_part)) return "Марка должна содержать буквы";
   }
   if (b.description != null && String(b.description).length > MAX_DESC_LEN)
     return "Слишком длинное описание";

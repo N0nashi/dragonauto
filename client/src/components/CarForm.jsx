@@ -6,6 +6,7 @@ import { useLang } from "../context/LangContext";
 import { translateDesc } from "../utils/translateDesc";
 
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, 50);
+const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(v);
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
@@ -16,8 +17,13 @@ const CAR_BOUNDS = {
   mileage: { min: 0, max: 2_000_000 },
   power:   { min: 0, max: 2_000 },
 };
-// оставляем только цифры и режем по длине максимума, чтобы нельзя было вбить 2222222222222
-const clampNum = (v, max) => v.replace(/[^0-9]/g, "").slice(0, String(max).length);
+// оставляем только цифры и зажимаем само значение до максимума,
+// чтобы нельзя было вбить ни 2222222222222, ни 9999 в год
+const clampNum = (v, max) => {
+  const digits = v.replace(/[^0-9]/g, "").slice(0, String(max).length);
+  if (digits === "") return "";
+  return String(Math.min(Number(digits), max));
+};
 
 export default function CarForm({ onSubmit, loading, initialData = null, readOnly = false }) {
   const { t, lang } = useLang();
@@ -68,7 +74,7 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
   const validate = () => {
     const e = {};
     if (form.country_car.length === 0) e.country_car = tr.errors.country;
-    if (!form.brand_car.trim())        e.brand_car   = tr.errors.brand;
+    if (!form.brand_car.trim() || !hasLetter(form.brand_car)) e.brand_car = tr.errors.brand;
 
     const inRange = (v, { min, max }) => v !== "" && !isNaN(Number(v)) && Number(v) >= min && Number(v) <= max;
     if (!inRange(form.year_from_car, CAR_BOUNDS.year)) e.year_from_car = tr.errors.yearFrom;

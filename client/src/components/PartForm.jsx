@@ -7,12 +7,17 @@ import { translateDesc } from "../utils/translateDesc";
 
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, 50);
 const sanitizePartName = (v) => v.replace(/[^a-zA-Z0-9Ѐ-ӿ\s\-\.]/g, "").slice(0, 50);
+const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(v);
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
 
 const PRICE_MAX = 1_000_000_000;
-const clampNum = (v, max) => v.replace(/[^0-9]/g, "").slice(0, String(max).length);
+const clampNum = (v, max) => {
+  const digits = v.replace(/[^0-9]/g, "").slice(0, String(max).length);
+  if (digits === "") return "";
+  return String(Math.min(Number(digits), max));
+};
 
 export default function PartForm({ onSubmit, loading, initialData = null, readOnly = false }) {
   const { t, lang } = useLang();
@@ -48,9 +53,9 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
 
   const validate = () => {
     const e = {};
-    if (!form.part_name.trim())  e.part_name    = tr.errors.name;
+    if (!form.part_name.trim() || !hasLetter(form.part_name))  e.part_name    = tr.errors.name;
     if (!form.country_part)      e.country_part = tr.errors.country;
-    if (!form.brand_part.trim()) e.brand_part   = tr.errors.brand;
+    if (!form.brand_part.trim() || !hasLetter(form.brand_part)) e.brand_part   = tr.errors.brand;
     if (!form.body_part)         e.body_part    = tr.errors.body;
 
     const inRange = v => v !== "" && !isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= PRICE_MAX;
