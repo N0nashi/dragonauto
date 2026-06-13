@@ -26,7 +26,7 @@ export default function MainFrame1() {
   return (
     <section className="min-h-[calc(100vh-64px)] bg-cream dark:bg-charcoal flex items-center justify-center px-4 md:px-8 overflow-hidden transition-colors duration-300">
 
-      {/* ── Desktop layout ── */}
+      {/* Desktop layout */}
       <div className="hidden md:flex flex-row items-center gap-6 w-full max-w-6xl">
         <div className="flex flex-col items-center gap-8 shrink-0">
           <img src={heroSrc} alt={t.hero.title}
@@ -38,7 +38,7 @@ export default function MainFrame1() {
         </div>
       </div>
 
-      {/* ── Mobile layout ── */}
+      {/* Mobile layout */}
       <div className="flex md:hidden flex-col items-center gap-6 w-full">
         <img src={heroSrc} alt={t.hero.title}
           className="w-3/4 max-w-[260px] dark:invert anim-fade-left" />

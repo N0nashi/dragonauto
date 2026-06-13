@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLang } from "../../context/LangContext";
 
-/* ── base classes ── */
+/* base classes */
 export const inputCls =
   "w-full font-mont text-sm bg-charcoal/5 dark:bg-cream/5 border border-charcoal/10 dark:border-cream/10 rounded-xl px-4 py-3 text-charcoal dark:text-cream placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-red-accent/50 transition-colors";
 
-/* ── Label + Input wrapper ── */
+/* Label + Input wrapper */
 export function FormField({ label, required, error, children }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -18,7 +18,7 @@ export function FormField({ label, required, error, children }) {
   );
 }
 
-/* ── Text / Number input ── */
+/* Text / Number input */
 export function Input({ label, required, error, ...props }) {
   return (
     <FormField label={label} required={required} error={error}>
@@ -27,7 +27,7 @@ export function Input({ label, required, error, ...props }) {
   );
 }
 
-/* ── Select ── */
+/* Select */
 export function Select({ label, required, error, options, placeholder, ...props }) {
   return (
     <FormField label={label} required={required} error={error}>
@@ -41,7 +41,7 @@ export function Select({ label, required, error, options, placeholder, ...props 
   );
 }
 
-/* ── Textarea ── */
+/* Textarea */
 export function Textarea({ label, required, error, rows = 3, ...props }) {
   return (
     <FormField label={label} required={required} error={error}>
@@ -53,7 +53,7 @@ export function Textarea({ label, required, error, rows = 3, ...props }) {
   );
 }
 
-/* ── Range (from / to) ── */
+/* Range (from / to) */
 export function RangeField({ label, required, fromProps, toProps, fromError, toError }) {
   const { lang } = useLang();
   const fromPh = lang === "en" ? "From" : "от";
@@ -104,7 +104,7 @@ function useOptionLabel() {
   return (opt) => map[opt] ?? opt;
 }
 
-/* ── MultiSelect dropdown ── */
+/* MultiSelect dropdown */
 export function MultiSelect({ label, required, error, options, selected, onChange, disabled }) {
   const { lang } = useLang();
   const getLabel = useOptionLabel();
@@ -170,7 +170,7 @@ export function MultiSelect({ label, required, error, options, selected, onChang
   );
 }
 
-/* ── SingleSelect dropdown ── */
+/* SingleSelect dropdown */
 export function SingleSelect({ label, required, error, options, value, onChange, disabled, placeholder }) {
   const { lang } = useLang();
   const getLabel = useOptionLabel();
@@ -223,7 +223,7 @@ export function SingleSelect({ label, required, error, options, value, onChange,
   );
 }
 
-/* ── Photo upload ── */
+/* Photo upload */
 export function PhotoUpload({ file, onChange, label = "Фото (необязательно)", required }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -252,7 +252,7 @@ export function PhotoUpload({ file, onChange, label = "Фото (необяза�
   );
 }
 
-/* ── Submit button ── */
+/* Submit button */
 export function SubmitBtn({ loading, label = "Отправить", loadingLabel = "Отправка…" }) {
   return (
     <button type="submit" disabled={loading}

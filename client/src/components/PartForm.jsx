@@ -11,6 +11,9 @@ const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
 
+const PRICE_MAX = 1_000_000_000;
+const clampNum = (v, max) => v.replace(/[^0-9]/g, "").slice(0, String(max).length);
+
 export default function PartForm({ onSubmit, loading, initialData = null, readOnly = false }) {
   const { t, lang } = useLang();
   const tr = t.partForm;
@@ -50,9 +53,9 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
     if (!form.brand_part.trim()) e.brand_part   = tr.errors.brand;
     if (!form.body_part)         e.body_part    = tr.errors.body;
 
-    const num = v => v !== "" && !isNaN(Number(v)) && Number(v) >= 0;
-    if (!num(form.price_from_part)) e.price_from_part = tr.errors.priceFrom;
-    if (!num(form.price_to_part))   e.price_to_part   = tr.errors.priceTo;
+    const inRange = v => v !== "" && !isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= PRICE_MAX;
+    if (!inRange(form.price_from_part)) e.price_from_part = tr.errors.priceFrom;
+    if (!inRange(form.price_to_part))   e.price_to_part   = tr.errors.priceTo;
     else if (+form.price_to_part < +form.price_from_part) e.price_to_part = tr.errors.priceToLess;
     return e;
   };
@@ -100,8 +103,8 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
           error={errors.body_part} disabled={readOnly || loading}
         />
         <RangeField label={tr.price} required
-          fromProps={{ type: "number", min: 0, value: form.price_from_part, onChange: e => set("price_from_part", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.price_to_part,   onChange: e => set("price_to_part",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, max: PRICE_MAX, value: form.price_from_part, onChange: e => set("price_from_part", clampNum(e.target.value, PRICE_MAX)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, max: PRICE_MAX, value: form.price_to_part,   onChange: e => set("price_to_part",   clampNum(e.target.value, PRICE_MAX)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.price_from_part} toError={errors.price_to_part}
         />
       </div>

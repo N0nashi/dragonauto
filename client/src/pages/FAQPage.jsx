@@ -67,7 +67,7 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-cream dark:bg-charcoal transition-colors duration-300">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="px-6 md:px-16 pt-16 pb-12">
         <div className="max-w-3xl mx-auto">
           <p className="font-mont text-[10px] tracking-[0.3em] text-charcoal/90 dark:text-cream/90 uppercase mb-3">
@@ -80,7 +80,7 @@ export default function FAQPage() {
         </div>
       </div>
 
-      {/* ── FAQ list ── */}
+      {/* FAQ list */}
       <div className="px-6 md:px-16 pb-24">
         <div className="max-w-3xl mx-auto flex flex-col gap-2">
           {allItems.map((item, i) => {
@@ -130,7 +130,7 @@ export default function FAQPage() {
         </div>
       </div>
 
-      {/* ── Bottom CTA ── */}
+      {/* Bottom CTA */}
       <div className="border-t border-charcoal/10 dark:border-cream/10 px-6 md:px-16 py-16">
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>

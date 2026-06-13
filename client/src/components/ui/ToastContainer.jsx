@@ -3,7 +3,7 @@ import { _setListener } from "../../utils/toast";
 
 const DURATION = 4000; // ms before auto-dismiss
 
-/* ── Per-type config ──────────────────────────────────────────── */
+/* Per-type config */
 const TYPES = {
   success: {
     color: "#16a34a",
@@ -57,7 +57,7 @@ const TYPES = {
   },
 };
 
-/* ── Single toast card ────────────────────────────────────────── */
+/* Single toast card */
 function ToastItem({ data, onRemove }) {
   const [phase, setPhase] = useState("enter"); // enter | idle | exit
   const timerRef = useRef(null);
@@ -146,7 +146,7 @@ function ToastItem({ data, onRemove }) {
   );
 }
 
-/* ── Container — rendered once in App.jsx ─────────────────────── */
+/* Container — rendered once in App.jsx */
 export default function ToastContainer() {
   const [toasts, setToasts] = useState([]);
 

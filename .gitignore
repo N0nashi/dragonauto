@@ -31,4 +31,13 @@ client/coverage/
 
 # Fix scripts and migrations
 fix-*.js
+_clean_comments.cjs
 server/migrations/
+
+# Tests
+**/__tests__/
+*.test.js
+*.spec.js
+client/src/setupTests.js
+server/jest.config.js
+server/jest.setup.js

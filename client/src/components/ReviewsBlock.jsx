@@ -11,7 +11,6 @@ import { useLang } from "../context/LangContext";
  * Each review occupies one SLOT:
  *   [ COMPACT_W ][ INNER_GAP ][ EXPANDED_W ][ OUTER_GAP ]
  *       340            60          340            80
- *   ─────────────────────────────────────────────────────
  *   SLOT_W = 820 px
  *
  * Expanded card appears in its reserved gap right after the compact truck,
@@ -61,7 +60,7 @@ export default function ReviewsBlock() {
         }
       `}</style>
 
-      {/* ── Road — background-repeat so it tiles on any screen width ── */}
+      {/* Road — background-repeat so it tiles on any screen width */}
       <div
         className="absolute inset-0"
         style={{
@@ -73,7 +72,7 @@ export default function ReviewsBlock() {
         }}
       />
 
-      {/* ── Scrolling convoy strip ── */}
+      {/* Scrolling convoy strip */}
       <div
         className="absolute z-10"
         style={{

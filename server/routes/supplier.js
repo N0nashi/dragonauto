@@ -28,9 +28,46 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-/* ─────────────────────────────────────────
-   SUPPLIER: свои товары
-───────────────────────────────────────── */
+/* Серверные границы для товаров каталога — чтобы нельзя было залить мусор через консоль */
+const CURRENT_YEAR = new Date().getFullYear();
+const ITEM_BOUNDS = {
+  year:    { min: 1950, max: CURRENT_YEAR + 1 },
+  price:   { min: 1,    max: 1_000_000_000 },
+  mileage: { min: 0,    max: 2_000_000 },
+  power:   { min: 0,    max: 2000 },
+};
+const ITEM_MAX_TEXT = 50;
+
+function numInRange(v, { min, max }) {
+  if (v === undefined || v === null || v === "") return false;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= min && n <= max;
+}
+function textTooLong(...vals) {
+  return vals.some(v => v != null && String(v).length > ITEM_MAX_TEXT);
+}
+
+function validateCar(b) {
+  if (!numInRange(b.year, ITEM_BOUNDS.year))   return "Некорректный год";
+  if (!numInRange(b.price, ITEM_BOUNDS.price))  return "Некорректная цена";
+  if (b.mileage !== undefined && b.mileage !== null && b.mileage !== "" && !numInRange(b.mileage, ITEM_BOUNDS.mileage))
+    return "Некорректный пробег";
+  if (b.engine_power != null && b.engine_power !== "" && !numInRange(b.engine_power, ITEM_BOUNDS.power))
+    return "Некорректная мощность";
+  if (textTooLong(b.brand, b.model, b.country, b.body, b.gearbox, b.drive))
+    return "Слишком длинное значение в поле";
+  return null;
+}
+function validatePart(b) {
+  if (!numInRange(b.price, ITEM_BOUNDS.price)) return "Некорректная цена";
+  if (b.year != null && b.year !== "" && !numInRange(b.year, ITEM_BOUNDS.year))
+    return "Некорректный год";
+  if (textTooLong(b.part_name, b.brand, b.model, b.country, b.body))
+    return "Слишком длинное значение в поле";
+  return null;
+}
+
+// SUPPLIER: свои товары
 
 // GET /api/supplier/listings
 router.get("/listings", authMiddleware, isSupplier, async (req, res) => {
@@ -57,6 +94,8 @@ router.post("/cars", authMiddleware, isSupplier, async (req, res) => {
   const { brand, model, year, price, country, mileage, body, gearbox, drive, engine_power, photo_url } = req.body;
   if (!brand || !model || !year || !price || !country)
     return res.status(400).json({ error: "Обязательные поля: brand, model, year, price, country" });
+  const vErr = validateCar(req.body);
+  if (vErr) return res.status(400).json({ error: vErr });
   try {
     const r = await db.query(
       `INSERT INTO cars (brand,model,year,price,country,mileage,body,gearbox,drive,engine_power,photo_url,supplier_id,status)
@@ -72,6 +111,8 @@ router.patch("/my-car/:id", authMiddleware, isSupplier, async (req, res) => {
   const { brand, model, year, price, country, mileage, body, gearbox, drive, engine_power, photo_url } = req.body;
   if (!brand || !model || !year || !price || !country)
     return res.status(400).json({ error: "Обязательные поля: brand, model, year, price, country" });
+  const vErr = validateCar(req.body);
+  if (vErr) return res.status(400).json({ error: vErr });
   try {
     const own = await db.query("SELECT id FROM cars WHERE id=$1 AND supplier_id=$2", [req.params.id, req.userId]);
     if (!own.rows.length) return res.status(403).json({ error: "Нет доступа" });
@@ -91,6 +132,8 @@ router.patch("/my-part/:id", authMiddleware, isSupplier, async (req, res) => {
   const { part_name, brand, model, price, country, body, year, photo_url } = req.body;
   if (!part_name || !price)
     return res.status(400).json({ error: "Обязательные поля: part_name, price" });
+  const vErr = validatePart(req.body);
+  if (vErr) return res.status(400).json({ error: vErr });
   try {
     const own = await db.query("SELECT id FROM parts WHERE id=$1 AND supplier_id=$2", [req.params.id, req.userId]);
     if (!own.rows.length) return res.status(403).json({ error: "Нет доступа" });
@@ -108,6 +151,8 @@ router.post("/parts", authMiddleware, isSupplier, async (req, res) => {
   const { part_name, brand, model, price, country, body, year, photo_url } = req.body;
   if (!part_name || !price)
     return res.status(400).json({ error: "Обязательные поля: part_name, price" });
+  const vErr = validatePart(req.body);
+  if (vErr) return res.status(400).json({ error: vErr });
   try {
     const r = await db.query(
       `INSERT INTO parts (part_name,brand,model,price,country,body,year,photo_url,supplier_id,status)
@@ -118,9 +163,7 @@ router.post("/parts", authMiddleware, isSupplier, async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: "Ошибка сервера" }); }
 });
 
-/* ─────────────────────────────────────────
-   SUPPLIER: заявки, в которых выбраны его товары
-───────────────────────────────────────── */
+// SUPPLIER: заявки, в которых выбраны его товары
 
 // GET /api/supplier/matched-applications
 router.get("/matched-applications", authMiddleware, isSupplier, async (req, res) => {
@@ -154,9 +197,7 @@ router.get("/matched-applications", authMiddleware, isSupplier, async (req, res)
   }
 });
 
-/* ─────────────────────────────────────────
-   ADMIN: модерация
-───────────────────────────────────────── */
+// ADMIN: модерация
 
 // GET /api/supplier/pending — товары поставщиков на модерации
 router.get("/pending", authMiddleware, isAdmin, async (req, res) => {

@@ -20,7 +20,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     description,
     country_car,
     brand_car,
-    model_car,               // ✅ Добавлено
+    model_car,               // Добавлено
     price_from_car,
     price_to_car,
     year_from_car,
@@ -70,7 +70,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     if (type === "car") {
       const countryCarArr = parseToArray(country_car);
       const brandCarArr = parseToArray(brand_car);
-      const modelCarArr = parseToArray(model_car); // ✅ Добавлено
+      const modelCarArr = parseToArray(model_car); // Добавлено
       const gearboxCarArr = parseToArray(gearbox_car);
       const bodyCarArr = parseToArray(body_car);
       const driveCarArr = parseToArray(drive_car);
@@ -98,7 +98,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
       await db.query(updateCarQuery, [
         countryCarArr.length ? countryCarArr : null,
         brandCarArr.length ? brandCarArr : null,
-        modelCarArr.length ? modelCarArr : null, // ✅ Добавлено
+        modelCarArr.length ? modelCarArr : null, // Добавлено
         price_from_car || null,
         price_to_car || null,
         year_from_car || null,

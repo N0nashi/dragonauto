@@ -10,6 +10,55 @@ function parseToArray(value) {
   return value.split(",").map(s => s.trim()).filter(Boolean);
 }
 
+
+const CURRENT_YEAR = new Date().getFullYear();
+const BOUNDS = {
+  year:    { min: 1950, max: CURRENT_YEAR + 1 },
+  price:   { min: 1,    max: 1_000_000_000 },
+  mileage: { min: 0,    max: 2_000_000 },
+  power:   { min: 0,    max: 2000 },
+};
+const MAX_TEXT_LEN = 50;
+const MAX_DESC_LEN = 1000;
+const MAX_ARRAY_LEN = 30;
+
+// Число в пределах [min, max]
+function numInRange(v, { min, max }) {
+  if (v === undefined || v === null || v === "") return false;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= min && n <= max;
+}
+
+// Возвращает текст ошибки или null
+function validateApplication(type, b) {
+  if (type === "car") {
+    for (const [k, key] of [["year", "year"], ["price", "price"], ["mileage", "mileage"], ["power", "power"]]) {
+      const from = b[`${key}_from_car`];
+      const to   = b[`${key}_to_car`];
+      if (!numInRange(from, BOUNDS[k]) || !numInRange(to, BOUNDS[k]))
+        return `Поле «${key}» вне допустимого диапазона`;
+      if (Number(from) > Number(to))
+        return `Поле «${key}»: «от» больше «до»`;
+    }
+    for (const arr of [b.country_car, b.brand_car, b.model_car, b.gearbox_car, b.body_car, b.drive_car]) {
+      const a = parseToArray(arr);
+      if (a.length > MAX_ARRAY_LEN) return "Слишком много значений в поле";
+      if (a.some(s => String(s).length > MAX_TEXT_LEN)) return "Слишком длинное значение в поле";
+    }
+  } else {
+    if (!numInRange(b.price_from_part, BOUNDS.price) || !numInRange(b.price_to_part, BOUNDS.price))
+      return "Цена вне допустимого диапазона";
+    if (Number(b.price_from_part) > Number(b.price_to_part))
+      return "Цена: «от» больше «до»";
+    for (const s of [b.part_name, b.brand_part, b.model_part, b.country_part, b.body_part]) {
+      if (s != null && String(s).length > MAX_TEXT_LEN) return "Слишком длинное значение в поле";
+    }
+  }
+  if (b.description != null && String(b.description).length > MAX_DESC_LEN)
+    return "Слишком длинное описание";
+  return null;
+}
+
 const TRANSITIONS = {
   "в обработке": { admin: ["в работе", "отменена"] },
   "в работе":    { admin: ["предложение", "отменена"] },
@@ -30,9 +79,7 @@ async function notifyUser(applicationId, type) {
   }
 }
 
-/* ────────────────────────────────────────────────
-   POST /api/applications — создать заявку
-─────────────────────────────────────────────────*/
+// POST /api/applications — создать заявку
 router.post("/", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const {
@@ -49,6 +96,9 @@ router.post("/", authMiddleware, async (req, res) => {
 
   if (!type || !["car", "part"].includes(type))
     return res.status(400).json({ error: "Некорректный тип заявки" });
+
+  const boundsError = validateApplication(type, req.body);
+  if (boundsError) return res.status(400).json({ error: boundsError });
 
   try {
     await db.query("BEGIN");
@@ -135,9 +185,7 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   GET /api/applications — заявки текущего пользователя
-─────────────────────────────────────────────────*/
+// GET /api/applications — заявки текущего пользователя
 router.get("/", authMiddleware, async (req, res) => {
   const userId = req.userId;
   try {
@@ -173,9 +221,7 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   GET /api/applications/all — все активные заявки (модератор)
-─────────────────────────────────────────────────*/
+// GET /api/applications/all — все активные заявки (модератор)
 router.get("/all", authMiddleware, isModerator, async (req, res) => {
   try {
     const result = await db.query(
@@ -193,9 +239,7 @@ router.get("/all", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   GET /api/applications/:id — одна заявка
-─────────────────────────────────────────────────*/
+// GET /api/applications/:id — одна заявка
 router.get("/:id", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const userRole = req.userRole;
@@ -258,9 +302,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   PATCH /api/applications/:id/status — смена статуса (модератор)
-─────────────────────────────────────────────────*/
+// PATCH /api/applications/:id/status — смена статуса (модератор)
 router.patch("/:id/status", authMiddleware, isModerator, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
   const { status, comment, offered_price } = req.body;
@@ -333,9 +375,7 @@ router.patch("/:id/status", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   PATCH /api/applications/:id/confirm-offer — пользователь принимает предложение
-─────────────────────────────────────────────────*/
+// PATCH /api/applications/:id/confirm-offer — пользователь принимает предложение
 router.patch("/:id/confirm-offer", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const applicationId = parseInt(req.params.id, 10);
@@ -376,9 +416,7 @@ router.patch("/:id/confirm-offer", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   GET /api/applications/:id/comments — список комментариев
-─────────────────────────────────────────────────*/
+// GET /api/applications/:id/comments — список комментариев
 router.get("/:id/comments", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const userRole = req.userRole;
@@ -401,9 +439,7 @@ router.get("/:id/comments", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   POST /api/applications/:id/comments — добавить комментарий
-─────────────────────────────────────────────────*/
+// POST /api/applications/:id/comments — добавить комментарий
 router.post("/:id/comments", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const userRole = req.userRole;
@@ -441,9 +477,7 @@ router.post("/:id/comments", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   PATCH /api/applications/:id/close — пользователь закрывает заявку
-─────────────────────────────────────────────────*/
+// PATCH /api/applications/:id/close — пользователь закрывает заявку
 router.patch("/:id/close", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const applicationId = parseInt(req.params.id, 10);
@@ -465,9 +499,7 @@ router.patch("/:id/close", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   PATCH /api/applications/:id/match — привязать товар поставщика (модератор)
-─────────────────────────────────────────────────*/
+// PATCH /api/applications/:id/match — привязать товар поставщика (модератор)
 router.patch("/:id/match", authMiddleware, isModerator, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
   const { item_id, item_type } = req.body;
@@ -499,9 +531,7 @@ router.patch("/:id/match", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   DELETE /api/applications/:id/match — убрать привязку (модератор)
-─────────────────────────────────────────────────*/
+// DELETE /api/applications/:id/match — убрать привязку (модератор)
 router.delete("/:id/match", authMiddleware, isModerator, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
   if (isNaN(applicationId)) return res.status(400).json({ error: "Неверный ID" });
@@ -517,10 +547,8 @@ router.delete("/:id/match", authMiddleware, isModerator, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   GET /api/applications/:id/supplier-messages
-   Доступ: модератор или поставщик из matched_supplier_id
-─────────────────────────────────────────────────*/
+// GET /api/applications/:id/supplier-messages
+// Доступ: модератор или поставщик из matched_supplier_id
 router.get("/:id/supplier-messages", authMiddleware, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
   if (isNaN(applicationId)) return res.status(400).json({ error: "Неверный ID" });
@@ -553,10 +581,8 @@ router.get("/:id/supplier-messages", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   POST /api/applications/:id/supplier-messages
-   Доступ: модератор или поставщик из matched_supplier_id
-─────────────────────────────────────────────────*/
+// POST /api/applications/:id/supplier-messages
+// Доступ: модератор или поставщик из matched_supplier_id
 router.post("/:id/supplier-messages", authMiddleware, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
   const { message } = req.body;
@@ -587,9 +613,7 @@ router.post("/:id/supplier-messages", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   PATCH /api/applications/:id/supplier-confirm — поставщик подтверждает/отклоняет
-─────────────────────────────────────────────────*/
+// PATCH /api/applications/:id/supplier-confirm — поставщик подтверждает/отклоняет
 router.patch("/:id/supplier-confirm", authMiddleware, async (req, res) => {
   const applicationId = parseInt(req.params.id, 10);
   const { status } = req.body;
@@ -612,9 +636,7 @@ router.patch("/:id/supplier-confirm", authMiddleware, async (req, res) => {
   }
 });
 
-/* ────────────────────────────────────────────────
-   DELETE /api/applications/:id — отменить заявку
-─────────────────────────────────────────────────*/
+// DELETE /api/applications/:id — отменить заявку
 router.delete("/:id", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const applicationId = parseInt(req.params.id, 10);

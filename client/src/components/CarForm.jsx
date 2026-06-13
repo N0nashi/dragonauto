@@ -10,6 +10,15 @@ const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
 
+const CAR_BOUNDS = {
+  year:    { min: 1950, max: new Date().getFullYear() + 1 },
+  price:   { min: 0, max: 1_000_000_000 },
+  mileage: { min: 0, max: 2_000_000 },
+  power:   { min: 0, max: 2_000 },
+};
+// оставляем только цифры и режем по длине максимума, чтобы нельзя было вбить 2222222222222
+const clampNum = (v, max) => v.replace(/[^0-9]/g, "").slice(0, String(max).length);
+
 export default function CarForm({ onSubmit, loading, initialData = null, readOnly = false }) {
   const { t, lang } = useLang();
   const tr = t.carForm;
@@ -61,21 +70,21 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
     if (form.country_car.length === 0) e.country_car = tr.errors.country;
     if (!form.brand_car.trim())        e.brand_car   = tr.errors.brand;
 
-    const num = v => v !== "" && !isNaN(Number(v)) && Number(v) >= 0;
-    if (!num(form.year_from_car) || Number(form.year_from_car) < 1950) e.year_from_car = tr.errors.yearFrom;
-    if (!num(form.year_to_car)   || Number(form.year_to_car)   < 1950) e.year_to_car   = tr.errors.yearTo;
+    const inRange = (v, { min, max }) => v !== "" && !isNaN(Number(v)) && Number(v) >= min && Number(v) <= max;
+    if (!inRange(form.year_from_car, CAR_BOUNDS.year)) e.year_from_car = tr.errors.yearFrom;
+    if (!inRange(form.year_to_car, CAR_BOUNDS.year))   e.year_to_car   = tr.errors.yearTo;
     else if (+form.year_to_car < +form.year_from_car) e.year_to_car = tr.errors.yearToLess;
 
-    if (!num(form.price_from_car)) e.price_from_car = tr.errors.priceFrom;
-    if (!num(form.price_to_car))   e.price_to_car   = tr.errors.priceTo;
+    if (!inRange(form.price_from_car, CAR_BOUNDS.price)) e.price_from_car = tr.errors.priceFrom;
+    if (!inRange(form.price_to_car, CAR_BOUNDS.price))   e.price_to_car   = tr.errors.priceTo;
     else if (+form.price_to_car < +form.price_from_car) e.price_to_car = tr.errors.priceToLess;
 
-    if (!num(form.mileage_from_car)) e.mileage_from_car = tr.errors.mileageFrom;
-    if (!num(form.mileage_to_car))   e.mileage_to_car   = tr.errors.mileageTo;
+    if (!inRange(form.mileage_from_car, CAR_BOUNDS.mileage)) e.mileage_from_car = tr.errors.mileageFrom;
+    if (!inRange(form.mileage_to_car, CAR_BOUNDS.mileage))   e.mileage_to_car   = tr.errors.mileageTo;
     else if (+form.mileage_to_car < +form.mileage_from_car) e.mileage_to_car = tr.errors.mileageToLess;
 
-    if (!num(form.power_from_car)) e.power_from_car = tr.errors.powerFrom;
-    if (!num(form.power_to_car))   e.power_to_car   = tr.errors.powerTo;
+    if (!inRange(form.power_from_car, CAR_BOUNDS.power)) e.power_from_car = tr.errors.powerFrom;
+    if (!inRange(form.power_to_car, CAR_BOUNDS.power))   e.power_to_car   = tr.errors.powerTo;
     else if (+form.power_to_car < +form.power_from_car) e.power_to_car = tr.errors.powerToLess;
 
     return e;
@@ -117,26 +126,26 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <RangeField label={tr.year} required
-          fromProps={{ type: "number", min: 1950, max: new Date().getFullYear() + 1, value: form.year_from_car, onChange: e => set("year_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 1950, max: new Date().getFullYear() + 1, value: form.year_to_car,   onChange: e => set("year_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: CAR_BOUNDS.year.min, max: CAR_BOUNDS.year.max, value: form.year_from_car, onChange: e => set("year_from_car", clampNum(e.target.value, CAR_BOUNDS.year.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: CAR_BOUNDS.year.min, max: CAR_BOUNDS.year.max, value: form.year_to_car,   onChange: e => set("year_to_car",   clampNum(e.target.value, CAR_BOUNDS.year.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.year_from_car} toError={errors.year_to_car}
         />
         <RangeField label={tr.price} required
-          fromProps={{ type: "number", min: 0, value: form.price_from_car, onChange: e => set("price_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.price_to_car,   onChange: e => set("price_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, max: CAR_BOUNDS.price.max, value: form.price_from_car, onChange: e => set("price_from_car", clampNum(e.target.value, CAR_BOUNDS.price.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, max: CAR_BOUNDS.price.max, value: form.price_to_car,   onChange: e => set("price_to_car",   clampNum(e.target.value, CAR_BOUNDS.price.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.price_from_car} toError={errors.price_to_car}
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <RangeField label={tr.mileage} required
-          fromProps={{ type: "number", min: 0, value: form.mileage_from_car, onChange: e => set("mileage_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.mileage_to_car,   onChange: e => set("mileage_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, max: CAR_BOUNDS.mileage.max, value: form.mileage_from_car, onChange: e => set("mileage_from_car", clampNum(e.target.value, CAR_BOUNDS.mileage.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, max: CAR_BOUNDS.mileage.max, value: form.mileage_to_car,   onChange: e => set("mileage_to_car",   clampNum(e.target.value, CAR_BOUNDS.mileage.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.mileage_from_car} toError={errors.mileage_to_car}
         />
         <RangeField label={tr.power} required
-          fromProps={{ type: "number", min: 0, value: form.power_from_car, onChange: e => set("power_from_car", e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
-          toProps={{   type: "number", min: 0, value: form.power_to_car,   onChange: e => set("power_to_car",   e.target.value), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          fromProps={{ type: "number", min: 0, max: CAR_BOUNDS.power.max, value: form.power_from_car, onChange: e => set("power_from_car", clampNum(e.target.value, CAR_BOUNDS.power.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
+          toProps={{   type: "number", min: 0, max: CAR_BOUNDS.power.max, value: form.power_to_car,   onChange: e => set("power_to_car",   clampNum(e.target.value, CAR_BOUNDS.power.max)), onKeyDown: blockSpecialNumeric, disabled: readOnly || loading }}
           fromError={errors.power_from_car} toError={errors.power_to_car}
         />
       </div>

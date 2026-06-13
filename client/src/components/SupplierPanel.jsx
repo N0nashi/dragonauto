@@ -179,7 +179,7 @@ function AddPartForm({ onSuccess }) {
   );
 }
 
-/* ── Matched Requests tab ── */
+/* Matched Requests tab */
 function MatchedRequests({ initialOpenId = null, onInitConsumed }) {
   const { t } = useLang();
   const tt = t.toasts;
