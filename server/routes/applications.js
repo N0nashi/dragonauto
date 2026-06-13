@@ -3,6 +3,17 @@ const router = express.Router();
 const db = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
 const isModerator = require("../middleware/isModerator");
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
+
+// Строгий лимит на создание заявок — по пользователю, чтобы нельзя было накликать сотню
+const createApplicationLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.userId ? `u${req.userId}` : ipKeyGenerator(req)),
+  message: { error: "Слишком много заявок за короткое время, подождите немного" },
+});
 
 function parseToArray(value) {
   if (!value) return [];
@@ -87,7 +98,7 @@ async function notifyUser(applicationId, type) {
 }
 
 // POST /api/applications — создать заявку
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, createApplicationLimiter, async (req, res) => {
   const userId = req.userId;
   const {
     type, description,
