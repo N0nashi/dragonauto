@@ -2,6 +2,10 @@
 import { toast } from "../utils/toast";
 import { useLang } from "../context/LangContext";
 
+// имя/фамилия — только буквы, пробел и дефис, без цифр и символов
+const sanitizeName = (v) => v.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-]/g, "").slice(0, 50);
+const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
 const Field = ({ type = "text", name, placeholder, value, onChange, disabled, extra = "" }) => {
   const [show, setShow] = useState(false);
   const isPassword = type === "password";
@@ -58,7 +62,11 @@ const RegisterForm = ({ onRegisterSuccess }) => {
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
   const [showPolicy, setShowPolicy] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const v = (name === "first_name" || name === "last_name") ? sanitizeName(value) : value;
+    setForm({ ...form, [name]: v });
+  };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -71,8 +79,14 @@ const RegisterForm = ({ onRegisterSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.first_name || !form.last_name || !form.email || !form.password || !form.confirmPassword) {
+    if (!form.first_name.trim() || !form.last_name.trim() || !form.email || !form.password || !form.confirmPassword) {
       toast.error(tt.fillAllFields); return;
+    }
+    if (!isEmail(form.email.trim())) {
+      toast.error(tt.invalidEmail); return;
+    }
+    if (form.password.length < 8) {
+      toast.error(tt.passwordTooShort); return;
     }
     if (form.password !== form.confirmPassword) {
       toast.error(tt.passwordMismatch); return;

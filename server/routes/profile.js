@@ -10,6 +10,13 @@ function isValidEmail(email) {
   return re.test(email) && email.length <= 254;
 }
 
+// Имя/фамилия: только буквы, пробел и дефис, 1–50 символов
+function isValidName(v) {
+  return typeof v === "string" &&
+    /^[a-zA-Zа-яА-ЯёЁ\s\-]{1,50}$/.test(v.trim()) &&
+    /[a-zA-Zа-яА-ЯёЁ]/.test(v);
+}
+
 // Хелпер для получения пользователя по id
 async function getUserById(userId) {
   const result = await db.query(
@@ -51,18 +58,9 @@ router.put("/", authMiddleware, async (req, res) => {
     const userId = req.userId;
     let { first_name, last_name, photo_url } = req.body;
 
-    // Имя и фамилия обязательны
-    if (!first_name || typeof first_name !== "string") {
-      return res.status(400).json({ error: "first_name обязателен и должен быть строкой" });
-    }
-    if (first_name.trim().length > 100) {
-      return res.status(400).json({ error: "first_name не должно превышать 100 символов" });
-    }
-    if (!last_name || typeof last_name !== "string") {
-      return res.status(400).json({ error: "last_name обязателен и должен быть строкой" });
-    }
-    if (last_name.trim().length > 100) {
-      return res.status(400).json({ error: "last_name не должно превышать 100 символов" });
+    // Имя и фамилия обязательны и только из букв
+    if (!isValidName(first_name) || !isValidName(last_name)) {
+      return res.status(400).json({ error: "Имя и фамилия должны содержать только буквы" });
     }
     if (photo_url !== undefined && typeof photo_url !== "string") {
       return res.status(400).json({ error: "photo_url должен быть строкой" });

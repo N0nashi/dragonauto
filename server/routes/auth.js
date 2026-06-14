@@ -13,7 +13,13 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-// 📌 Роут: Регистрация
+// Имя/фамилия: только буквы, пробел и дефис, 1–50 символов
+const isValidName = (v) =>
+  typeof v === "string" &&
+  /^[a-zA-Zа-яА-ЯёЁ\s\-]{1,50}$/.test(v.trim()) &&
+  /[a-zA-Zа-яА-ЯёЁ]/.test(v);
+
+// Роут: Регистрация
 router.post("/register", avatarUploadMiddleware, async (req, res) => {
   const { email, password, first_name, last_name, role } = req.body;
 
@@ -21,8 +27,11 @@ router.post("/register", avatarUploadMiddleware, async (req, res) => {
   if (!email || !password || !first_name || !last_name) {
     return res.status(400).json({ error: "Все поля обязательны" });
   }
-  if (password.length < 8) {
-    return res.status(400).json({ error: "Пароль должен содержать минимум 8 символов" });
+  if (!isValidName(first_name) || !isValidName(last_name)) {
+    return res.status(400).json({ error: "Имя и фамилия должны содержать только буквы" });
+  }
+  if (password.length < 8 || password.length > 72) {
+    return res.status(400).json({ error: "Пароль должен содержать от 8 до 72 символов" });
   }
   if (!validator.isEmail(email)) {
     return res.status(400).json({ error: "Некорректный формат email" });
@@ -98,7 +107,7 @@ router.post("/register", avatarUploadMiddleware, async (req, res) => {
   }
 });
 
-// 📬 Роут: Подтверждение email по коду
+// Роут: Подтверждение email по коду
 router.post("/verify-email", async (req, res) => {
   const { email, code } = req.body;
 
@@ -141,7 +150,7 @@ router.post("/verify-email", async (req, res) => {
   }
 });
 
-// 🔑 Роут: Авторизация
+// Роут: Авторизация
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -176,7 +185,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// 📧 Роут: Забыли пароль — отправка кода
+// Роут: Забыли пароль — отправка кода
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email обязателен" });
@@ -231,7 +240,7 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-// 🔐 Роут: Сброс пароля по коду
+// Роут: Сброс пароля по коду
 router.post("/reset-password", async (req, res) => {
   const { email, otp, newPassword } = req.body;
 

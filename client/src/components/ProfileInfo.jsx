@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { toast } from "../utils/toast";
 import { useLang } from "../context/LangContext";
 
+// имя/фамилия — только буквы, пробел и дефис, без цифр и символов
+const sanitizeName = (v) => v.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-]/g, "").slice(0, 50);
+
 const inputCls = "w-full font-mont text-sm text-charcoal dark:text-cream bg-transparent border border-charcoal/20 dark:border-cream/20 rounded-xl px-4 py-3 placeholder:text-charcoal/90 dark:placeholder:text-cream/90 focus:outline-none focus:border-charcoal/50 dark:focus:border-cream/50 transition-colors duration-200";
 
 const Section = ({ title, children }) => (
@@ -56,6 +59,9 @@ export default function ProfileInfo({ onProfileLoad }) {
 
   const saveProfile = async (e) => {
     e.preventDefault();
+    if (!editData.firstName?.trim() || !editData.lastName?.trim()) {
+      toast.error(tt.invalidName); return;
+    }
     try {
       let photoUrl = editData.avatarUrl;
       if (selectedFile) {
@@ -111,6 +117,7 @@ export default function ProfileInfo({ onProfileLoad }) {
 
   const changePassword = async (e) => {
     e.preventDefault();
+    if (newPwd.length < 8) { toast.error(tt.passwordTooShort); return; }
     if (newPwd !== conPwd) { toast.error(tt.passwordMismatch); return; }
     try {
       const r = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/password`, {
@@ -157,9 +164,9 @@ export default function ProfileInfo({ onProfileLoad }) {
             <form onSubmit={saveProfile} className="flex-1 flex flex-col gap-3">
               <div className="flex gap-3">
                 <input className={inputCls} placeholder={tp.firstName} value={editData.firstName}
-                  onChange={e => setEditData(p => ({ ...p, firstName: e.target.value }))} />
+                  onChange={e => setEditData(p => ({ ...p, firstName: sanitizeName(e.target.value) }))} />
                 <input className={inputCls} placeholder={tp.lastName} value={editData.lastName}
-                  onChange={e => setEditData(p => ({ ...p, lastName: e.target.value }))} />
+                  onChange={e => setEditData(p => ({ ...p, lastName: sanitizeName(e.target.value) }))} />
               </div>
               <div className="flex gap-2 mt-1">
                 <button type="submit"
