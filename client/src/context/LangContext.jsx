@@ -83,6 +83,7 @@ const translations = {
       ui: {
         loading: "Загрузка...", empty: "Ничего не найдено",
         select: "Подобрать", carsCount: "авто", partsCount: "запчастей",
+        ownItem: "Это ваш товар", ownItemBtn: "Ваш товар",
         loginRequired: "Войдите в систему, чтобы создать заявку.",
         priceFrom: "от",
         reqCarDesc: "Заявка на",
@@ -662,6 +663,7 @@ const translations = {
       ui: {
         loading: "Loading...", empty: "Nothing found",
         select: "Select", carsCount: "cars", partsCount: "parts",
+        ownItem: "This is your own listing", ownItemBtn: "Your listing",
         loginRequired: "Please log in to create a request.",
         priceFrom: "from",
         reqCarDesc: "Request for",

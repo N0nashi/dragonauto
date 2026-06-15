@@ -180,6 +180,14 @@ const CarsCatalog = () => {
     catch { return null; }
   };
   const currentUserId = getUserId();
+  const currentRole = (() => {
+    if (!token) return null;
+    try { return JSON.parse(atob(token.split(".")[1])).role || null; } catch { return null; }
+  })();
+  // персонал (админ/модератор) может заказывать свой товар — для отладки
+  const isStaff = currentRole === "admin" || currentRole === "moderator";
+  const isOwnItem = (item) =>
+    !isStaff && currentUserId && String(item.supplier_id) === String(currentUserId);
 
   const updateLayout = useCallback(() => {
     const w = window.innerWidth;
@@ -280,6 +288,9 @@ const CarsCatalog = () => {
       setTimeout(() => { window.location.href = "/auth"; }, 2000);
       return;
     }
+    if (isOwnItem(item)) {
+      toast.error(tc.ui.ownItem); return;
+    }
     try {
       const body = activeTab === "cars"
         ? {
@@ -302,6 +313,8 @@ const CarsCatalog = () => {
             price_from_part: item.price, price_to_part: item.price,
             body_part: item.body_type || item.body,
           };
+      body.source_item_id = item.id;
+      body.source_item_type = activeTab === "cars" ? "car" : "part";
       const res = await fetch(`${API}/api/applications`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -438,10 +451,16 @@ const CarsCatalog = () => {
                 {car.price ? car.price.toLocaleString("ru-RU") + " ₽" : "—"}
               </p>
             </div>
-            <button onClick={() => createRequest(car)}
-              className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-85 active:scale-95 transition-all duration-200">
-              {tc.ui.select}
-            </button>
+            {isOwnItem(car) ? (
+              <span className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 rounded-xl bg-charcoal/10 dark:bg-cream/10 text-charcoal/50 dark:text-cream/50">
+                {tc.ui.ownItemBtn}
+              </span>
+            ) : (
+              <button onClick={() => createRequest(car)}
+                className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-85 active:scale-95 transition-all duration-200">
+                {tc.ui.select}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -503,10 +522,16 @@ const CarsCatalog = () => {
                 {part.price ? part.price.toLocaleString("ru-RU") + " ₽" : "—"}
               </p>
             </div>
-            <button onClick={() => createRequest(part)}
-              className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-85 active:scale-95 transition-all duration-200">
-              {tc.ui.select}
-            </button>
+            {isOwnItem(part) ? (
+              <span className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 rounded-xl bg-charcoal/10 dark:bg-cream/10 text-charcoal/50 dark:text-cream/50">
+                {tc.ui.ownItemBtn}
+              </span>
+            ) : (
+              <button onClick={() => createRequest(part)}
+                className="shrink-0 font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2.5 bg-red-accent text-cream rounded-xl hover:opacity-85 active:scale-95 transition-all duration-200">
+                {tc.ui.select}
+              </button>
+            )}
           </div>
         </div>
       </div>

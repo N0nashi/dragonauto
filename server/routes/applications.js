@@ -118,6 +118,20 @@ router.post("/", authMiddleware, createApplicationLimiter, async (req, res) => {
   const boundsError = validateApplication(type, req.body);
   if (boundsError) return res.status(400).json({ error: boundsError });
 
+  // Поставщик не может заказать собственный товар (админ/модератор — может, для отладки)
+  const isStaff = req.userRole === "admin" || req.userRole === "moderator";
+  const { source_item_id, source_item_type } = req.body;
+  if (!isStaff && source_item_id && ["car", "part"].includes(source_item_type)) {
+    try {
+      const table = source_item_type === "car" ? "cars" : "parts";
+      const own = await db.query(`SELECT supplier_id FROM ${table} WHERE id = $1`, [source_item_id]);
+      if (own.rows[0]?.supplier_id === userId)
+        return res.status(400).json({ error: "Нельзя заказать собственный товар" });
+    } catch (e) {
+      console.error("source item check error:", e.message);
+    }
+  }
+
   try {
     await db.query("BEGIN");
 
@@ -530,6 +544,16 @@ router.patch("/:id/match", authMiddleware, isModerator, async (req, res) => {
     if (!item.rows.length) return res.status(404).json({ error: "Товар не найден или не одобрен" });
     const supplierId = item.rows[0].supplier_id;
     if (!supplierId) return res.status(400).json({ error: "У товара нет поставщика" });
+
+    // Нельзя привязать товар поставщика к его же заявке (кроме заявок персонала — для отладки)
+    const appOwner = await db.query(
+      "SELECT a.user_id, u.role FROM applications a JOIN users u ON u.id = a.user_id WHERE a.id = $1",
+      [applicationId]
+    );
+    if (!appOwner.rows.length) return res.status(404).json({ error: "Заявка не найдена" });
+    const ownerIsStaff = ["admin", "moderator"].includes(appOwner.rows[0].role);
+    if (!ownerIsStaff && appOwner.rows[0].user_id === supplierId)
+      return res.status(400).json({ error: "Нельзя привязать товар поставщика к его же заявке" });
 
     await db.query(
       `UPDATE applications SET matched_item_id=$1, matched_item_type=$2, matched_supplier_id=$3, supplier_status='pending'

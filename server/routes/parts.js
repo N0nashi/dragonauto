@@ -114,7 +114,8 @@ router.post("/search", async (req, res) => {
       body AS body_type,
       part_name,
       photo_url,
-      price
+      price,
+      supplier_id
     FROM parts
     ${whereClause}
     ORDER BY id DESC
