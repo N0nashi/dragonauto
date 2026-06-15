@@ -591,12 +591,13 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                       className={fldCls} />
                   </label>
                 );
+                const optCls = "bg-cream dark:bg-charcoal text-charcoal dark:text-cream";
                 const selectInput = (key, label, opts) => (
                   <label key={key} className="flex flex-col gap-1">
                     {lbl(label)}
                     <select value={editing.item[key] ?? ""} onChange={e => setEditField(key, e.target.value)} className={fldCls}>
-                      <option value="">— не выбрано</option>
-                      {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                      <option value="" className={optCls}>— не выбрано</option>
+                      {opts.map(o => <option key={o} value={o} className={optCls}>{o}</option>)}
                     </select>
                   </label>
                 );
