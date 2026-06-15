@@ -6,8 +6,8 @@ import { useLang } from "../context/LangContext";
 import { translateDesc } from "../utils/translateDesc";
 
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, 50);
-// марка — только буквы, пробел и дефис, без цифр
-const sanitizeBrand = (v) => v.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-]/g, "").slice(0, 50);
+// марка в заявке — список через запятую: буквы/пробел/дефис/запятая, без цифр
+const sanitizeBrand = (v) => v.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-,]/g, "").slice(0, 100);
 const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(v);
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
@@ -129,7 +129,7 @@ export default function CarForm({ onSubmit, loading, initialData = null, readOnl
           error={errors.country_car}
           disabled={readOnly || loading}
         />
-        <Input label={tr.brand} required placeholder="Toyota"
+        <Input label={tr.brand} required placeholder="Toyota, BYD"
           value={form.brand_car} onChange={e => set("brand_car", sanitizeBrand(e.target.value))}
           error={errors.brand_car} disabled={readOnly || loading}
         />

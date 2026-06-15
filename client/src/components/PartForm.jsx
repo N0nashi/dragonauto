@@ -59,6 +59,7 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
     if (!form.part_name.trim() || !hasLetter(form.part_name))  e.part_name    = tr.errors.name;
     if (!form.country_part)      e.country_part = tr.errors.country;
     if (!form.brand_part.trim() || !hasLetter(form.brand_part)) e.brand_part   = tr.errors.brand;
+    if (!form.model_part.trim()) e.model_part   = tr.errors.model;
     if (!form.body_part)         e.body_part    = tr.errors.body;
 
     const inRange = v => v !== "" && !isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= PRICE_MAX;
@@ -104,9 +105,9 @@ export default function PartForm({ onSubmit, loading, initialData = null, readOn
           value={form.brand_part} onChange={e => set("brand_part", sanitizeBrand(e.target.value))}
           error={errors.brand_part} disabled={readOnly || loading}
         />
-        <Input label={tr.carModel} placeholder="Land Cruiser"
+        <Input label={tr.carModel} required placeholder="Land Cruiser"
           value={form.model_part} onChange={e => set("model_part", sanitizeText(e.target.value))}
-          disabled={readOnly || loading}
+          error={errors.model_part} disabled={readOnly || loading}
         />
       </div>
 
