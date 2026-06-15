@@ -338,6 +338,13 @@ export default function ViewApplicationForm({ applicationId, onCancel, onReply, 
 
   useEffect(() => { loadData(); }, [applicationId]);
 
+  // Автозаполнение цены предложения из привязанного товара поставщика
+  useEffect(() => {
+    if (nextStatus === "предложение" && !offerPrice && data?.matched_item?.price != null) {
+      setOfferPrice(String(data.matched_item.price));
+    }
+  }, [nextStatus, data]);
+
   const saveStatus = async () => {
     if (!nextStatus) return;
     setSaving(true);

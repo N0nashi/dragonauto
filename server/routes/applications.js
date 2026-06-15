@@ -448,6 +448,47 @@ router.patch("/:id/confirm-offer", authMiddleware, async (req, res) => {
   }
 });
 
+// PATCH /api/applications/:id/decline-offer — пользователь отклоняет предложение
+router.patch("/:id/decline-offer", authMiddleware, async (req, res) => {
+  const userId = req.userId;
+  const applicationId = parseInt(req.params.id, 10);
+  if (isNaN(applicationId)) return res.status(400).json({ error: "Неверный ID" });
+
+  try {
+    const cur = await db.query(
+      "SELECT status, user_id, matched_supplier_id FROM applications WHERE id = $1", [applicationId]
+    );
+    if (cur.rowCount === 0) return res.status(404).json({ error: "Заявка не найдена" });
+    if (cur.rows[0].user_id !== userId) return res.status(403).json({ error: "Нет доступа" });
+    if (cur.rows[0].status !== "предложение")
+      return res.status(400).json({ error: "Заявка не в статусе 'предложение'" });
+
+    // Возвращаем в работу, снимаем предложение и привязку товара — менеджер подберёт другой вариант
+    await db.query(
+      `UPDATE applications
+          SET status = 'в работе', offered_price = NULL,
+              matched_item_id = NULL, matched_item_type = NULL,
+              matched_supplier_id = NULL, supplier_status = NULL
+        WHERE id = $1`,
+      [applicationId]
+    );
+
+    // Если был привязан поставщик — уведомить его, что вариант отклонён
+    if (cur.rows[0].matched_supplier_id) {
+      await db.query(
+        `INSERT INTO supplier_messages (application_id, sender_role, sender_name, message)
+         VALUES ($1, 'admin', 'Система', $2)`,
+        [applicationId, `❌ Клиент отклонил предложение по заявке #${applicationId}. Менеджер подбирает другой вариант.`]
+      );
+    }
+
+    res.json({ message: "Предложение отклонено", newStatus: "в работе" });
+  } catch (err) {
+    console.error("Ошибка decline-offer:", err);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
 // GET /api/applications/:id/comments — список комментариев
 router.get("/:id/comments", authMiddleware, async (req, res) => {
   const userId = req.userId;

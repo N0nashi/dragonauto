@@ -107,6 +107,18 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
     } catch { toast.error(tt.offerAcceptFail); }
   };
 
+  const declineOffer = async (id) => {
+    try {
+      const r = await fetch(`${API}/api/applications/${id}/decline-offer`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!r.ok) throw new Error();
+      await loadApps();
+      toast.success(tt.offerDeclined);
+    } catch { toast.error(tt.offerDeclineFail); }
+  };
+
   if (editing) {
     return (
       <EditApplicationForm
@@ -303,6 +315,12 @@ export default function Requests({ initialOpenId = null, onOpenIdConsumed }) {
                       <button onClick={() => confirmOffer(id)}
                         className="font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2 bg-orange-500 text-white rounded-xl hover:opacity-90 transition">
                         {lang === "en" ? "Accept offer" : "Принять предложение"}
+                      </button>
+                    )}
+                    {status === "предложение" && (
+                      <button onClick={() => declineOffer(id)}
+                        className="font-mont font-black text-[10px] tracking-widest uppercase px-4 py-2 border-2 border-charcoal/20 dark:border-cream/20 text-charcoal dark:text-cream rounded-xl hover:border-red-accent hover:text-red-accent transition">
+                        {lang === "en" ? "Decline" : "Отклонить"}
                       </button>
                     )}
                     {USER_CLOSEABLE.includes(status) && (
