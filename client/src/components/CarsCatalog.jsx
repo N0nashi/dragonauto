@@ -587,9 +587,9 @@ const CarsCatalog = () => {
                   {showAdvanced && (
                     <div className="flex flex-col gap-3 pt-1 anim-fade-up">
                       <div className="h-px bg-charcoal/8 dark:bg-cream/8" />
-                      <RangeRow label={tc.f.mileage} filterKey="mileage" value={selectedFilters.mileage} onChange={handleFilter} fromLabel={tc.f.from} toLabel={tc.f.to} />
                       {activeTab === "cars" && (
                         <>
+                          <RangeRow label={tc.f.mileage} filterKey="mileage" value={selectedFilters.mileage} onChange={handleFilter} fromLabel={tc.f.from} toLabel={tc.f.to} />
                           <FilterSelect placeholder={tc.f.gearbox} filterKey="gearbox" options={filters.gearboxes} />
                           <FilterSelect placeholder={tc.f.drive}   filterKey="drive"   options={filters.drives}    />
                         </>

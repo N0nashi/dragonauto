@@ -15,6 +15,9 @@ const TEXT_FIELDS_SP = ["brand", "model", "part_name"];
 const MAX_TEXT_SP = 50;
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT_SP);
 const sanitizePartName = (v) => v.replace(/[^a-zA-Z0-9Ѐ-ӿ\s\-\.]/g, "").slice(0, MAX_TEXT_SP);
+// марка — только буквы, пробел и дефис, без цифр
+const sanitizeBrand = (v) => v.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-]/g, "").slice(0, MAX_TEXT_SP);
+const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(String(v ?? ""));
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
@@ -37,6 +40,9 @@ function AddCarForm({ onSuccess }) {
     const carFields = ["brand","model","year","price","country","mileage","body","gearbox","drive","engine_power"];
     if (carFields.some(k => form[k] === "" || form[k] == null) || !photo) {
       toast.error(tf.required); return;
+    }
+    if (!hasLetter(form.brand)) {
+      toast.error("Марка должна содержать буквы"); return;
     }
     setLoading(true);
     try {
@@ -72,7 +78,7 @@ function AddCarForm({ onSuccess }) {
     <form onSubmit={submit} className="flex flex-col gap-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input label={tf.brand} required placeholder="Toyota"
-          value={form.brand} onChange={e => set("brand", sanitizeText(e.target.value))} disabled={loading} />
+          value={form.brand} onChange={e => set("brand", sanitizeBrand(e.target.value))} disabled={loading} />
         <Input label={tf.model} required placeholder="Land Cruiser"
           value={form.model} onChange={e => set("model", sanitizeText(e.target.value))} disabled={loading} />
         <SingleSelect label={tf.country} required placeholder="Выберите…"
@@ -122,6 +128,9 @@ function AddPartForm({ onSuccess }) {
     if (partFields.some(k => form[k] === "" || form[k] == null) || !photo) {
       toast.error(tf.required); return;
     }
+    if (!hasLetter(form.part_name) || !hasLetter(form.brand)) {
+      toast.error("Название и марка должны содержать буквы"); return;
+    }
     setLoading(true);
     try {
       let photo_url = null;
@@ -163,7 +172,7 @@ function AddPartForm({ onSuccess }) {
         <SingleSelect label={tf.country} required placeholder="—" options={COUNTRIES}
           value={form.country} onChange={v => set("country", v)} disabled={loading} />
         <Input label={tf.carBrand} required placeholder="Toyota"
-          value={form.brand} onChange={e => set("brand", sanitizeText(e.target.value))} disabled={loading} />
+          value={form.brand} onChange={e => set("brand", sanitizeBrand(e.target.value))} disabled={loading} />
         <Input label={tf.carModel} required placeholder="Land Cruiser"
           value={form.model} onChange={e => set("model", sanitizeText(e.target.value))} disabled={loading} />
       </div>
@@ -578,7 +587,7 @@ export default function SupplierPanel({ initialTab = null, initialOpenId = null,
                   <label key={key} className={`flex flex-col gap-1${span2 ? " col-span-2" : ""}`}>
                     {lbl(label)}
                     <input type="text" value={editing.item[key] ?? ""}
-                      onChange={e => setEditField(key, key === "part_name" ? sanitizePartName(e.target.value) : TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
+                      onChange={e => setEditField(key, key === "part_name" ? sanitizePartName(e.target.value) : key === "brand" ? sanitizeBrand(e.target.value) : TEXT_FIELDS_SP.includes(key) ? sanitizeText(e.target.value) : e.target.value)}
                       className={fldCls} />
                   </label>
                 );

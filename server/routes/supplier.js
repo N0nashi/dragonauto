@@ -46,6 +46,15 @@ function numInRange(v, { min, max }) {
 function textTooLong(...vals) {
   return vals.some(v => v != null && String(v).length > ITEM_MAX_TEXT);
 }
+// Строка содержит хотя бы одну букву (марка/модель/название не из одних цифр)
+const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(String(v ?? ""));
+
+// Допустимый статус, если задаёт админ/модератор
+function resolveStatus(req) {
+  if (req.userRole === "admin" || req.userRole === "moderator")
+    return ["approved", "pending", "rejected"].includes(req.body.status) ? req.body.status : "approved";
+  return "pending";
+}
 
 function validateCar(b) {
   if (!numInRange(b.year, ITEM_BOUNDS.year))   return "Некорректный год";
@@ -56,6 +65,7 @@ function validateCar(b) {
     return "Некорректная мощность";
   if (textTooLong(b.brand, b.model, b.country, b.body, b.gearbox, b.drive))
     return "Слишком длинное значение в поле";
+  if (!hasLetter(b.brand)) return "Марка должна содержать буквы";
   return null;
 }
 function validatePart(b) {
@@ -64,6 +74,8 @@ function validatePart(b) {
     return "Некорректный год";
   if (textTooLong(b.part_name, b.brand, b.model, b.country, b.body))
     return "Слишком длинное значение в поле";
+  if (!hasLetter(b.part_name)) return "Название должно содержать буквы";
+  if (b.brand && !hasLetter(b.brand)) return "Марка должна содержать буквы";
   return null;
 }
 
@@ -96,13 +108,14 @@ router.post("/cars", authMiddleware, isSupplier, async (req, res) => {
     return res.status(400).json({ error: "Обязательные поля: brand, model, year, price, country" });
   const vErr = validateCar(req.body);
   if (vErr) return res.status(400).json({ error: vErr });
+  const status = resolveStatus(req);
   try {
     const r = await db.query(
       `INSERT INTO cars (brand,model,year,price,country,mileage,body,gearbox,drive,engine_power,photo_url,supplier_id,status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending') RETURNING id`,
-      [brand, model, +year, +price, country, +mileage||0, body||null, gearbox||null, drive||null, engine_power?+engine_power:null, photo_url||null, req.userId]
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
+      [brand, model, +year, +price, country, +mileage||0, body||null, gearbox||null, drive||null, engine_power?+engine_power:null, photo_url||null, req.userId, status]
     );
-    res.status(201).json({ id: r.rows[0].id, message: "Автомобиль отправлен на модерацию" });
+    res.status(201).json({ id: r.rows[0].id, message: status === "pending" ? "Автомобиль отправлен на модерацию" : "Автомобиль добавлен" });
   } catch (err) { console.error(err); res.status(500).json({ error: "Ошибка сервера" }); }
 });
 
@@ -153,13 +166,14 @@ router.post("/parts", authMiddleware, isSupplier, async (req, res) => {
     return res.status(400).json({ error: "Обязательные поля: part_name, price" });
   const vErr = validatePart(req.body);
   if (vErr) return res.status(400).json({ error: vErr });
+  const status = resolveStatus(req);
   try {
     const r = await db.query(
       `INSERT INTO parts (part_name,brand,model,price,country,body,year,photo_url,supplier_id,status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending') RETURNING id`,
-      [part_name, brand||null, model||null, +price, country||null, body||null, year?+year:null, photo_url||null, req.userId]
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+      [part_name, brand||null, model||null, +price, country||null, body||null, year?+year:null, photo_url||null, req.userId, status]
     );
-    res.status(201).json({ id: r.rows[0].id, message: "Запчасть отправлена на модерацию" });
+    res.status(201).json({ id: r.rows[0].id, message: status === "pending" ? "Запчасть отправлена на модерацию" : "Запчасть добавлена" });
   } catch (err) { console.error(err); res.status(500).json({ error: "Ошибка сервера" }); }
 });
 
@@ -390,23 +404,28 @@ router.patch("/block/:id", authMiddleware, isAdmin, async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: "Ошибка сервера" }); }
 });
 
-/* helper — отменяет незакрытые заявки и рассылает письма */
-async function cancelPendingApplications(type, itemLabel) {
-  // Собираем заявки «в обработке» нужного типа с данными пользователя
+/* helper — отменяет только заявки, привязанные к удаляемому товару, и рассылает письма */
+async function cancelMatchedApplications(itemId, type, itemLabel) {
+  // Берём только заявки, реально привязанные к этому товару
   const result = await db.query(
     `SELECT a.id, a.user_id, u.email, u.first_name
        FROM applications a
        JOIN users u ON u.id = a.user_id
-      WHERE a.type = $1 AND a.status = 'в обработке'`,
-    [type]
+      WHERE a.matched_item_id = $1 AND a.matched_item_type = $2
+        AND a.status NOT IN ('выполнена','отменена')`,
+    [itemId, type]
   );
   if (result.rows.length === 0) return 0;
 
-  // Отменяем всё одним запросом
+  // Отменяем и снимаем привязку, чтобы не осталось ссылки на удалённый товар
   await db.query(
-    `UPDATE applications SET status = 'отменена'
-      WHERE type = $1 AND status = 'в обработке'`,
-    [type]
+    `UPDATE applications
+        SET status = 'отменена',
+            matched_item_id = NULL, matched_item_type = NULL,
+            matched_supplier_id = NULL, supplier_status = NULL
+      WHERE matched_item_id = $1 AND matched_item_type = $2
+        AND status NOT IN ('выполнена','отменена')`,
+    [itemId, type]
   );
 
   // Рассылаем письма асинхронно (не блокируем ответ)
@@ -435,7 +454,7 @@ router.delete("/car/:id", authMiddleware, isAdmin, async (req, res) => {
     const { brand, model, year } = car.rows[0];
     const label = `${brand} ${model} ${year}`;
 
-    const cancelled = await cancelPendingApplications("car", label);
+    const cancelled = await cancelMatchedApplications(req.params.id, "car", label);
     await db.query("DELETE FROM cars WHERE id = $1", [req.params.id]);
 
     res.json({ message: "Автомобиль удалён", cancelledApplications: cancelled });
@@ -453,7 +472,7 @@ router.delete("/part/:id", authMiddleware, isAdmin, async (req, res) => {
 
     const label = part.rows[0].part_name || "Запчасть";
 
-    const cancelled = await cancelPendingApplications("part", label);
+    const cancelled = await cancelMatchedApplications(req.params.id, "part", label);
     await db.query("DELETE FROM parts WHERE id = $1", [req.params.id]);
 
     res.json({ message: "Запчасть удалена", cancelledApplications: cancelled });

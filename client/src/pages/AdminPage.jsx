@@ -26,6 +26,9 @@ const TEXT_FIELDS_CATALOG = ["brand", "model", "part_name"];
 const MAX_TEXT_LEN = 50;
 const sanitizeText = (v) => v.replace(/[^a-zA-Z0-9\s\-\.]/g, "").slice(0, MAX_TEXT_LEN);
 const sanitizePartName = (v) => v.replace(/[^a-zA-Z0-9Ѐ-ӿ\s\-\.]/g, "").slice(0, MAX_TEXT_LEN);
+// марка — только буквы, пробел и дефис, без цифр
+const sanitizeBrand = (v) => v.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-]/g, "").slice(0, MAX_TEXT_LEN);
+const hasLetter = (v) => /[a-zA-Zа-яА-ЯёЁ]/.test(String(v ?? ""));
 const blockSpecialNumeric = (e) => {
   if (["-", "+", "_", "e", "E", ".", ","].includes(e.key)) e.preventDefault();
 };
@@ -38,7 +41,9 @@ const Field = ({ label, value, onChange, type = "text", required, min, max, fiel
       if (v.replace(/[^0-9]/g, "").length > maxLen) return;
     }
     if (type === "text" && fieldKey && TEXT_FIELDS_CATALOG.includes(fieldKey)) {
-      v = fieldKey === "part_name" ? sanitizePartName(v) : sanitizeText(v);
+      v = fieldKey === "part_name" ? sanitizePartName(v)
+        : fieldKey === "brand"    ? sanitizeBrand(v)
+        : sanitizeText(v);
     }
     onChange(v);
   };
@@ -271,6 +276,14 @@ function CatalogSection() {
     }
     if (rangeErrors.length > 0) {
       setAddMsg(rangeErrors.join(". "));
+      return;
+    }
+
+    const letterErrors = [];
+    if (!hasLetter(addForm.brand)) letterErrors.push("Марка должна содержать буквы");
+    if (!isCar && !hasLetter(addForm.part_name)) letterErrors.push("Название должно содержать буквы");
+    if (letterErrors.length > 0) {
+      setAddMsg(letterErrors.join(". "));
       return;
     }
 
